@@ -1,4 +1,4 @@
-name: build-check
+name: Build Check
 
 # Trigger the check on any pull request targeting the main branch
 on:
