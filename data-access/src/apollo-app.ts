@@ -137,7 +137,9 @@ export function createGraphQLApp(): express.Express {
     } catch (err: any) {
       console.error('[landing page] error:', err);
       res.setHeader('Content-Type', 'text/html');
-      res.status(500).send('<!DOCTYPE html><html><body>Failed to load Apollo landing page</body></html>');
+      res
+        .status(500)
+        .send('<!DOCTYPE html><html><body>Failed to load Apollo landing page</body></html>');
     }
   });
 
