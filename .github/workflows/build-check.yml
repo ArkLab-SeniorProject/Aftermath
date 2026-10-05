@@ -2,6 +2,8 @@ name: build-check
 
 # Trigger the check only on pull requests targeting main or development
 on:
+  push:
+    branches: [main, development]
   pull_request:
     branches: [main, development]
 
