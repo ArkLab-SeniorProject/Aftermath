@@ -10,7 +10,7 @@ export function Header({ user }: HeaderProps) {
   const navigate = useNavigate();
   const organization = user?.organization as Record<string, unknown> | undefined;
   const orgName = organization?.orgName ? String(organization.orgName).toUpperCase() : '';
-  const userDisplayName = user ? String(user.firstName ?? user.username ?? 'User') : null;
+  const userDisplayName = user ? String(user.firstName ?? '').trim() || String(user.username ?? '').trim() || 'User' : null;
 
   return (
     <AppBar position='static' elevation={1} sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
