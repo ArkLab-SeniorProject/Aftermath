@@ -2,8 +2,8 @@ import { Suspense, useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { AuthProvider } from '../auth/AuthProvider';
 import { useAuth } from '../auth/useAuth';
-import { AppLayout } from '../components/organisms/app-layout';
 import { Loading } from '../components/molecules/loading/Loading';
+import { AppLayout } from '../components/organisms/app-layout';
 
 export default function RootLayout() {
   return (
@@ -28,27 +28,23 @@ function AuthGate() {
   }, [pathname]);
 
   useEffect(() => {
-    const isLoginRoute = pathname === '/login';
-    if (!isLoginRoute && !user && !loading) {
-      navigate('/login', { replace: true });
-    }
-    if (user && isLoginRoute) {
+    if (user && pathname === '/login') {
       navigate('/', { replace: true });
     }
-  }, [pathname, user, loading, navigate]);
+  }, [pathname, user, navigate]);
 
   if (loading) {
     return <Loading text='Checking authentication...' />;
   }
 
-  const isLoginRoute = location.pathname === '/login';
+  const isLoginRoute = pathname === '/login';
 
-  if (isLoginRoute || !user) {
+  if (isLoginRoute) {
     return <Outlet />;
   }
 
   return (
-    <AppLayout user={user} onLogout={logout}>
+    <AppLayout user={user ?? undefined} onLogout={logout}>
       <Suspense fallback={<Loading />}>
         <Outlet />
       </Suspense>
