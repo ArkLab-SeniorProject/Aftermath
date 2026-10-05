@@ -9,7 +9,9 @@ import RootLayout from './pages/_layout';
 import Home from './pages/index';
 import Login from './pages/login';
 import NotFound from './pages/not-found';
+import Quiz from './pages/quiz';
 import StyleGuide from './pages/style-guide';
+import Support from './pages/support';
 
 export default function App() {
   return (
@@ -19,6 +21,8 @@ export default function App() {
         <Routes>
           <Route path='/' element={<RootLayout />}>
             <Route index element={<Home />} />
+            <Route path='quiz' element={<Quiz />} />
+            <Route path='support' element={<Support />} />
             <Route path='style-guide' element={<StyleGuide />} />
             <Route path='login' element={<Login />} />
             <Route path='*' element={<NotFound />} />
