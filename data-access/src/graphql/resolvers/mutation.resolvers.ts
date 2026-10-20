@@ -11,6 +11,8 @@ function toSnakeCaseDoc(input: any, idFields: string[] = []) {
     eventOccured: 'event_occured',
     helpNeeded: 'help_needed',
     resourceType: 'resource_type',
+    securityQuestion: 'security_question',
+    securityAnswer: 'security_answer',
     disasterId: 'disaster',
     stateCode: 'state_code',
     countryCode: 'country_code',
@@ -58,6 +60,8 @@ function mapUser(doc: any) {
     username: doc.username,
     firstName: doc.first_name ?? null,
     passwordHash: doc.password_hash ?? doc.password ?? null,
+    securityQuestion: doc.security_question ?? null,
+    securityAnswer: doc.security_answer ?? null,
     createdAt: doc.created_at ?? null,
     updatedAt: doc.updated_at ?? null,
   };
@@ -129,6 +133,21 @@ export const mutationResolvers = {
   deleteUser: async (_: unknown, args: any, ctx: Context) => {
     const result = await ctx.mongoDb.collection('users').deleteOne({ _id: new ObjectId(args.id) });
     return result.deletedCount > 0;
+  },
+
+  resetPassword: async (_: unknown, args: any, ctx: Context) => {
+    const doc = await ctx.mongoDb.collection('users').findOne({ username: args.username });
+    if (!doc) return false;
+
+    const storedAnswer = (doc.security_answer ?? '').toLowerCase().trim();
+    const providedAnswer = (args.securityAnswer ?? '').toLowerCase().trim();
+    if (storedAnswer !== providedAnswer) return false;
+
+    await ctx.mongoDb.collection('users').updateOne(
+      { _id: doc._id },
+      { $set: { password_hash: args.newPassword, updated_at: new Date() } }
+    );
+    return true;
   },
 
   // ── Disasters ──

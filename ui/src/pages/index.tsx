@@ -1,8 +1,10 @@
 import { Box, Button, Link, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../auth/useAuth';
 
 export default function HomeRoute() {
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
   return (
     <Box
@@ -47,28 +49,39 @@ export default function HomeRoute() {
         I need immediate support
       </Button>
 
+      {user ? (
         <Typography variant='body2' color='text.secondary' component='span'>
-          Have an account?{' '}
-            <Link
-            component='button'
-            variant='body2'
-            onClick={() => navigate('/login')}
-            underline='hover'
-          >
-            Sign in
+          Signed in as {user.firstName || user.username}.{' '}
+          <Link component='button' variant='body2' onClick={logout} underline='hover'>
+            Log out
           </Link>
         </Typography>
-        <Typography variant='body2' color='text.secondary' component='span'>
+      ) : (
+        <>
+          <Typography variant='body2' color='text.secondary' component='span'>
+            Have an account?{' '}
+            <Link
+              component='button'
+              variant='body2'
+              onClick={() => navigate('/login')}
+              underline='hover'
+            >
+              Sign in
+            </Link>
+          </Typography>
+          <Typography variant='body2' color='text.secondary' component='span'>
             New Here?{' '}
             <Link
-            component='button'
-            variant='body2'
-            onClick={() => navigate('/login')}
-            underline='hover'
-          >
-            Create an account
-          </Link>
+              component='button'
+              variant='body2'
+              onClick={() => navigate('/create-account')}
+              underline='hover'
+            >
+              Create an account
+            </Link>
           </Typography>
+        </>
+      )}
     </Box>
   );
 }

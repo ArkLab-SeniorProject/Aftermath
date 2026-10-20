@@ -11,6 +11,8 @@ function mapUser(doc: any) {
     username: doc.username,
     firstName: doc.first_name ?? null,
     passwordHash: doc.password_hash ?? doc.password ?? null,
+    securityQuestion: doc.security_question ?? null,
+    securityAnswer: doc.security_answer ?? null,
     createdAt: doc.created_at ?? null,
     updatedAt: doc.updated_at ?? null,
   };
@@ -85,6 +87,11 @@ export const queryResolvers = {
   getUserByUsername: async (_: unknown, args: { username: string }, ctx: Context) => {
     const doc = await ctx.mongoDb.collection('users').findOne({ username: args.username });
     return mapUser(doc);
+  },
+
+  getSecurityQuestion: async (_: unknown, args: { username: string }, ctx: Context) => {
+    const doc = await ctx.mongoDb.collection('users').findOne({ username: args.username });
+    return doc?.security_question ?? null;
   },
 
   getUsers: async (_: unknown, args: { limit: number; offset: number }, ctx: Context) => {

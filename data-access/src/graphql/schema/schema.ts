@@ -10,6 +10,8 @@ export const schema = gql`
     username: String!
     firstName: String
     passwordHash: String
+    securityQuestion: String
+    securityAnswer: String
     createdAt: DateTime
     updatedAt: DateTime
   }
@@ -18,12 +20,16 @@ export const schema = gql`
     username: String!
     firstName: String
     passwordHash: String!
+    securityQuestion: String!
+    securityAnswer: String!
   }
 
   input UpdateUserInput {
     username: String
     firstName: String
     passwordHash: String
+    securityQuestion: String
+    securityAnswer: String
   }
 
   # ── Location (embedded in Disaster) ──────
@@ -152,6 +158,7 @@ export const schema = gql`
     getUser(id: ID!): User
     getUserByUsername(username: String!): User
     getUsers(limit: Int = 25, offset: Int = 0): [User!]!
+    getSecurityQuestion(username: String!): String
 
     # Disasters
     getDisaster(id: ID!): Disaster
@@ -172,6 +179,7 @@ export const schema = gql`
     createUser(input: CreateUserInput!): User!
     updateUser(id: ID!, input: UpdateUserInput!): User!
     deleteUser(id: ID!): Boolean!
+    resetPassword(username: String!, securityAnswer: String!, newPassword: String!): Boolean!
 
     # Disasters
     createDisaster(input: CreateDisasterInput!): Disaster!

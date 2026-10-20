@@ -16,6 +16,8 @@ export default function RootLayout() {
 const titles: Record<string, string> = {
   '/': 'Home | Senior Project',
   '/login': 'Login | Senior Project',
+  '/create-account': 'Create Account | Senior Project',
+  '/forgot-password': 'Forgot Password | Senior Project',
 };
 
 function AuthGate() {
@@ -27,20 +29,14 @@ function AuthGate() {
     document.title = titles[pathname] ?? 'Senior Project';
   }, [pathname]);
 
-  useEffect(() => {
-    if (user && pathname === '/login') {
-      navigate('/', { replace: true });
-    }
-  }, [pathname, user, navigate]);
+  const isAuthRoute = pathname === '/login' || pathname === '/create-account' || pathname === '/forgot-password';
+
+  if (isAuthRoute) {
+    return <Outlet />;
+  }
 
   if (loading) {
     return <Loading text='Checking authentication...' />;
-  }
-
-  const isLoginRoute = pathname === '/login';
-
-  if (isLoginRoute) {
-    return <Outlet />;
   }
 
   return (

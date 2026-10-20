@@ -8,6 +8,8 @@ import { theme } from './theme';
 import RootLayout from './pages/_layout';
 import Home from './pages/index';
 import Login from './pages/login';
+import CreateAccount from './pages/create-account';
+import ForgotPassword from './pages/forgot-password';
 import NotFound from './pages/not-found';
 import Quiz from './pages/quiz';
 import StyleGuide from './pages/style-guide';
@@ -25,6 +27,8 @@ export default function App() {
             <Route path='support' element={<Support />} />
             <Route path='style-guide' element={<StyleGuide />} />
             <Route path='login' element={<Login />} />
+            <Route path='create-account' element={<CreateAccount />} />
+            <Route path='forgot-password' element={<ForgotPassword />} />
             <Route path='*' element={<NotFound />} />
           </Route>
         </Routes>
