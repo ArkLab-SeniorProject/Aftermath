@@ -1,13 +1,21 @@
-import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client';
+import { ApolloClient, HttpLink, InMemoryCache } from '@apollo/client';
 
-const GRAPHQL_ENDPOINT = import.meta.env.VITE_GRAPHQL_URL;
+function getGraphQLEndpoint(): string {
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    if (host === 'localhost' || host === '127.0.0.1') {
+      return 'http://localhost:7071/graphql';
+    }
+    if (host.includes('dev-intheaftermath')) {
+      return import.meta.env.VITE_GRAPHQL_URL_DEV || 'https://dev-aftermath-data-access.vercel.app/graphql';
+    }
+  }
 
-if (!GRAPHQL_ENDPOINT) {
-  console.warn('VITE_GRAPHQL_URL is not set. GraphQL requests will fail.');
+  return import.meta.env.VITE_GRAPHQL_URL || 'https://aftermath-data-access.vercel.app/graphql';
 }
 
 const httpLink = new HttpLink({
-  uri: GRAPHQL_ENDPOINT,
+  uri: getGraphQLEndpoint(),
   credentials: 'include',
 });
 
