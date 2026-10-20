@@ -2,7 +2,14 @@ import type { Db } from 'mongodb';
 import { ObjectId } from 'mongodb';
 import { mapId } from '../../db/mongoHelpers.js';
 
-type Context = { mongoDb: Db };
+const MAX_LIMIT = 100;
+
+type Context = { mongoDb: Db; userId?: string };
+
+function clampLimit(limit: number): number {
+  if (!limit || limit <= 0) return 25;
+  return Math.min(limit, MAX_LIMIT);
+}
 
 function mapUser(doc: any) {
   if (!doc) return null;
@@ -10,9 +17,7 @@ function mapUser(doc: any) {
     id: String(doc._id),
     username: doc.username,
     firstName: doc.first_name ?? null,
-    passwordHash: doc.password_hash ?? doc.password ?? null,
     securityQuestion: doc.security_question ?? null,
-    securityAnswer: doc.security_answer ?? null,
     createdAt: doc.created_at ?? null,
     updatedAt: doc.updated_at ?? null,
   };
@@ -99,7 +104,7 @@ export const queryResolvers = {
       .collection('users')
       .find()
       .skip(args.offset)
-      .limit(args.limit)
+      .limit(clampLimit(args.limit))
       .toArray();
     return docs.map(mapUser);
   },
@@ -111,6 +116,8 @@ export const queryResolvers = {
   },
 
   getDisastersByUser: async (_: unknown, args: { userId: string }, ctx: Context) => {
+    if (!ctx.userId) throw new Error('Authentication required');
+    if (ctx.userId !== args.userId) throw new Error('Not authorized');
     const docs = await ctx.mongoDb
       .collection('disaster')
       .find({ user_id: new ObjectId(args.userId) })
@@ -136,7 +143,7 @@ export const queryResolvers = {
       .collection('resources')
       .find(filter)
       .skip(args.offset)
-      .limit(args.limit)
+      .limit(clampLimit(args.limit))
       .toArray();
     return docs.map(mapResource);
   },
@@ -148,6 +155,8 @@ export const queryResolvers = {
   },
 
   getGuidesByUser: async (_: unknown, args: { userId: string }, ctx: Context) => {
+    if (!ctx.userId) throw new Error('Authentication required');
+    if (ctx.userId !== args.userId) throw new Error('Not authorized');
     const docs = await ctx.mongoDb
       .collection('guide')
       .find({ user_id: new ObjectId(args.userId) })

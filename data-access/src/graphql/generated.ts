@@ -31,6 +31,13 @@ export type Scalars = {
   JSON: { input: any; output: any };
 };
 
+export type AuthPayload = {
+  __typename?: 'AuthPayload';
+  error?: Maybe<Scalars['String']['output']>;
+  success: Scalars['Boolean']['output'];
+  user?: Maybe<User>;
+};
+
 export type CreateDisasterInput = {
   disaster?: InputMaybe<Scalars['JSON']['input']>;
   eventOccured?: InputMaybe<Scalars['String']['input']>;
@@ -137,11 +144,12 @@ export type Mutation = {
   createDisaster: Disaster;
   createGuide: Guide;
   createResource: Resource;
-  createUser: User;
+  createUser: AuthPayload;
   deleteDisaster: Scalars['Boolean']['output'];
   deleteGuide: Scalars['Boolean']['output'];
   deleteResource: Scalars['Boolean']['output'];
   deleteUser: Scalars['Boolean']['output'];
+  login: AuthPayload;
   resetPassword: Scalars['Boolean']['output'];
   updateDisaster: Disaster;
   updateGuide: Guide;
@@ -179,6 +187,11 @@ export type MutationDeleteResourceArgs = {
 
 export type MutationDeleteUserArgs = {
   id: Scalars['ID']['input'];
+};
+
+export type MutationLoginArgs = {
+  password: Scalars['String']['input'];
+  username: Scalars['String']['input'];
 };
 
 export type MutationResetPasswordArgs = {
@@ -311,8 +324,6 @@ export type User = {
   createdAt?: Maybe<Scalars['DateTime']['output']>;
   firstName?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
-  passwordHash?: Maybe<Scalars['String']['output']>;
-  securityAnswer?: Maybe<Scalars['String']['output']>;
   securityQuestion?: Maybe<Scalars['String']['output']>;
   updatedAt?: Maybe<Scalars['DateTime']['output']>;
   username: Scalars['String']['output'];
@@ -329,7 +340,6 @@ export type GetUserQuery = {
     id: string;
     username: string;
     firstName?: string | null;
-    passwordHash?: string | null;
     createdAt?: any | null;
     updatedAt?: any | null;
   } | null;
@@ -346,7 +356,6 @@ export type GetUserByUsernameQuery = {
     id: string;
     username: string;
     firstName?: string | null;
-    passwordHash?: string | null;
     createdAt?: any | null;
     updatedAt?: any | null;
   } | null;
@@ -369,6 +378,28 @@ export type GetUsersQuery = {
   }>;
 };
 
+export type LoginMutationVariables = Exact<{
+  username: Scalars['String']['input'];
+  password: Scalars['String']['input'];
+}>;
+
+export type LoginMutation = {
+  __typename?: 'Mutation';
+  login: {
+    __typename?: 'AuthPayload';
+    success: boolean;
+    error?: string | null;
+    user?: {
+      __typename?: 'User';
+      id: string;
+      username: string;
+      firstName?: string | null;
+      createdAt?: any | null;
+      updatedAt?: any | null;
+    } | null;
+  };
+};
+
 export type CreateUserMutationVariables = Exact<{
   input: CreateUserInput;
 }>;
@@ -376,13 +407,17 @@ export type CreateUserMutationVariables = Exact<{
 export type CreateUserMutation = {
   __typename?: 'Mutation';
   createUser: {
-    __typename?: 'User';
-    id: string;
-    username: string;
-    firstName?: string | null;
-    passwordHash?: string | null;
-    createdAt?: any | null;
-    updatedAt?: any | null;
+    __typename?: 'AuthPayload';
+    success: boolean;
+    error?: string | null;
+    user?: {
+      __typename?: 'User';
+      id: string;
+      username: string;
+      firstName?: string | null;
+      createdAt?: any | null;
+      updatedAt?: any | null;
+    } | null;
   };
 };
 
@@ -409,7 +444,6 @@ export const GetUserDocument = gql`
     id
     username
     firstName
-    passwordHash
     createdAt
     updatedAt
   }
@@ -481,7 +515,6 @@ export const GetUserByUsernameDocument = gql`
     id
     username
     firstName
-    passwordHash
     createdAt
     updatedAt
   }
@@ -650,15 +683,71 @@ export type GetUsersQueryResult = ApolloReactCommon.QueryResult<
   GetUsersQuery,
   GetUsersQueryVariables
 >;
+export const LoginDocument = gql`
+    mutation Login($username: String!, $password: String!) {
+  login(username: $username, password: $password) {
+    success
+    error
+    user {
+      id
+      username
+      firstName
+      createdAt
+      updatedAt
+    }
+  }
+}
+    `;
+export type LoginMutationFn = ApolloReactCommon.MutationFunction<
+  LoginMutation,
+  LoginMutationVariables
+>;
+
+/**
+ * __useLoginMutation__
+ *
+ * To run a mutation, you first call `useLoginMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useLoginMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [loginMutation, { data, loading, error }] = useLoginMutation({
+ *   variables: {
+ *      username: // value for 'username'
+ *      password: // value for 'password'
+ *   },
+ * });
+ */
+export function useLoginMutation(
+  baseOptions?: ApolloReactHooks.MutationHookOptions<LoginMutation, LoginMutationVariables>
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return ApolloReactHooks.useMutation<LoginMutation, LoginMutationVariables>(
+    LoginDocument,
+    options
+  );
+}
+export type LoginMutationHookResult = ReturnType<typeof useLoginMutation>;
+export type LoginMutationResult = ApolloReactCommon.MutationResult<LoginMutation>;
+export type LoginMutationOptions = ApolloReactCommon.BaseMutationOptions<
+  LoginMutation,
+  LoginMutationVariables
+>;
 export const CreateUserDocument = gql`
     mutation CreateUser($input: CreateUserInput!) {
   createUser(input: $input) {
-    id
-    username
-    firstName
-    passwordHash
-    createdAt
-    updatedAt
+    success
+    error
+    user {
+      id
+      username
+      firstName
+      createdAt
+      updatedAt
+    }
   }
 }
     `;

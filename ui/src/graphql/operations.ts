@@ -6,7 +6,6 @@ export const GET_USER = gql`
       id
       username
       firstName
-      passwordHash
       createdAt
       updatedAt
     }
@@ -19,7 +18,6 @@ export const GET_USER_BY_USERNAME = gql`
       id
       username
       firstName
-      passwordHash
       createdAt
       updatedAt
     }
@@ -38,15 +36,34 @@ export const GET_USERS = gql`
   }
 `;
 
+export const LOGIN = gql`
+  mutation Login($username: String!, $password: String!) {
+    login(username: $username, password: $password) {
+      success
+      error
+      user {
+        id
+        username
+        firstName
+        createdAt
+        updatedAt
+      }
+    }
+  }
+`;
+
 export const CREATE_USER = gql`
   mutation CreateUser($input: CreateUserInput!) {
     createUser(input: $input) {
-      id
-      username
-      firstName
-      passwordHash
-      createdAt
-      updatedAt
+      success
+      error
+      user {
+        id
+        username
+        firstName
+        createdAt
+        updatedAt
+      }
     }
   }
 `;

@@ -1,13 +1,13 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { apolloClient } from '../lib/apollo-client';
 import {
   GetUserDocument,
-  GetUserByUsernameDocument,
+  LoginDocument,
   CreateUserDocument,
   type GetUserQuery,
   type GetUserQueryVariables,
-  type GetUserByUsernameQuery,
-  type GetUserByUsernameQueryVariables,
+  type LoginMutation,
+  type LoginMutationVariables,
   type CreateUserMutation,
   type CreateUserMutationVariables,
 } from '../generated';
@@ -42,14 +42,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   const [loading, setLoading] = useState(true);
+  const authActionRef = useRef(0);
 
   useEffect(() => {
     if (user) {
-      localStorage.setItem('authUser', JSON.stringify(user));
-      localStorage.setItem('authToken', user.id);
+      try {
+        localStorage.setItem('authUser', JSON.stringify(user));
+        localStorage.setItem('authToken', user.id);
+      } catch {}
     } else {
-      localStorage.removeItem('authUser');
-      localStorage.removeItem('authToken');
+      try {
+        localStorage.removeItem('authUser');
+        localStorage.removeItem('authToken');
+      } catch {}
     }
   }, [user]);
 
@@ -68,7 +73,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    const restoreVersion = authActionRef.current;
     let cancelled = false;
+
     (async () => {
       try {
         const { data } = await withTimeout(
@@ -78,9 +85,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             fetchPolicy: 'network-only',
           })
         );
-        if (!cancelled) setUser(toUser(data?.getUser));
+        if (!cancelled && authActionRef.current === restoreVersion) {
+          setUser(toUser(data?.getUser));
+        }
       } catch {
-        if (!cancelled) setUser(null);
+        // Preserve saved session on transient failures
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -93,21 +102,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (username: string, password: string) => {
     setLoading(true);
+    authActionRef.current++;
     try {
       const { data } = await withTimeout(
-        apolloClient.query<GetUserByUsernameQuery, GetUserByUsernameQueryVariables>({
-          query: GetUserByUsernameDocument,
-          variables: { username },
-          fetchPolicy: 'network-only',
+        apolloClient.mutate<LoginMutation, LoginMutationVariables>({
+          mutation: LoginDocument,
+          variables: { username, password },
         })
       );
 
-      const found = data?.getUserByUsername;
-      if (!found || found.passwordHash !== password) {
+      const result = data?.login;
+      if (!result?.success || !result.user) {
         return false;
       }
 
-      setUser(toUser(found));
+      setUser(toUser(result.user));
       return true;
     } catch {
       return false;
@@ -124,19 +133,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     securityAnswer: string
   ) => {
     setLoading(true);
+    authActionRef.current++;
     try {
-      const { data: existing } = await withTimeout(
-        apolloClient.query<GetUserByUsernameQuery, GetUserByUsernameQueryVariables>({
-          query: GetUserByUsernameDocument,
-          variables: { username },
-          fetchPolicy: 'network-only',
-        })
-      );
-
-      if (existing?.getUserByUsername) {
-        return { success: false, error: 'Username already taken' };
-      }
-
       const { data } = await withTimeout(
         apolloClient.mutate<CreateUserMutation, CreateUserMutationVariables>({
           mutation: CreateUserDocument,
@@ -152,12 +150,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         })
       );
 
-      const created = data?.createUser;
-      if (!created) {
-        return { success: false, error: 'Failed to create account' };
+      const result = data?.createUser;
+      if (!result?.success || !result.user) {
+        return { success: false, error: result?.error ?? 'Failed to create account' };
       }
 
-      setUser(toUser(created));
+      setUser(toUser(result.user));
       return { success: true };
     } catch (err: any) {
       return { success: false, error: err.message ?? 'Something went wrong' };
@@ -166,7 +164,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = () => setUser(null);
+  const logout = () => {
+    authActionRef.current++;
+    setUser(null);
+  };
 
   return (
     <AuthContext.Provider value={{ user, loading, login, signup, logout }}>

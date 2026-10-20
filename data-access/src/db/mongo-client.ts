@@ -43,6 +43,8 @@ export async function getDb(): Promise<Db> {
   const dbName = process.env.DB_NAME ?? 'senior-project';
   db = mongoClient.db(dbName);
 
+  await db.collection('users').createIndex({ username: 1 }, { unique: true });
+
   return db;
 }
 

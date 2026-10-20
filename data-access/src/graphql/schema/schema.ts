@@ -9,11 +9,15 @@ export const schema = gql`
     id: ID!
     username: String!
     firstName: String
-    passwordHash: String
     securityQuestion: String
-    securityAnswer: String
     createdAt: DateTime
     updatedAt: DateTime
+  }
+
+  type AuthPayload {
+    success: Boolean!
+    user: User
+    error: String
   }
 
   input CreateUserInput {
@@ -176,7 +180,8 @@ export const schema = gql`
 
   type Mutation {
     # Users
-    createUser(input: CreateUserInput!): User!
+    createUser(input: CreateUserInput!): AuthPayload!
+    login(username: String!, password: String!): AuthPayload!
     updateUser(id: ID!, input: UpdateUserInput!): User!
     deleteUser(id: ID!): Boolean!
     resetPassword(username: String!, securityAnswer: String!, newPassword: String!): Boolean!
