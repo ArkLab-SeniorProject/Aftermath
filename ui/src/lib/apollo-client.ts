@@ -7,7 +7,10 @@ function getGraphQLEndpoint(): string {
       return 'http://localhost:7071/graphql';
     }
     if (host.includes('dev-intheaftermath')) {
-      return import.meta.env.VITE_GRAPHQL_URL_DEV || 'https://dev-aftermath-data-access.vercel.app/graphql';
+      return (
+        import.meta.env.VITE_GRAPHQL_URL_DEV ||
+        'https://dev-aftermath-data-access.vercel.app/graphql'
+      );
     }
   }
 
