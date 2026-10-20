@@ -40,7 +40,7 @@ export async function getDb(): Promise<Db> {
   await mongoClient.connect();
   await mongoClient.db('admin').command({ ping: 1 });
 
-  const dbName = process.env.DB_NAME ?? 'greenlight';
+  const dbName = process.env.DB_NAME ?? 'senior-project';
   db = mongoClient.db(dbName);
 
   return db;
