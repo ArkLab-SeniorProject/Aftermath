@@ -143,10 +143,12 @@ export const mutationResolvers = {
     const providedAnswer = (args.securityAnswer ?? '').toLowerCase().trim();
     if (storedAnswer !== providedAnswer) return false;
 
-    await ctx.mongoDb.collection('users').updateOne(
-      { _id: doc._id },
-      { $set: { password_hash: args.newPassword, updated_at: new Date() } }
-    );
+    await ctx.mongoDb
+      .collection('users')
+      .updateOne(
+        { _id: doc._id },
+        { $set: { password_hash: args.newPassword, updated_at: new Date() } }
+      );
     return true;
   },
 

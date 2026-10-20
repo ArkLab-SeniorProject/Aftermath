@@ -86,7 +86,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     })();
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const login = async (username: string, password: string) => {
@@ -114,7 +116,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signup = async (username: string, firstName: string, password: string, securityQuestion: string, securityAnswer: string) => {
+  const signup = async (
+    username: string,
+    firstName: string,
+    password: string,
+    securityQuestion: string,
+    securityAnswer: string
+  ) => {
     setLoading(true);
     try {
       const { data: existing } = await withTimeout(

@@ -13,18 +13,22 @@ export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
-export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
-export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
+export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = {
+  [_ in K]?: never;
+};
+export type Incremental<T> =
+  | T
+  | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
 const defaultOptions = {} as const;
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
-  ID: { input: string; output: string; }
-  String: { input: string; output: string; }
-  Boolean: { input: boolean; output: boolean; }
-  Int: { input: number; output: number; }
-  Float: { input: number; output: number; }
-  DateTime: { input: any; output: any; }
-  JSON: { input: any; output: any; }
+  ID: { input: string; output: string };
+  String: { input: string; output: string };
+  Boolean: { input: boolean; output: boolean };
+  Int: { input: number; output: number };
+  Float: { input: number; output: number };
+  DateTime: { input: any; output: any };
+  JSON: { input: any; output: any };
 };
 
 export type CreateDisasterInput = {
@@ -145,46 +149,37 @@ export type Mutation = {
   updateUser: User;
 };
 
-
 export type MutationCreateDisasterArgs = {
   input: CreateDisasterInput;
 };
-
 
 export type MutationCreateGuideArgs = {
   input: CreateGuideInput;
 };
 
-
 export type MutationCreateResourceArgs = {
   input: CreateResourceInput;
 };
-
 
 export type MutationCreateUserArgs = {
   input: CreateUserInput;
 };
 
-
 export type MutationDeleteDisasterArgs = {
   id: Scalars['ID']['input'];
 };
-
 
 export type MutationDeleteGuideArgs = {
   id: Scalars['ID']['input'];
 };
 
-
 export type MutationDeleteResourceArgs = {
   id: Scalars['ID']['input'];
 };
 
-
 export type MutationDeleteUserArgs = {
   id: Scalars['ID']['input'];
 };
-
 
 export type MutationResetPasswordArgs = {
   newPassword: Scalars['String']['input'];
@@ -192,24 +187,20 @@ export type MutationResetPasswordArgs = {
   username: Scalars['String']['input'];
 };
 
-
 export type MutationUpdateDisasterArgs = {
   id: Scalars['ID']['input'];
   input: UpdateDisasterInput;
 };
-
 
 export type MutationUpdateGuideArgs = {
   id: Scalars['ID']['input'];
   input: UpdateGuideInput;
 };
 
-
 export type MutationUpdateResourceArgs = {
   id: Scalars['ID']['input'];
   input: UpdateResourceInput;
 };
-
 
 export type MutationUpdateUserArgs = {
   id: Scalars['ID']['input'];
@@ -231,36 +222,29 @@ export type Query = {
   getUsers: Array<User>;
 };
 
-
 export type QueryGetDisasterArgs = {
   id: Scalars['ID']['input'];
 };
-
 
 export type QueryGetDisastersByUserArgs = {
   userId: Scalars['ID']['input'];
 };
 
-
 export type QueryGetGuideArgs = {
   id: Scalars['ID']['input'];
 };
-
 
 export type QueryGetGuideByDisasterArgs = {
   disasterId: Scalars['ID']['input'];
 };
 
-
 export type QueryGetGuidesByUserArgs = {
   userId: Scalars['ID']['input'];
 };
 
-
 export type QueryGetResourceArgs = {
   id: Scalars['ID']['input'];
 };
-
 
 export type QueryGetResourcesArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
@@ -268,21 +252,17 @@ export type QueryGetResourcesArgs = {
   resourceType?: InputMaybe<Scalars['String']['input']>;
 };
 
-
 export type QueryGetSecurityQuestionArgs = {
   username: Scalars['String']['input'];
 };
-
 
 export type QueryGetUserArgs = {
   id: Scalars['ID']['input'];
 };
 
-
 export type QueryGetUserByUsernameArgs = {
   username: Scalars['String']['input'];
 };
-
 
 export type QueryGetUsersArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
@@ -342,37 +322,78 @@ export type GetUserQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
-
-export type GetUserQuery = { __typename?: 'Query', getUser?: { __typename?: 'User', id: string, username: string, firstName?: string | null, passwordHash?: string | null, createdAt?: any | null, updatedAt?: any | null } | null };
+export type GetUserQuery = {
+  __typename?: 'Query';
+  getUser?: {
+    __typename?: 'User';
+    id: string;
+    username: string;
+    firstName?: string | null;
+    passwordHash?: string | null;
+    createdAt?: any | null;
+    updatedAt?: any | null;
+  } | null;
+};
 
 export type GetUserByUsernameQueryVariables = Exact<{
   username: Scalars['String']['input'];
 }>;
 
-
-export type GetUserByUsernameQuery = { __typename?: 'Query', getUserByUsername?: { __typename?: 'User', id: string, username: string, firstName?: string | null, passwordHash?: string | null, createdAt?: any | null, updatedAt?: any | null } | null };
+export type GetUserByUsernameQuery = {
+  __typename?: 'Query';
+  getUserByUsername?: {
+    __typename?: 'User';
+    id: string;
+    username: string;
+    firstName?: string | null;
+    passwordHash?: string | null;
+    createdAt?: any | null;
+    updatedAt?: any | null;
+  } | null;
+};
 
 export type GetUsersQueryVariables = Exact<{
   limit?: InputMaybe<Scalars['Int']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
 }>;
 
-
-export type GetUsersQuery = { __typename?: 'Query', getUsers: Array<{ __typename?: 'User', id: string, username: string, firstName?: string | null, createdAt?: any | null, updatedAt?: any | null }> };
+export type GetUsersQuery = {
+  __typename?: 'Query';
+  getUsers: Array<{
+    __typename?: 'User';
+    id: string;
+    username: string;
+    firstName?: string | null;
+    createdAt?: any | null;
+    updatedAt?: any | null;
+  }>;
+};
 
 export type CreateUserMutationVariables = Exact<{
   input: CreateUserInput;
 }>;
 
-
-export type CreateUserMutation = { __typename?: 'Mutation', createUser: { __typename?: 'User', id: string, username: string, firstName?: string | null, passwordHash?: string | null, createdAt?: any | null, updatedAt?: any | null } };
+export type CreateUserMutation = {
+  __typename?: 'Mutation';
+  createUser: {
+    __typename?: 'User';
+    id: string;
+    username: string;
+    firstName?: string | null;
+    passwordHash?: string | null;
+    createdAt?: any | null;
+    updatedAt?: any | null;
+  };
+};
 
 export type GetSecurityQuestionQueryVariables = Exact<{
   username: Scalars['String']['input'];
 }>;
 
-
-export type GetSecurityQuestionQuery = { __typename?: 'Query', getSecurityQuestion?: string | null };
+export type GetSecurityQuestionQuery = {
+  __typename?: 'Query';
+  getSecurityQuestion?: string | null;
+};
 
 export type ResetPasswordMutationVariables = Exact<{
   username: Scalars['String']['input'];
@@ -380,9 +401,7 @@ export type ResetPasswordMutationVariables = Exact<{
   newPassword: Scalars['String']['input'];
 }>;
 
-
-export type ResetPasswordMutation = { __typename?: 'Mutation', resetPassword: boolean };
-
+export type ResetPasswordMutation = { __typename?: 'Mutation'; resetPassword: boolean };
 
 export const GetUserDocument = gql`
     query GetUser($id: ID!) {
@@ -413,21 +432,45 @@ export const GetUserDocument = gql`
  *   },
  * });
  */
-export function useGetUserQuery(baseOptions: ApolloReactHooks.QueryHookOptions<GetUserQuery, GetUserQueryVariables> & ({ variables: GetUserQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
-        const options = {...defaultOptions, ...baseOptions}
-        return ApolloReactHooks.useQuery<GetUserQuery, GetUserQueryVariables>(GetUserDocument, options);
-      }
-export function useGetUserLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<GetUserQuery, GetUserQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return ApolloReactHooks.useLazyQuery<GetUserQuery, GetUserQueryVariables>(GetUserDocument, options);
-        }
+export function useGetUserQuery(
+  baseOptions: ApolloReactHooks.QueryHookOptions<GetUserQuery, GetUserQueryVariables> &
+    ({ variables: GetUserQueryVariables; skip?: boolean } | { skip: boolean })
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return ApolloReactHooks.useQuery<GetUserQuery, GetUserQueryVariables>(GetUserDocument, options);
+}
+export function useGetUserLazyQuery(
+  baseOptions?: ApolloReactHooks.LazyQueryHookOptions<GetUserQuery, GetUserQueryVariables>
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return ApolloReactHooks.useLazyQuery<GetUserQuery, GetUserQueryVariables>(
+    GetUserDocument,
+    options
+  );
+}
 // @ts-ignore
-export function useGetUserSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<GetUserQuery, GetUserQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetUserQuery, GetUserQueryVariables>;
-export function useGetUserSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetUserQuery, GetUserQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetUserQuery | undefined, GetUserQueryVariables>;
-export function useGetUserSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetUserQuery, GetUserQueryVariables>) {
-          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
-          return ApolloReactHooks.useSuspenseQuery<GetUserQuery, GetUserQueryVariables>(GetUserDocument, options);
-        }
+export function useGetUserSuspenseQuery(
+  baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<GetUserQuery, GetUserQueryVariables>
+): ApolloReactHooks.UseSuspenseQueryResult<GetUserQuery, GetUserQueryVariables>;
+export function useGetUserSuspenseQuery(
+  baseOptions?:
+    | ApolloReactHooks.SkipToken
+    | ApolloReactHooks.SuspenseQueryHookOptions<GetUserQuery, GetUserQueryVariables>
+): ApolloReactHooks.UseSuspenseQueryResult<GetUserQuery | undefined, GetUserQueryVariables>;
+export function useGetUserSuspenseQuery(
+  baseOptions?:
+    | ApolloReactHooks.SkipToken
+    | ApolloReactHooks.SuspenseQueryHookOptions<GetUserQuery, GetUserQueryVariables>
+) {
+  const options =
+    baseOptions === ApolloReactHooks.skipToken
+      ? baseOptions
+      : { ...defaultOptions, ...baseOptions };
+  return ApolloReactHooks.useSuspenseQuery<GetUserQuery, GetUserQueryVariables>(
+    GetUserDocument,
+    options
+  );
+}
 export type GetUserQueryHookResult = ReturnType<typeof useGetUserQuery>;
 export type GetUserLazyQueryHookResult = ReturnType<typeof useGetUserLazyQuery>;
 export type GetUserSuspenseQueryHookResult = ReturnType<typeof useGetUserSuspenseQuery>;
@@ -461,25 +504,75 @@ export const GetUserByUsernameDocument = gql`
  *   },
  * });
  */
-export function useGetUserByUsernameQuery(baseOptions: ApolloReactHooks.QueryHookOptions<GetUserByUsernameQuery, GetUserByUsernameQueryVariables> & ({ variables: GetUserByUsernameQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
-        const options = {...defaultOptions, ...baseOptions}
-        return ApolloReactHooks.useQuery<GetUserByUsernameQuery, GetUserByUsernameQueryVariables>(GetUserByUsernameDocument, options);
-      }
-export function useGetUserByUsernameLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<GetUserByUsernameQuery, GetUserByUsernameQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return ApolloReactHooks.useLazyQuery<GetUserByUsernameQuery, GetUserByUsernameQueryVariables>(GetUserByUsernameDocument, options);
-        }
+export function useGetUserByUsernameQuery(
+  baseOptions: ApolloReactHooks.QueryHookOptions<
+    GetUserByUsernameQuery,
+    GetUserByUsernameQueryVariables
+  > &
+    ({ variables: GetUserByUsernameQueryVariables; skip?: boolean } | { skip: boolean })
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return ApolloReactHooks.useQuery<GetUserByUsernameQuery, GetUserByUsernameQueryVariables>(
+    GetUserByUsernameDocument,
+    options
+  );
+}
+export function useGetUserByUsernameLazyQuery(
+  baseOptions?: ApolloReactHooks.LazyQueryHookOptions<
+    GetUserByUsernameQuery,
+    GetUserByUsernameQueryVariables
+  >
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return ApolloReactHooks.useLazyQuery<GetUserByUsernameQuery, GetUserByUsernameQueryVariables>(
+    GetUserByUsernameDocument,
+    options
+  );
+}
 // @ts-ignore
-export function useGetUserByUsernameSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<GetUserByUsernameQuery, GetUserByUsernameQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetUserByUsernameQuery, GetUserByUsernameQueryVariables>;
-export function useGetUserByUsernameSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetUserByUsernameQuery, GetUserByUsernameQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetUserByUsernameQuery | undefined, GetUserByUsernameQueryVariables>;
-export function useGetUserByUsernameSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetUserByUsernameQuery, GetUserByUsernameQueryVariables>) {
-          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
-          return ApolloReactHooks.useSuspenseQuery<GetUserByUsernameQuery, GetUserByUsernameQueryVariables>(GetUserByUsernameDocument, options);
-        }
+export function useGetUserByUsernameSuspenseQuery(
+  baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<
+    GetUserByUsernameQuery,
+    GetUserByUsernameQueryVariables
+  >
+): ApolloReactHooks.UseSuspenseQueryResult<GetUserByUsernameQuery, GetUserByUsernameQueryVariables>;
+export function useGetUserByUsernameSuspenseQuery(
+  baseOptions?:
+    | ApolloReactHooks.SkipToken
+    | ApolloReactHooks.SuspenseQueryHookOptions<
+        GetUserByUsernameQuery,
+        GetUserByUsernameQueryVariables
+      >
+): ApolloReactHooks.UseSuspenseQueryResult<
+  GetUserByUsernameQuery | undefined,
+  GetUserByUsernameQueryVariables
+>;
+export function useGetUserByUsernameSuspenseQuery(
+  baseOptions?:
+    | ApolloReactHooks.SkipToken
+    | ApolloReactHooks.SuspenseQueryHookOptions<
+        GetUserByUsernameQuery,
+        GetUserByUsernameQueryVariables
+      >
+) {
+  const options =
+    baseOptions === ApolloReactHooks.skipToken
+      ? baseOptions
+      : { ...defaultOptions, ...baseOptions };
+  return ApolloReactHooks.useSuspenseQuery<GetUserByUsernameQuery, GetUserByUsernameQueryVariables>(
+    GetUserByUsernameDocument,
+    options
+  );
+}
 export type GetUserByUsernameQueryHookResult = ReturnType<typeof useGetUserByUsernameQuery>;
 export type GetUserByUsernameLazyQueryHookResult = ReturnType<typeof useGetUserByUsernameLazyQuery>;
-export type GetUserByUsernameSuspenseQueryHookResult = ReturnType<typeof useGetUserByUsernameSuspenseQuery>;
-export type GetUserByUsernameQueryResult = ApolloReactCommon.QueryResult<GetUserByUsernameQuery, GetUserByUsernameQueryVariables>;
+export type GetUserByUsernameSuspenseQueryHookResult = ReturnType<
+  typeof useGetUserByUsernameSuspenseQuery
+>;
+export type GetUserByUsernameQueryResult = ApolloReactCommon.QueryResult<
+  GetUserByUsernameQuery,
+  GetUserByUsernameQueryVariables
+>;
 export const GetUsersDocument = gql`
     query GetUsers($limit: Int = 25, $offset: Int = 0) {
   getUsers(limit: $limit, offset: $offset) {
@@ -509,25 +602,54 @@ export const GetUsersDocument = gql`
  *   },
  * });
  */
-export function useGetUsersQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<GetUsersQuery, GetUsersQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return ApolloReactHooks.useQuery<GetUsersQuery, GetUsersQueryVariables>(GetUsersDocument, options);
-      }
-export function useGetUsersLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<GetUsersQuery, GetUsersQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return ApolloReactHooks.useLazyQuery<GetUsersQuery, GetUsersQueryVariables>(GetUsersDocument, options);
-        }
+export function useGetUsersQuery(
+  baseOptions?: ApolloReactHooks.QueryHookOptions<GetUsersQuery, GetUsersQueryVariables>
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return ApolloReactHooks.useQuery<GetUsersQuery, GetUsersQueryVariables>(
+    GetUsersDocument,
+    options
+  );
+}
+export function useGetUsersLazyQuery(
+  baseOptions?: ApolloReactHooks.LazyQueryHookOptions<GetUsersQuery, GetUsersQueryVariables>
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return ApolloReactHooks.useLazyQuery<GetUsersQuery, GetUsersQueryVariables>(
+    GetUsersDocument,
+    options
+  );
+}
 // @ts-ignore
-export function useGetUsersSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<GetUsersQuery, GetUsersQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetUsersQuery, GetUsersQueryVariables>;
-export function useGetUsersSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetUsersQuery, GetUsersQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetUsersQuery | undefined, GetUsersQueryVariables>;
-export function useGetUsersSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetUsersQuery, GetUsersQueryVariables>) {
-          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
-          return ApolloReactHooks.useSuspenseQuery<GetUsersQuery, GetUsersQueryVariables>(GetUsersDocument, options);
-        }
+export function useGetUsersSuspenseQuery(
+  baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<GetUsersQuery, GetUsersQueryVariables>
+): ApolloReactHooks.UseSuspenseQueryResult<GetUsersQuery, GetUsersQueryVariables>;
+export function useGetUsersSuspenseQuery(
+  baseOptions?:
+    | ApolloReactHooks.SkipToken
+    | ApolloReactHooks.SuspenseQueryHookOptions<GetUsersQuery, GetUsersQueryVariables>
+): ApolloReactHooks.UseSuspenseQueryResult<GetUsersQuery | undefined, GetUsersQueryVariables>;
+export function useGetUsersSuspenseQuery(
+  baseOptions?:
+    | ApolloReactHooks.SkipToken
+    | ApolloReactHooks.SuspenseQueryHookOptions<GetUsersQuery, GetUsersQueryVariables>
+) {
+  const options =
+    baseOptions === ApolloReactHooks.skipToken
+      ? baseOptions
+      : { ...defaultOptions, ...baseOptions };
+  return ApolloReactHooks.useSuspenseQuery<GetUsersQuery, GetUsersQueryVariables>(
+    GetUsersDocument,
+    options
+  );
+}
 export type GetUsersQueryHookResult = ReturnType<typeof useGetUsersQuery>;
 export type GetUsersLazyQueryHookResult = ReturnType<typeof useGetUsersLazyQuery>;
 export type GetUsersSuspenseQueryHookResult = ReturnType<typeof useGetUsersSuspenseQuery>;
-export type GetUsersQueryResult = ApolloReactCommon.QueryResult<GetUsersQuery, GetUsersQueryVariables>;
+export type GetUsersQueryResult = ApolloReactCommon.QueryResult<
+  GetUsersQuery,
+  GetUsersQueryVariables
+>;
 export const CreateUserDocument = gql`
     mutation CreateUser($input: CreateUserInput!) {
   createUser(input: $input) {
@@ -540,7 +662,10 @@ export const CreateUserDocument = gql`
   }
 }
     `;
-export type CreateUserMutationFn = ApolloReactCommon.MutationFunction<CreateUserMutation, CreateUserMutationVariables>;
+export type CreateUserMutationFn = ApolloReactCommon.MutationFunction<
+  CreateUserMutation,
+  CreateUserMutationVariables
+>;
 
 /**
  * __useCreateUserMutation__
@@ -559,13 +684,24 @@ export type CreateUserMutationFn = ApolloReactCommon.MutationFunction<CreateUser
  *   },
  * });
  */
-export function useCreateUserMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<CreateUserMutation, CreateUserMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return ApolloReactHooks.useMutation<CreateUserMutation, CreateUserMutationVariables>(CreateUserDocument, options);
-      }
+export function useCreateUserMutation(
+  baseOptions?: ApolloReactHooks.MutationHookOptions<
+    CreateUserMutation,
+    CreateUserMutationVariables
+  >
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return ApolloReactHooks.useMutation<CreateUserMutation, CreateUserMutationVariables>(
+    CreateUserDocument,
+    options
+  );
+}
 export type CreateUserMutationHookResult = ReturnType<typeof useCreateUserMutation>;
 export type CreateUserMutationResult = ApolloReactCommon.MutationResult<CreateUserMutation>;
-export type CreateUserMutationOptions = ApolloReactCommon.BaseMutationOptions<CreateUserMutation, CreateUserMutationVariables>;
+export type CreateUserMutationOptions = ApolloReactCommon.BaseMutationOptions<
+  CreateUserMutation,
+  CreateUserMutationVariables
+>;
 export const GetSecurityQuestionDocument = gql`
     query GetSecurityQuestion($username: String!) {
   getSecurityQuestion(username: $username)
@@ -588,25 +724,80 @@ export const GetSecurityQuestionDocument = gql`
  *   },
  * });
  */
-export function useGetSecurityQuestionQuery(baseOptions: ApolloReactHooks.QueryHookOptions<GetSecurityQuestionQuery, GetSecurityQuestionQueryVariables> & ({ variables: GetSecurityQuestionQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
-        const options = {...defaultOptions, ...baseOptions}
-        return ApolloReactHooks.useQuery<GetSecurityQuestionQuery, GetSecurityQuestionQueryVariables>(GetSecurityQuestionDocument, options);
-      }
-export function useGetSecurityQuestionLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<GetSecurityQuestionQuery, GetSecurityQuestionQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return ApolloReactHooks.useLazyQuery<GetSecurityQuestionQuery, GetSecurityQuestionQueryVariables>(GetSecurityQuestionDocument, options);
-        }
+export function useGetSecurityQuestionQuery(
+  baseOptions: ApolloReactHooks.QueryHookOptions<
+    GetSecurityQuestionQuery,
+    GetSecurityQuestionQueryVariables
+  > &
+    ({ variables: GetSecurityQuestionQueryVariables; skip?: boolean } | { skip: boolean })
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return ApolloReactHooks.useQuery<GetSecurityQuestionQuery, GetSecurityQuestionQueryVariables>(
+    GetSecurityQuestionDocument,
+    options
+  );
+}
+export function useGetSecurityQuestionLazyQuery(
+  baseOptions?: ApolloReactHooks.LazyQueryHookOptions<
+    GetSecurityQuestionQuery,
+    GetSecurityQuestionQueryVariables
+  >
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return ApolloReactHooks.useLazyQuery<GetSecurityQuestionQuery, GetSecurityQuestionQueryVariables>(
+    GetSecurityQuestionDocument,
+    options
+  );
+}
 // @ts-ignore
-export function useGetSecurityQuestionSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<GetSecurityQuestionQuery, GetSecurityQuestionQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetSecurityQuestionQuery, GetSecurityQuestionQueryVariables>;
-export function useGetSecurityQuestionSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetSecurityQuestionQuery, GetSecurityQuestionQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetSecurityQuestionQuery | undefined, GetSecurityQuestionQueryVariables>;
-export function useGetSecurityQuestionSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetSecurityQuestionQuery, GetSecurityQuestionQueryVariables>) {
-          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
-          return ApolloReactHooks.useSuspenseQuery<GetSecurityQuestionQuery, GetSecurityQuestionQueryVariables>(GetSecurityQuestionDocument, options);
-        }
+export function useGetSecurityQuestionSuspenseQuery(
+  baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<
+    GetSecurityQuestionQuery,
+    GetSecurityQuestionQueryVariables
+  >
+): ApolloReactHooks.UseSuspenseQueryResult<
+  GetSecurityQuestionQuery,
+  GetSecurityQuestionQueryVariables
+>;
+export function useGetSecurityQuestionSuspenseQuery(
+  baseOptions?:
+    | ApolloReactHooks.SkipToken
+    | ApolloReactHooks.SuspenseQueryHookOptions<
+        GetSecurityQuestionQuery,
+        GetSecurityQuestionQueryVariables
+      >
+): ApolloReactHooks.UseSuspenseQueryResult<
+  GetSecurityQuestionQuery | undefined,
+  GetSecurityQuestionQueryVariables
+>;
+export function useGetSecurityQuestionSuspenseQuery(
+  baseOptions?:
+    | ApolloReactHooks.SkipToken
+    | ApolloReactHooks.SuspenseQueryHookOptions<
+        GetSecurityQuestionQuery,
+        GetSecurityQuestionQueryVariables
+      >
+) {
+  const options =
+    baseOptions === ApolloReactHooks.skipToken
+      ? baseOptions
+      : { ...defaultOptions, ...baseOptions };
+  return ApolloReactHooks.useSuspenseQuery<
+    GetSecurityQuestionQuery,
+    GetSecurityQuestionQueryVariables
+  >(GetSecurityQuestionDocument, options);
+}
 export type GetSecurityQuestionQueryHookResult = ReturnType<typeof useGetSecurityQuestionQuery>;
-export type GetSecurityQuestionLazyQueryHookResult = ReturnType<typeof useGetSecurityQuestionLazyQuery>;
-export type GetSecurityQuestionSuspenseQueryHookResult = ReturnType<typeof useGetSecurityQuestionSuspenseQuery>;
-export type GetSecurityQuestionQueryResult = ApolloReactCommon.QueryResult<GetSecurityQuestionQuery, GetSecurityQuestionQueryVariables>;
+export type GetSecurityQuestionLazyQueryHookResult = ReturnType<
+  typeof useGetSecurityQuestionLazyQuery
+>;
+export type GetSecurityQuestionSuspenseQueryHookResult = ReturnType<
+  typeof useGetSecurityQuestionSuspenseQuery
+>;
+export type GetSecurityQuestionQueryResult = ApolloReactCommon.QueryResult<
+  GetSecurityQuestionQuery,
+  GetSecurityQuestionQueryVariables
+>;
 export const ResetPasswordDocument = gql`
     mutation ResetPassword($username: String!, $securityAnswer: String!, $newPassword: String!) {
   resetPassword(
@@ -616,7 +807,10 @@ export const ResetPasswordDocument = gql`
   )
 }
     `;
-export type ResetPasswordMutationFn = ApolloReactCommon.MutationFunction<ResetPasswordMutation, ResetPasswordMutationVariables>;
+export type ResetPasswordMutationFn = ApolloReactCommon.MutationFunction<
+  ResetPasswordMutation,
+  ResetPasswordMutationVariables
+>;
 
 /**
  * __useResetPasswordMutation__
@@ -637,10 +831,21 @@ export type ResetPasswordMutationFn = ApolloReactCommon.MutationFunction<ResetPa
  *   },
  * });
  */
-export function useResetPasswordMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<ResetPasswordMutation, ResetPasswordMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return ApolloReactHooks.useMutation<ResetPasswordMutation, ResetPasswordMutationVariables>(ResetPasswordDocument, options);
-      }
+export function useResetPasswordMutation(
+  baseOptions?: ApolloReactHooks.MutationHookOptions<
+    ResetPasswordMutation,
+    ResetPasswordMutationVariables
+  >
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return ApolloReactHooks.useMutation<ResetPasswordMutation, ResetPasswordMutationVariables>(
+    ResetPasswordDocument,
+    options
+  );
+}
 export type ResetPasswordMutationHookResult = ReturnType<typeof useResetPasswordMutation>;
 export type ResetPasswordMutationResult = ApolloReactCommon.MutationResult<ResetPasswordMutation>;
-export type ResetPasswordMutationOptions = ApolloReactCommon.BaseMutationOptions<ResetPasswordMutation, ResetPasswordMutationVariables>;
+export type ResetPasswordMutationOptions = ApolloReactCommon.BaseMutationOptions<
+  ResetPasswordMutation,
+  ResetPasswordMutationVariables
+>;

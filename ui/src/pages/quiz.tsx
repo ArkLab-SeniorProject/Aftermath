@@ -1,7 +1,4 @@
-import {
-  ArrowBack,
-  CheckCircle,
-} from '@mui/icons-material';
+import { ArrowBack, CheckCircle } from '@mui/icons-material';
 import {
   Box,
   Button,
@@ -65,7 +62,7 @@ export default function QuizRoute() {
     helpType: '',
   });
 
-  const progress = ((step) / TOTAL_STEPS) * 100;
+  const progress = (step / TOTAL_STEPS) * 100;
 
   const handleNext = () => {
     if (step < TOTAL_STEPS - 1) {
@@ -146,7 +143,12 @@ export default function QuizRoute() {
         <Typography variant='body1' color='text.secondary' sx={{ maxWidth: 360 }}>
           We found resources in your area based on your situation.
         </Typography>
-        <Button variant='contained' size='large' sx={{ mt: 1, px: 4 }} onClick={() => navigate('/')}>
+        <Button
+          variant='contained'
+          size='large'
+          sx={{ mt: 1, px: 4 }}
+          onClick={() => navigate('/')}
+        >
           View my resources
         </Button>
       </Box>
@@ -166,7 +168,11 @@ export default function QuizRoute() {
             sx={{ height: 6, borderRadius: 3 }}
           />
         </Box>
-        <Typography variant='caption' color='text.secondary' sx={{ minWidth: 36, textAlign: 'right' }}>
+        <Typography
+          variant='caption'
+          color='text.secondary'
+          sx={{ minWidth: 36, textAlign: 'right' }}
+        >
           {step + 1}/{TOTAL_STEPS}
         </Typography>
       </Box>
@@ -192,7 +198,7 @@ export default function QuizRoute() {
 
       {step === 1 && (
         <StepWrapper
-          question="When did this happen?"
+          question='When did this happen?'
           hint='A rough estimate is fine. This helps us find programs that fit your timeline.'
         >
           <RadioGroup
@@ -236,10 +242,7 @@ export default function QuizRoute() {
       )}
 
       {step === 3 && (
-        <StepWrapper
-          question='What would help most right now?'
-          hint=''
-        >
+        <StepWrapper question='What would help most right now?' hint=''>
           <RadioGroup
             value={answers.helpType}
             onChange={(e) => setAnswers((prev) => ({ ...prev, helpType: e.target.value }))}

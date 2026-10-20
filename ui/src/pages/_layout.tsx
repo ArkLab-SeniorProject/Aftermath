@@ -1,5 +1,5 @@
 import { Suspense, useEffect } from 'react';
-import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { AuthProvider } from '../auth/AuthProvider';
 import { useAuth } from '../auth/useAuth';
 import { Loading } from '../components/molecules/loading/Loading';
@@ -22,14 +22,14 @@ const titles: Record<string, string> = {
 
 function AuthGate() {
   const { pathname } = useLocation();
-  const navigate = useNavigate();
   const { user, loading, logout } = useAuth();
 
   useEffect(() => {
     document.title = titles[pathname] ?? 'Senior Project';
   }, [pathname]);
 
-  const isAuthRoute = pathname === '/login' || pathname === '/create-account' || pathname === '/forgot-password';
+  const isAuthRoute =
+    pathname === '/login' || pathname === '/create-account' || pathname === '/forgot-password';
 
   if (isAuthRoute) {
     return <Outlet />;

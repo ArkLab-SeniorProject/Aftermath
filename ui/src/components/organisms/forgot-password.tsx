@@ -161,13 +161,7 @@ export function ForgotPasswordContent() {
                   }}
                   disabled={loading}
                 />
-                <Button
-                  type='submit'
-                  variant='contained'
-                  size='large'
-                  fullWidth
-                  disabled={loading}
-                >
+                <Button type='submit' variant='contained' size='large' fullWidth disabled={loading}>
                   {loading ? 'Looking up...' : 'Continue'}
                 </Button>
               </Box>
@@ -274,13 +268,7 @@ export function ForgotPasswordContent() {
                   }}
                   disabled={loading}
                 />
-                <Button
-                  type='submit'
-                  variant='contained'
-                  size='large'
-                  fullWidth
-                  disabled={loading}
-                >
+                <Button type='submit' variant='contained' size='large' fullWidth disabled={loading}>
                   {loading ? 'Resetting...' : 'Reset password'}
                 </Button>
               </Box>
@@ -295,12 +283,7 @@ export function ForgotPasswordContent() {
               <Alert severity='success' sx={{ mb: 2 }}>
                 Your password has been updated successfully.
               </Alert>
-              <Button
-                variant='contained'
-                size='large'
-                fullWidth
-                onClick={() => navigate('/login')}
-              >
+              <Button variant='contained' size='large' fullWidth onClick={() => navigate('/login')}>
                 Back to sign in
               </Button>
             </>

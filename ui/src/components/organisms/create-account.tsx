@@ -49,7 +49,13 @@ export function CreateAccountContent() {
       return;
     }
 
-    const result = await auth.signup(username.trim(), firstName.trim(), password, securityQuestion.trim(), securityAnswer.trim());
+    const result = await auth.signup(
+      username.trim(),
+      firstName.trim(),
+      password,
+      securityQuestion.trim(),
+      securityAnswer.trim()
+    );
     if (result.success) {
       navigate('/', { replace: true });
     } else {
@@ -189,13 +195,23 @@ export function CreateAccountContent() {
               disabled={auth.loading}
             >
               <MenuItem value=''>Select a question</MenuItem>
-              <MenuItem value="What is your childhood pet's name?">What is your childhood pet's name?</MenuItem>
+              <MenuItem value="What is your childhood pet's name?">
+                What is your childhood pet's name?
+              </MenuItem>
               <MenuItem value='What city were you born in?'>What city were you born in?</MenuItem>
-              <MenuItem value='What was the name of your favorite stuffed toy?'>What was the name of your favorite stuffed toy?</MenuItem>
+              <MenuItem value='What was the name of your favorite stuffed toy?'>
+                What was the name of your favorite stuffed toy?
+              </MenuItem>
               <MenuItem value='What was your first job?'>What was your first job?</MenuItem>
-              <MenuItem value="What is your oldest sibling's middle name?">What is your oldest sibling's middle name?</MenuItem>
-              <MenuItem value='What was the name of your first school?'>What was the name of your first school?</MenuItem>
-              <MenuItem value='What is your favorite sports team?'>What is your favorite sports team?</MenuItem>
+              <MenuItem value="What is your oldest sibling's middle name?">
+                What is your oldest sibling's middle name?
+              </MenuItem>
+              <MenuItem value='What was the name of your first school?'>
+                What was the name of your first school?
+              </MenuItem>
+              <MenuItem value='What is your favorite sports team?'>
+                What is your favorite sports team?
+              </MenuItem>
             </TextField>
             <TextField
               label='Security Answer'

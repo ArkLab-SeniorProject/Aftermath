@@ -12,7 +12,13 @@ export interface AuthContextValue {
   user: User | null;
   loading: boolean;
   login: (username: string, password: string) => Promise<boolean>;
-  signup: (username: string, firstName: string, password: string, securityQuestion: string, securityAnswer: string) => Promise<{ success: boolean; error?: string }>;
+  signup: (
+    username: string,
+    firstName: string,
+    password: string,
+    securityQuestion: string,
+    securityAnswer: string
+  ) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
 }
 
