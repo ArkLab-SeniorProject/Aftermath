@@ -20,6 +20,7 @@ if (process.env.NODE_ENV !== 'production') {
 
 export type GraphQLContext = {
   mongoDb: Awaited<ReturnType<typeof getDb>>;
+  userId?: string;
 };
 
 let server: ApolloServer<GraphQLContext> | null = null;
@@ -40,8 +41,11 @@ export async function createApolloServer(): Promise<ApolloServer<GraphQLContext>
   return server;
 }
 
-export async function createContext(): Promise<GraphQLContext> {
-  return { mongoDb: await getDb() };
+export async function createContext(req?: express.Request): Promise<GraphQLContext> {
+  const mongoDb = await getDb();
+  const authToken = req?.headers?.authorization?.replace('Bearer ', '') ?? '';
+  const userId = authToken || undefined;
+  return { mongoDb, userId };
 }
 
 function parseGraphQLRequest(req: express.Request) {
@@ -92,7 +96,7 @@ const graphqlHandler: express.RequestHandler = async (req, res) => {
     const apolloServer = await createApolloServer();
     const result = await apolloServer.executeOperation(
       { query, variables, operationName },
-      { contextValue: await createContext() }
+      { contextValue: await createContext(req) }
     );
 
     if (result.body.kind === 'single') {
