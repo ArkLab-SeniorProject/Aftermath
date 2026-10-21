@@ -1,4 +1,5 @@
-import { AppBar, Box, Toolbar, Typography } from '@mui/material';
+import { Login } from '@mui/icons-material';
+import { AppBar, Box, Button, Toolbar, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
 export interface HeaderProps {
@@ -9,6 +10,7 @@ export function Header({ user }: HeaderProps) {
   const navigate = useNavigate();
   const organization = user?.organization as Record<string, unknown> | undefined;
   const orgName = organization?.orgName ? String(organization.orgName).toUpperCase() : '';
+  const userDisplayName = user ? String(user.firstName ?? '').trim() || String(user.username ?? '').trim() || 'User' : null;
 
   return (
     <AppBar position='static' elevation={1} sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
@@ -37,6 +39,22 @@ export function Header({ user }: HeaderProps) {
             <Typography variant='body2' color='inherit' sx={{ opacity: 0.8 }}>
               {orgName}
             </Typography>
+          )}
+        </Box>
+        <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 1 }}>
+          {userDisplayName ? (
+            <Typography variant='body2' color='inherit'>
+              {userDisplayName}
+            </Typography>
+          ) : (
+            <Button
+              color='inherit'
+              size='small'
+              startIcon={<Login />}
+              onClick={() => navigate('/login')}
+            >
+              Sign in
+            </Button>
           )}
         </Box>
       </Toolbar>

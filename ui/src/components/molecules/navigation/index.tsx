@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Home, Login, Logout, Menu } from '@mui/icons-material';
 import {
   Box,
   Button,
@@ -12,8 +12,9 @@ import {
   ListItemText,
   Toolbar,
 } from '@mui/material';
-import { Home, Logout, Menu } from '@mui/icons-material';
+import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../auth/useAuth';
 
 export interface NavigationProps {
   onLogout?: () => void;
@@ -26,6 +27,7 @@ const navItems = [{ key: 'dashboard', label: 'Home', icon: <Home />, path: '/' }
 export function Navigation({ onLogout }: NavigationProps) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleToggle = () => setMobileOpen((open) => !open);
@@ -53,15 +55,27 @@ export function Navigation({ onLogout }: NavigationProps) {
       </List>
       <Divider />
       <Box sx={{ p: 2 }}>
-        <Button
-          fullWidth
-          variant='outlined'
-          color='inherit'
-          startIcon={<Logout />}
-          onClick={onLogout}
-        >
-          Sign out
-        </Button>
+        {user ? (
+          <Button
+            fullWidth
+            variant='outlined'
+            color='inherit'
+            startIcon={<Logout />}
+            onClick={onLogout}
+          >
+            Sign out
+          </Button>
+        ) : (
+          <Button
+            fullWidth
+            variant='outlined'
+            color='inherit'
+            startIcon={<Login />}
+            onClick={() => navigate('/login')}
+          >
+            Sign in
+          </Button>
+        )}
       </Box>
     </Box>
   );
