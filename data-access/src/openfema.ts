@@ -38,14 +38,10 @@ export async function getDisasterDeclarations({
     if (!/^[A-Za-z]{2}$/.test(state)) {
       throw new Error('state must be a 2-letter code');
     }
-    params.push(
-      `$filter=${encodeURIComponent(`state eq '${state.toUpperCase()}'`)}`
-    );
+    params.push(`$filter=${encodeURIComponent(`state eq '${state.toUpperCase()}'`)}`);
   }
 
-  const res = await fetch(
-    `${BASE_URL}/DisasterDeclarationsSummaries?${params.join('&')}`
-  );
+  const res = await fetch(`${BASE_URL}/DisasterDeclarationsSummaries?${params.join('&')}`);
   if (!res.ok) throw new Error(`OpenFEMA request failed: ${res.status}`);
 
   const json = (await res.json()) as OpenFemaResponse;
