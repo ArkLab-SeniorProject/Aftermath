@@ -6,11 +6,7 @@
   "workspaces": ["data-access", "ui"],
   "scripts": {
     "dev": "concurrently \"npm run dev -w data-access\" \"npm run dev -w ui\"",
-<<<<<<< HEAD
-    "build": "npm run lint:check && npm run format:check && npm run build -w data-access && npm run build -w ui",
-=======
     "build": "npm run format:check && npm run lint:check && npm run build -w data-access && npm run build -w ui",
->>>>>>> origin/main
     "vercel-build": "npm run build",
     "gen": "npm run gen --workspace=data-access",
     "format": "biome format --write .",

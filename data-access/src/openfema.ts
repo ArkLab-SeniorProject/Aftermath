@@ -1,14 +1,25 @@
 const BASE_URL = 'https://www.fema.gov/api/open/v2';
 
 export interface DisasterDeclaration {
+  id?: string;
+  femaDeclarationString?: string;
   disasterNumber: number;
-  declarationTitle: string;
   state: string;
+  declarationType?: string;
   declarationDate: string;
+  fyDeclared?: number;
   incidentType: string;
-  designatedArea?: string;
+  declarationTitle: string;
+  ihProgramDeclared?: boolean;
+  iaProgramDeclared?: boolean;
+  paProgramDeclared?: boolean;
+  hmProgramDeclared?: boolean;
+  incidentBeginDate?: string;
+  incidentEndDate?: string;
   fipsStateCode?: string;
   fipsCountyCode?: string;
+  designatedArea?: string;
+  region?: number;
 }
 
 interface DeclarationsArgs {
@@ -45,7 +56,7 @@ export async function getDisasterDeclarations({
   if (!res.ok) throw new Error(`OpenFEMA request failed: ${res.status}`);
 
   const json = (await res.json()) as OpenFemaResponse;
-  console.log(JSON.stringify(json).slice(0, 500)); // TEMPORARY LINE - delete after checking
+  console.log(JSON.stringify(json).slice(0, 500)); 
   return {
     total: json.metadata?.count ?? 0,
     declarations: json.DisasterDeclarationsSummaries ?? [],
