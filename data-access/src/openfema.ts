@@ -56,7 +56,7 @@ export async function getDisasterDeclarations({
   if (!res.ok) throw new Error(`OpenFEMA request failed: ${res.status}`);
 
   const json = (await res.json()) as OpenFemaResponse;
-  console.log(JSON.stringify(json).slice(0, 500)); 
+  console.log(JSON.stringify(json).slice(0, 500));
   return {
     total: json.metadata?.count ?? 0,
     declarations: json.DisasterDeclarationsSummaries ?? [],
