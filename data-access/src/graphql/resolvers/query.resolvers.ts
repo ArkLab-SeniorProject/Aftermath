@@ -1,5 +1,6 @@
 import type { Db } from 'mongodb';
 import { ObjectId } from 'mongodb';
+import crypto from 'node:crypto';
 import { mapId } from '../../db/mongoHelpers.js';
 
 const MAX_LIMIT = 100;
@@ -16,8 +17,8 @@ function mapUser(doc: any) {
   return {
     id: String(doc._id),
     username: doc.username,
+    email: doc.email ?? null,
     firstName: doc.first_name ?? null,
-    securityQuestion: doc.security_question ?? null,
     createdAt: doc.created_at ?? null,
     updatedAt: doc.updated_at ?? null,
   };
@@ -34,16 +35,18 @@ function mapLocation(loc: any) {
   };
 }
 
-function mapDisaster(doc: any) {
+function mapRecoverySituation(doc: any) {
   if (!doc) return null;
   return {
     id: String(doc._id),
     userId: String(doc.user_id),
     location: mapLocation(doc.location),
-    eventOccured: doc.event_occured ?? null,
-    disaster: doc.disaster ?? null,
-    helpNeeded: doc.help_needed ?? null,
-    homeownership: doc.homeownership ?? null,
+    timeline: doc.timeline ?? null,
+    disasters: doc.disasters ?? null,
+    displayName: doc.display_name ?? null,
+    helpTypes: doc.help_types ?? null,
+    homeStatus: doc.home_status ?? null,
+    household: doc.household ?? [],
     createdAt: doc.created_at ?? null,
     updatedAt: doc.updated_at ?? null,
   };
@@ -74,7 +77,7 @@ function mapGuide(doc: any) {
   return {
     id: String(doc._id),
     userId: String(doc.user_id),
-    disasterId: String(doc.disaster),
+    recoverySituationId: String(doc.recovery_situation_id),
     resources: (doc.resources ?? []).map(mapGuideResource),
     filters: doc.filters ?? null,
     createdAt: doc.created_at ?? null,
@@ -94,9 +97,13 @@ export const queryResolvers = {
     return mapUser(doc);
   },
 
-  getSecurityQuestion: async (_: unknown, args: { username: string }, ctx: Context) => {
-    const doc = await ctx.mongoDb.collection('users').findOne({ username: args.username });
-    return doc?.security_question ?? null;
+  validateResetToken: async (_: unknown, args: { token: string }, ctx: Context) => {
+    const hashedToken = crypto.createHash('sha256').update(args.token).digest('hex');
+    const doc = await ctx.mongoDb.collection('users').findOne({
+      reset_password_token: hashedToken,
+      reset_password_expires: { $gt: new Date() },
+    });
+    return !!doc;
   },
 
   getUsers: async (_: unknown, args: { limit: number; offset: number }, ctx: Context) => {
@@ -109,20 +116,22 @@ export const queryResolvers = {
     return docs.map(mapUser);
   },
 
-  // ── Disasters ──
-  getDisaster: async (_: unknown, args: { id: string }, ctx: Context) => {
-    const doc = await ctx.mongoDb.collection('disaster').findOne({ _id: new ObjectId(args.id) });
-    return mapDisaster(doc);
+  // ── Recovery Situations ──
+  getRecoverySituation: async (_: unknown, args: { id: string }, ctx: Context) => {
+    const doc = await ctx.mongoDb
+      .collection('recovery_situation')
+      .findOne({ _id: new ObjectId(args.id) });
+    return mapRecoverySituation(doc);
   },
 
-  getDisastersByUser: async (_: unknown, args: { userId: string }, ctx: Context) => {
+  getRecoverySituationsByUser: async (_: unknown, args: { userId: string }, ctx: Context) => {
     if (!ctx.userId) throw new Error('Authentication required');
     if (ctx.userId !== args.userId) throw new Error('Not authorized');
     const docs = await ctx.mongoDb
-      .collection('disaster')
+      .collection('recovery_situation')
       .find({ user_id: new ObjectId(args.userId) })
       .toArray();
-    return docs.map(mapDisaster);
+    return docs.map(mapRecoverySituation);
   },
 
   // ── Resources ──
@@ -164,17 +173,21 @@ export const queryResolvers = {
     return docs.map(mapGuide);
   },
 
-  getGuideByDisaster: async (_: unknown, args: { disasterId: string }, ctx: Context) => {
+  getGuideByRecoverySituation: async (
+    _: unknown,
+    args: { recoverySituationId: string },
+    ctx: Context
+  ) => {
     const doc = await ctx.mongoDb
       .collection('guide')
-      .findOne({ disaster: new ObjectId(args.disasterId) });
+      .findOne({ recovery_situation_id: new ObjectId(args.recoverySituationId) });
     return mapGuide(doc);
   },
 };
 
 // Field resolvers for nested relations
 export const typeResolvers = {
-  Disaster: {
+  RecoverySituation: {
     user: async (parent: any, _: unknown, ctx: Context) => {
       const doc = await ctx.mongoDb
         .collection('users')
@@ -190,11 +203,11 @@ export const typeResolvers = {
         .findOne({ _id: new ObjectId(parent.userId) });
       return mapUser(doc);
     },
-    disaster: async (parent: any, _: unknown, ctx: Context) => {
+    recoverySituation: async (parent: any, _: unknown, ctx: Context) => {
       const doc = await ctx.mongoDb
-        .collection('disaster')
-        .findOne({ _id: new ObjectId(parent.disasterId) });
-      return mapDisaster(doc);
+        .collection('recovery_situation')
+        .findOne({ _id: new ObjectId(parent.recoverySituationId) });
+      return mapRecoverySituation(doc);
     },
   },
 

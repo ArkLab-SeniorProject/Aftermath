@@ -3,6 +3,7 @@ import { createContext } from 'react';
 export type User = {
   id: string;
   username: string;
+  email?: string | null;
   firstName?: string | null;
   createdAt?: string | null;
   updatedAt?: string | null;
@@ -14,10 +15,9 @@ export interface AuthContextValue {
   login: (username: string, password: string) => Promise<boolean>;
   signup: (
     username: string,
+    email: string,
     firstName: string,
-    password: string,
-    securityQuestion: string,
-    securityAnswer: string
+    password: string
   ) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
 }
