@@ -6,14 +6,16 @@ import { apolloClient } from './lib/apollo-client';
 import { theme } from './theme';
 
 import RootLayout from './pages/_layout';
-import Home from './pages/index';
+import Landing from './pages/index';
 import Login from './pages/login';
 import CreateAccount from './pages/create-account';
 import ForgotPassword from './pages/forgot-password';
 import NotFound from './pages/not-found';
-import Quiz from './pages/quiz';
+import ResetPassword from './pages/reset-password';
+import RecoveryQuiz from './pages/recovery/quiz';
+import PreparednessQuiz from './pages/preparedness/quiz';
+import Dashboard from './pages/dashboard';
 import StyleGuide from './pages/style-guide';
-import Support from './pages/support';
 
 export default function App() {
   return (
@@ -22,13 +24,15 @@ export default function App() {
         <CssBaseline />
         <Routes>
           <Route path='/' element={<RootLayout />}>
-            <Route index element={<Home />} />
-            <Route path='quiz' element={<Quiz />} />
-            <Route path='support' element={<Support />} />
+            <Route index element={<Landing />} />
+            <Route path='recovery/quiz' element={<RecoveryQuiz />} />
+            <Route path='preparedness/quiz' element={<PreparednessQuiz />} />
+            <Route path='dashboard' element={<Dashboard />} />
             <Route path='style-guide' element={<StyleGuide />} />
             <Route path='login' element={<Login />} />
             <Route path='create-account' element={<CreateAccount />} />
             <Route path='forgot-password' element={<ForgotPassword />} />
+            <Route path='reset-password/:token' element={<ResetPassword />} />
             <Route path='*' element={<NotFound />} />
           </Route>
         </Routes>

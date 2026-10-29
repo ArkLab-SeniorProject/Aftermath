@@ -1,17 +1,14 @@
 import { useEffect, useLayoutEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Box } from '@mui/material';
-import { Header } from '../../molecules/header';
-import { Navigation } from '../../molecules/navigation';
-import { Footer } from '../../molecules/footer';
+import { BottomNav } from '../../molecules/bottom-nav';
 
 export interface AppLayoutProps {
-  user?: Record<string, unknown>;
-  onLogout?: () => void;
+  showNav: boolean;
   children: React.ReactNode;
 }
 
-export function AppLayout({ user, onLogout, children }: AppLayoutProps) {
+export function AppLayout({ showNav, children }: AppLayoutProps) {
   const location = useLocation();
 
   useEffect(() => {
@@ -29,14 +26,18 @@ export function AppLayout({ user, onLogout, children }: AppLayoutProps) {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      <Header user={user} />
-      <Box sx={{ display: 'flex', flex: 1 }}>
-        <Navigation onLogout={onLogout} />
-        <Box component='main' sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-          <Box sx={{ flex: 1, p: 3 }}>{children}</Box>
-          <Footer />
-        </Box>
+      <Box
+        component='main'
+        sx={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          pb: showNav ? '72px' : 0,
+        }}
+      >
+        {children}
       </Box>
+      {showNav && <BottomNav />}
     </Box>
   );
 }

@@ -8,8 +8,8 @@ export const schema = gql`
   type User {
     id: ID!
     username: String!
+    email: String
     firstName: String
-    securityQuestion: String
     createdAt: DateTime
     updatedAt: DateTime
   }
@@ -22,21 +22,19 @@ export const schema = gql`
 
   input CreateUserInput {
     username: String!
+    email: String!
     firstName: String
     passwordHash: String!
-    securityQuestion: String!
-    securityAnswer: String!
   }
 
   input UpdateUserInput {
     username: String
+    email: String
     firstName: String
     passwordHash: String
-    securityQuestion: String
-    securityAnswer: String
   }
 
-  # ── Location (embedded in Disaster) ──────
+  # ── Location ────────────────────────────
   type Location {
     zip: String
     city: String
@@ -53,47 +51,52 @@ export const schema = gql`
     countryCode: String
   }
 
-  # ── Disaster ─────────────────────────────
-  type HelpNeeded {
+  # ── Recovery Situation ──────────────────
+  type HelpTypes {
     housing: Boolean
     financial: Boolean
     damage: Boolean
   }
 
-  input HelpNeededInput {
+  input HelpTypesInput {
     housing: Boolean
     financial: Boolean
     damage: Boolean
   }
 
-  type Disaster {
+  type RecoverySituation {
     id: ID!
     userId: ID!
     location: Location
-    eventOccured: String
-    disaster: JSON
-    helpNeeded: HelpNeeded
-    homeownership: String
+    timeline: String
+    disasters: String
+    displayName: String
+    helpTypes: HelpTypes
+    homeStatus: String
+    household: [String!]
     createdAt: DateTime
     updatedAt: DateTime
     user: User
   }
 
-  input CreateDisasterInput {
-    userId: ID!
+  input CreateRecoverySituationInput {
     location: LocationInput
-    eventOccured: String
-    disaster: JSON
-    helpNeeded: HelpNeededInput
-    homeownership: String
+    timeline: String
+    disasters: String
+    displayName: String
+    helpTypes: HelpTypesInput
+    homeStatus: String
+    household: [String!]
   }
 
-  input UpdateDisasterInput {
+  input UpdateRecoverySituationInput {
     location: LocationInput
-    eventOccured: String
-    disaster: JSON
-    helpNeeded: HelpNeededInput
-    homeownership: String
+    timeline: String
+    disasters: String
+    displayName: String
+    helpTypes: HelpTypesInput
+    homeStatus: String
+    household: [String!]
   }
 
   # ── Resource ─────────────────────────────
@@ -135,18 +138,18 @@ export const schema = gql`
   type Guide {
     id: ID!
     userId: ID!
-    disasterId: ID!
+    recoverySituationId: ID!
     resources: [GuideResource!]
     filters: JSON
     createdAt: DateTime
     updatedAt: DateTime
     user: User
-    disaster: Disaster
+    recoverySituation: RecoverySituation
   }
 
   input CreateGuideInput {
     userId: ID!
-    disasterId: ID!
+    recoverySituationId: ID!
     resources: [GuideResourceInput!]
     filters: JSON
   }
@@ -162,11 +165,11 @@ export const schema = gql`
     getUser(id: ID!): User
     getUserByUsername(username: String!): User
     getUsers(limit: Int = 25, offset: Int = 0): [User!]!
-    getSecurityQuestion(username: String!): String
+    validateResetToken(token: String!): Boolean!
 
-    # Disasters
-    getDisaster(id: ID!): Disaster
-    getDisastersByUser(userId: ID!): [Disaster!]!
+    # Recovery Situations
+    getRecoverySituation(id: ID!): RecoverySituation
+    getRecoverySituationsByUser(userId: ID!): [RecoverySituation!]!
 
     # Resources
     getResource(id: ID!): Resource
@@ -175,7 +178,7 @@ export const schema = gql`
     # Guides
     getGuide(id: ID!): Guide
     getGuidesByUser(userId: ID!): [Guide!]!
-    getGuideByDisaster(disasterId: ID!): Guide
+    getGuideByRecoverySituation(recoverySituationId: ID!): Guide
   }
 
   type Mutation {
@@ -184,12 +187,13 @@ export const schema = gql`
     login(username: String!, password: String!): AuthPayload!
     updateUser(id: ID!, input: UpdateUserInput!): User!
     deleteUser(id: ID!): Boolean!
-    resetPassword(username: String!, securityAnswer: String!, newPassword: String!): Boolean!
+    forgotPassword(email: String!): Boolean!
+    resetPasswordWithToken(token: String!, newPassword: String!): Boolean!
 
-    # Disasters
-    createDisaster(input: CreateDisasterInput!): Disaster!
-    updateDisaster(id: ID!, input: UpdateDisasterInput!): Disaster!
-    deleteDisaster(id: ID!): Boolean!
+    # Recovery Situations
+    createRecoverySituation(input: CreateRecoverySituationInput!): RecoverySituation!
+    updateRecoverySituation(id: ID!, input: UpdateRecoverySituationInput!): RecoverySituation!
+    deleteRecoverySituation(id: ID!): Boolean!
 
     # Resources
     createResource(input: CreateResourceInput!): Resource!

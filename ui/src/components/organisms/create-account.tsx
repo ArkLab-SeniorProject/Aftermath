@@ -7,31 +7,38 @@ import {
   IconButton,
   InputAdornment,
   Link,
-  MenuItem,
   Paper,
   TextField,
   Typography,
 } from '@mui/material';
 import {
+  EmailOutlined,
   LockOutlined,
   PersonOutline,
   BadgeOutlined,
-  HelpOutline,
   Visibility,
   VisibilityOff,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/useAuth';
+import { syncRecoverySituationIfNeeded } from '../../lib/sync-recovery-situation';
+
+function hasCompletedQuiz(): boolean {
+  try {
+    return localStorage.getItem('recovery_quiz_complete') === 'true';
+  } catch {
+    return false;
+  }
+}
 
 export function CreateAccountContent() {
   const auth = useAuth();
   const navigate = useNavigate();
   const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [firstName, setFirstName] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [securityQuestion, setSecurityQuestion] = useState('');
-  const [securityAnswer, setSecurityAnswer] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
 
@@ -51,13 +58,13 @@ export function CreateAccountContent() {
 
     const result = await auth.signup(
       username.trim(),
+      email.trim().toLowerCase(),
       firstName.trim(),
-      password,
-      securityQuestion.trim(),
-      securityAnswer.trim()
+      password
     );
     if (result.success) {
-      navigate('/', { replace: true });
+      await syncRecoverySituationIfNeeded();
+      navigate(hasCompletedQuiz() ? '/dashboard' : '/', { replace: true });
     } else {
       setError(result.error ?? 'Failed to create account');
     }
@@ -105,6 +112,24 @@ export function CreateAccountContent() {
                   startAdornment: (
                     <InputAdornment position='start'>
                       <BadgeOutlined color='disabled' />
+                    </InputAdornment>
+                  ),
+                },
+              }}
+              disabled={auth.loading}
+            />
+            <TextField
+              label='Email'
+              type='email'
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              fullWidth
+              slotProps={{
+                input: {
+                  startAdornment: (
+                    <InputAdornment position='start'>
+                      <EmailOutlined color='disabled' />
                     </InputAdornment>
                   ),
                 },
@@ -170,60 +195,6 @@ export function CreateAccountContent() {
                   startAdornment: (
                     <InputAdornment position='start'>
                       <LockOutlined color='disabled' />
-                    </InputAdornment>
-                  ),
-                },
-              }}
-              disabled={auth.loading}
-            />
-            <TextField
-              label='Security Question'
-              select
-              value={securityQuestion}
-              onChange={(e) => setSecurityQuestion(e.target.value)}
-              required
-              fullWidth
-              slotProps={{
-                input: {
-                  startAdornment: (
-                    <InputAdornment position='start'>
-                      <HelpOutline color='disabled' />
-                    </InputAdornment>
-                  ),
-                },
-              }}
-              disabled={auth.loading}
-            >
-              <MenuItem value=''>Select a question</MenuItem>
-              <MenuItem value="What is your childhood pet's name?">
-                What is your childhood pet's name?
-              </MenuItem>
-              <MenuItem value='What city were you born in?'>What city were you born in?</MenuItem>
-              <MenuItem value='What was the name of your favorite stuffed toy?'>
-                What was the name of your favorite stuffed toy?
-              </MenuItem>
-              <MenuItem value='What was your first job?'>What was your first job?</MenuItem>
-              <MenuItem value="What is your oldest sibling's middle name?">
-                What is your oldest sibling's middle name?
-              </MenuItem>
-              <MenuItem value='What was the name of your first school?'>
-                What was the name of your first school?
-              </MenuItem>
-              <MenuItem value='What is your favorite sports team?'>
-                What is your favorite sports team?
-              </MenuItem>
-            </TextField>
-            <TextField
-              label='Security Answer'
-              value={securityAnswer}
-              onChange={(e) => setSecurityAnswer(e.target.value)}
-              required
-              fullWidth
-              slotProps={{
-                input: {
-                  startAdornment: (
-                    <InputAdornment position='start'>
-                      <HelpOutline color='disabled' />
                     </InputAdornment>
                   ),
                 },
