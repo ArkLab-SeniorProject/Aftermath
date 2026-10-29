@@ -1,34 +1,107 @@
-import { Box, Button, Chip, Divider, Paper, Typography } from '@mui/material';
+import { Box, Button, Chip, CircularProgress, Divider, Paper, Typography } from '@mui/material';
 import { LogoutOutlined } from '@mui/icons-material';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/useAuth';
-import { syncRecoverySituationIfNeeded } from '../lib/sync-recovery-situation';
+import { apolloClient } from '../lib/apollo-client';
+import { GetRecoverySituationsByUserDocument, type GetRecoverySituationsByUserQuery, type GetRecoverySituationsByUserQueryVariables } from '../generated';
 import type { RecoveryQuizAnswers } from './recovery/quiz';
 
-const STORAGE_KEY = 'recovery_quiz_answers';
+interface SituationDisplay {
+  zipCode: string;
+  timeline: string;
+  disasters: string[];
+  helpTypes: string[];
+  homeStatus: string;
+  household: string[];
+  name: string;
+}
+
+function fromLocalStorage(): SituationDisplay | null {
+  try {
+    const stored = localStorage.getItem('recovery_quiz_answers');
+    if (!stored) return null;
+    const answers: RecoveryQuizAnswers = JSON.parse(stored);
+    return {
+      zipCode: answers.zipCode,
+      timeline: answers.timeline,
+      disasters: answers.disasters,
+      helpTypes: answers.helpTypes,
+      homeStatus: answers.homeStatus,
+      household: answers.household,
+      name: answers.name,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function fromDbRecord(record: any): SituationDisplay {
+  const helpTypes: string[] = [];
+  if (record.helpTypes?.housing) helpTypes.push('Housing');
+  if (record.helpTypes?.financial) helpTypes.push('Financial');
+  if (record.helpTypes?.damage) helpTypes.push('Property Damage');
+  const toArray = (val: unknown): string[] =>
+    Array.isArray(val) ? val : typeof val === 'string' && val ? [val] : [];
+
+  return {
+    zipCode: record.location?.zip ?? '',
+    timeline: record.timeline ?? '',
+    disasters: toArray(record.disasters),
+    helpTypes,
+    homeStatus: record.homeStatus ?? '',
+    household: toArray(record.household),
+    name: record.displayName ?? '',
+  };
+}
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [answers, setAnswers] = useState<RecoveryQuizAnswers | null>(null);
+  const [situation, setSituation] = useState<SituationDisplay | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) setAnswers(JSON.parse(stored));
-    } catch {
-      // ignore parse errors
-    }
-  }, []);
+    let cancelled = false;
 
-  useEffect(() => {
-    if (user) {
-      syncRecoverySituationIfNeeded();
+    async function load() {
+      if (user) {
+        try {
+          const { data } = await apolloClient.query<GetRecoverySituationsByUserQuery, GetRecoverySituationsByUserQueryVariables>({
+            query: GetRecoverySituationsByUserDocument,
+            variables: { userId: user.id },
+            fetchPolicy: 'network-only',
+          });
+          if (!cancelled) {
+            const records = data?.getRecoverySituationsByUser;
+            if (records && records.length > 0) {
+              setSituation(fromDbRecord(records[0]));
+            } else {
+              setSituation(fromLocalStorage());
+            }
+          }
+        } catch {
+          if (!cancelled) setSituation(fromLocalStorage());
+        }
+      } else {
+        setSituation(fromLocalStorage());
+      }
+      if (!cancelled) setLoading(false);
     }
+
+    load();
+    return () => { cancelled = true; };
   }, [user]);
 
-  if (!answers) {
+  if (loading) {
+    return (
+      <Box sx={{ maxWidth: 480, mx: 'auto', px: 2, py: 6, textAlign: 'center' }}>
+        <CircularProgress size={32} />
+      </Box>
+    );
+  }
+
+  if (!situation) {
     return (
       <Box sx={{ maxWidth: 480, mx: 'auto', px: 2, py: 3, textAlign: 'center' }}>
         <Typography variant='h5' fontWeight={600} gutterBottom>
@@ -37,11 +110,25 @@ export default function Dashboard() {
         <Typography variant='body2' color='text.secondary'>
           Complete the recovery quiz to see your plan here.
         </Typography>
+        {user && (
+          <Button
+            variant='outlined'
+            color='error'
+            startIcon={<LogoutOutlined />}
+            onClick={() => {
+              logout();
+              navigate('/', { replace: true });
+            }}
+            sx={{ mt: 3 }}
+          >
+            Log out
+          </Button>
+        )}
       </Box>
     );
   }
 
-  const displayName = answers.name?.trim() || 'friend';
+  const displayName = situation.name?.trim() || 'friend';
 
   return (
     <Box sx={{ maxWidth: 480, mx: 'auto', px: 2, py: 3 }}>
@@ -58,44 +145,44 @@ export default function Dashboard() {
         </Typography>
         <Divider sx={{ mb: 2 }} />
 
-        <InfoRow label='Location' value={answers.zipCode} />
-        <InfoRow label='Timeline' value={answers.timeline} />
-        <InfoRow label='Home status' value={answers.homeStatus} />
-        <InfoRow label='Name' value={answers.name || '—'} />
+        <InfoRow label='Location' value={situation.zipCode} />
+        <InfoRow label='Timeline' value={situation.timeline} />
+        <InfoRow label='Home status' value={situation.homeStatus} />
+        <InfoRow label='Name' value={situation.name || '—'} />
 
-        {answers.disasters.length > 0 && (
+        {situation.disasters.length > 0 && (
           <Box sx={{ mb: 1.5 }}>
             <Typography variant='caption' color='text.secondary'>
               Disasters
             </Typography>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.5 }}>
-              {answers.disasters.map((d) => (
+              {situation.disasters.map((d) => (
                 <Chip key={d} label={d} size='small' />
               ))}
             </Box>
           </Box>
         )}
 
-        {answers.helpTypes.length > 0 && (
+        {situation.helpTypes.length > 0 && (
           <Box sx={{ mb: 1.5 }}>
             <Typography variant='caption' color='text.secondary'>
               Help needed
             </Typography>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.5 }}>
-              {answers.helpTypes.map((h) => (
+              {situation.helpTypes.map((h) => (
                 <Chip key={h} label={h} size='small' color='primary' variant='outlined' />
               ))}
             </Box>
           </Box>
         )}
 
-        {answers.household.length > 0 && (
+        {situation.household.length > 0 && (
           <Box sx={{ mb: 1.5 }}>
             <Typography variant='caption' color='text.secondary'>
               Household
             </Typography>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.5 }}>
-              {answers.household.map((h) => (
+              {situation.household.map((h) => (
                 <Chip key={h} label={h} size='small' variant='outlined' />
               ))}
             </Box>
@@ -118,18 +205,20 @@ export default function Dashboard() {
         </Typography>
       </Paper>
 
-      <Button
-        variant='outlined'
-        color='error'
-        startIcon={<LogoutOutlined />}
-        onClick={() => {
-          logout();
-          navigate('/', { replace: true });
-        }}
-        sx={{ mt: 3, width: '100%' }}
-      >
-        Log out
-      </Button>
+      {user && (
+        <Button
+          variant='outlined'
+          color='error'
+          startIcon={<LogoutOutlined />}
+          onClick={() => {
+            logout();
+            navigate('/', { replace: true });
+          }}
+          sx={{ mt: 3, width: '100%' }}
+        >
+          Log out
+        </Button>
+      )}
     </Box>
   );
 }
