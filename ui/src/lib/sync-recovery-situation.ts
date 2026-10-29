@@ -1,8 +1,8 @@
 import { apolloClient } from './apollo-client';
 import {
-  CreateRecoverySituationDocument,
-  type CreateRecoverySituationMutation,
-  type CreateRecoverySituationMutationVariables,
+  CreateSituationDocument,
+  type CreateSituationMutation,
+  type CreateSituationMutationVariables,
 } from '../generated';
 import type { RecoveryQuizAnswers } from '../pages/recovery/quiz';
 
@@ -37,10 +37,10 @@ export async function syncRecoverySituationIfNeeded(): Promise<void> {
     const input = quizAnswersToInput(answers);
 
     await apolloClient.mutate<
-      CreateRecoverySituationMutation,
-      CreateRecoverySituationMutationVariables
+      CreateSituationMutation,
+      CreateSituationMutationVariables
     >({
-      mutation: CreateRecoverySituationDocument,
+      mutation: CreateSituationDocument,
       variables: { input },
     });
 

@@ -17,8 +17,9 @@ function toSnakeCaseDoc(input: any, idFields: string[] = []) {
     displayName: 'display_name',
     helpTypes: 'help_types',
     homeStatus: 'home_status',
-    recoverySituationId: 'recovery_situation_id',
+    disaster: 'disaster',
     resourceType: 'resource_type',
+    guideType: 'guide_type',
     stateCode: 'state_code',
     countryCode: 'country_code',
   };
@@ -70,7 +71,7 @@ function mapUser(doc: any) {
   };
 }
 
-function mapRecoverySituation(doc: any) {
+function mapSituation(doc: any) {
   return {
     id: String(doc._id),
     userId: String(doc.user_id),
@@ -100,6 +101,7 @@ function mapResource(doc: any) {
     resourceType: doc.resource_type ?? null,
     title: doc.title ?? null,
     content: doc.content ?? null,
+    guideType: doc.guide_type ?? null,
     createdAt: doc.created_at ?? null,
     updatedAt: doc.updated_at ?? null,
   };
@@ -109,7 +111,8 @@ function mapGuide(doc: any) {
   return {
     id: String(doc._id),
     userId: String(doc.user_id),
-    recoverySituationId: String(doc.recovery_situation_id),
+    disaster: String(doc.disaster),
+    guideType: doc.guide_type,
     resources: (doc.resources ?? []).map((r: any) => ({
       resourceId: String(r.resource_id),
       progress: r.progress ?? null,
@@ -260,28 +263,32 @@ export const mutationResolvers = {
     return true;
   },
 
-  // ── Recovery Situations ──
-  createRecoverySituation: async (_: unknown, args: any, ctx: Context) => {
+  // ── Situations ──
+  createSituation: async (_: unknown, args: any, ctx: Context) => {
     const authedUserId = requireAuth(ctx);
+    const existing = await ctx.mongoDb.collection('situation').findOne({
+      user_id: new ObjectId(authedUserId),
+    });
+    if (existing) throw new Error('A user can only have one situation');
     const input = { ...args.input, userId: authedUserId };
     const doc = toSnakeCaseDoc(input, ['userId']);
-    const result = await insertAndReturn(ctx.mongoDb, 'recovery_situation', doc);
-    return mapRecoverySituation(result);
+    const result = await insertAndReturn(ctx.mongoDb, 'situation', doc);
+    return mapSituation(result);
   },
 
-  updateRecoverySituation: async (_: unknown, args: any, ctx: Context) => {
+  updateSituation: async (_: unknown, args: any, ctx: Context) => {
     const authedUserId = requireAuth(ctx);
-    await requireOwnership(ctx.mongoDb, 'recovery_situation', args.id, authedUserId);
+    await requireOwnership(ctx.mongoDb, 'situation', args.id, authedUserId);
     const fields = toSnakeCaseDoc(args.input);
-    const result = await updateAndReturn(ctx.mongoDb, 'recovery_situation', args.id, fields);
-    return mapRecoverySituation(result);
+    const result = await updateAndReturn(ctx.mongoDb, 'situation', args.id, fields);
+    return mapSituation(result);
   },
 
-  deleteRecoverySituation: async (_: unknown, args: any, ctx: Context) => {
+  deleteSituation: async (_: unknown, args: any, ctx: Context) => {
     const authedUserId = requireAuth(ctx);
-    await requireOwnership(ctx.mongoDb, 'recovery_situation', args.id, authedUserId);
+    await requireOwnership(ctx.mongoDb, 'situation', args.id, authedUserId);
     const result = await ctx.mongoDb
-      .collection('recovery_situation')
+      .collection('situation')
       .deleteOne({ _id: new ObjectId(args.id) });
     return result.deletedCount > 0;
   },
@@ -313,7 +320,32 @@ export const mutationResolvers = {
   createGuide: async (_: unknown, args: any, ctx: Context) => {
     const authedUserId = requireAuth(ctx);
     const input = { ...args.input, userId: authedUserId };
-    const doc = toSnakeCaseDoc(input, ['userId', 'recoverySituationId']);
+    const existing = await ctx.mongoDb.collection('guide').findOne({
+      user_id: new ObjectId(authedUserId),
+      guide_type: input.guideType,
+    });
+    if (existing) throw new Error(`A user can only have one ${input.guideType} guide`);
+    const doc = toSnakeCaseDoc(input, ['userId', 'disaster']);
+    if (!doc.resources?.length && input.filters && typeof input.filters === 'object') {
+      const helpTypes = input.filters.helpTypes ?? input.filters.help_types;
+      const resourceTypes = Object.entries(helpTypes ?? {})
+        .filter(([, enabled]) => enabled === true)
+        .map(([type]) => (type === 'damage' ? 'damage-recovery' : type));
+      if (resourceTypes.length) {
+        const resources = await ctx.mongoDb
+          .collection('resources')
+          .find({
+            guide_type: input.guideType,
+            resource_type: { $in: resourceTypes },
+          })
+          .toArray();
+        doc.resources = resources.map((resource: any) => ({
+          resource_id: resource._id,
+          progress: null,
+          saved: false,
+        }));
+      }
+    }
     const result = await insertAndReturn(ctx.mongoDb, 'guide', doc);
     return mapGuide(result);
   },

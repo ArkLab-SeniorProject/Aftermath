@@ -93,9 +93,9 @@ export const RESET_PASSWORD_WITH_TOKEN = gql`
 
 // ── Recovery Situation ──
 
-export const CREATE_RECOVERY_SITUATION = gql`
-  mutation CreateRecoverySituation($input: CreateRecoverySituationInput!) {
-    createRecoverySituation(input: $input) {
+export const CREATE_SITUATION = gql`
+  mutation CreateSituation($input: CreateSituationInput!) {
+    createSituation(input: $input) {
       id
       userId
       location {
@@ -121,9 +121,9 @@ export const CREATE_RECOVERY_SITUATION = gql`
   }
 `;
 
-export const GET_RECOVERY_SITUATIONS_BY_USER = gql`
-  query GetRecoverySituationsByUser($userId: ID!) {
-    getRecoverySituationsByUser(userId: $userId) {
+export const GET_SITUATIONS_BY_USER = gql`
+  query GetSituationsByUser($userId: ID!) {
+    getSituationsByUser(userId: $userId) {
       id
       userId
       location {
@@ -149,9 +149,9 @@ export const GET_RECOVERY_SITUATIONS_BY_USER = gql`
   }
 `;
 
-export const UPDATE_RECOVERY_SITUATION = gql`
-  mutation UpdateRecoverySituation($id: ID!, $input: UpdateRecoverySituationInput!) {
-    updateRecoverySituation(id: $id, input: $input) {
+export const UPDATE_SITUATION = gql`
+  mutation UpdateSituation($id: ID!, $input: UpdateSituationInput!) {
+    updateSituation(id: $id, input: $input) {
       id
       timeline
       disasters

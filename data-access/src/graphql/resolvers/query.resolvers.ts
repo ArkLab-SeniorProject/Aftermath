@@ -35,7 +35,7 @@ function mapLocation(loc: any) {
   };
 }
 
-function mapRecoverySituation(doc: any) {
+function mapSituation(doc: any) {
   if (!doc) return null;
   return {
     id: String(doc._id),
@@ -59,6 +59,7 @@ function mapResource(doc: any) {
     resourceType: doc.resource_type ?? null,
     title: doc.title ?? null,
     content: doc.content ?? null,
+    guideType: doc.guide_type ?? null,
     createdAt: doc.created_at ?? null,
     updatedAt: doc.updated_at ?? null,
   };
@@ -77,7 +78,8 @@ function mapGuide(doc: any) {
   return {
     id: String(doc._id),
     userId: String(doc.user_id),
-    recoverySituationId: String(doc.recovery_situation_id),
+    disaster: String(doc.disaster),
+    guideType: doc.guide_type,
     resources: (doc.resources ?? []).map(mapGuideResource),
     filters: doc.filters ?? null,
     createdAt: doc.created_at ?? null,
@@ -117,21 +119,21 @@ export const queryResolvers = {
   },
 
   // ── Recovery Situations ──
-  getRecoverySituation: async (_: unknown, args: { id: string }, ctx: Context) => {
+  getSituation: async (_: unknown, args: { id: string }, ctx: Context) => {
     const doc = await ctx.mongoDb
-      .collection('recovery_situation')
+      .collection('situation')
       .findOne({ _id: new ObjectId(args.id) });
-    return mapRecoverySituation(doc);
+    return mapSituation(doc);
   },
 
-  getRecoverySituationsByUser: async (_: unknown, args: { userId: string }, ctx: Context) => {
+  getSituationsByUser: async (_: unknown, args: { userId: string }, ctx: Context) => {
     if (!ctx.userId) throw new Error('Authentication required');
     if (ctx.userId !== args.userId) throw new Error('Not authorized');
     const docs = await ctx.mongoDb
-      .collection('recovery_situation')
+      .collection('situation')
       .find({ user_id: new ObjectId(args.userId) })
       .toArray();
-    return docs.map(mapRecoverySituation);
+    return docs.map(mapSituation);
   },
 
   // ── Resources ──
@@ -142,11 +144,12 @@ export const queryResolvers = {
 
   getResources: async (
     _: unknown,
-    args: { resourceType?: string; limit: number; offset: number },
+    args: { resourceType?: string; guideType?: string; limit: number; offset: number },
     ctx: Context
   ) => {
     const filter: any = {};
     if (args.resourceType) filter.resource_type = args.resourceType;
+    if (args.guideType) filter.guide_type = args.guideType;
 
     const docs = await ctx.mongoDb
       .collection('resources')
@@ -173,21 +176,21 @@ export const queryResolvers = {
     return docs.map(mapGuide);
   },
 
-  getGuideByRecoverySituation: async (
+  getGuideByDisaster: async (
     _: unknown,
-    args: { recoverySituationId: string },
+    args: { disaster: string },
     ctx: Context
   ) => {
     const doc = await ctx.mongoDb
       .collection('guide')
-      .findOne({ recovery_situation_id: new ObjectId(args.recoverySituationId) });
+      .findOne({ disaster: new ObjectId(args.disaster) });
     return mapGuide(doc);
   },
 };
 
 // Field resolvers for nested relations
 export const typeResolvers = {
-  RecoverySituation: {
+  Situation: {
     user: async (parent: any, _: unknown, ctx: Context) => {
       const doc = await ctx.mongoDb
         .collection('users')
@@ -202,12 +205,6 @@ export const typeResolvers = {
         .collection('users')
         .findOne({ _id: new ObjectId(parent.userId) });
       return mapUser(doc);
-    },
-    recoverySituation: async (parent: any, _: unknown, ctx: Context) => {
-      const doc = await ctx.mongoDb
-        .collection('recovery_situation')
-        .findOne({ _id: new ObjectId(parent.recoverySituationId) });
-      return mapRecoverySituation(doc);
     },
   },
 

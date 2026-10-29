@@ -13,22 +13,18 @@ export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
-export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = {
-  [_ in K]?: never;
-};
-export type Incremental<T> =
-  | T
-  | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
+export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
+export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
 const defaultOptions = {} as const;
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
-  ID: { input: string; output: string };
-  String: { input: string; output: string };
-  Boolean: { input: boolean; output: boolean };
-  Int: { input: number; output: number };
-  Float: { input: number; output: number };
-  DateTime: { input: any; output: any };
-  JSON: { input: any; output: any };
+  ID: { input: string; output: string; }
+  String: { input: string; output: string; }
+  Boolean: { input: boolean; output: boolean; }
+  Int: { input: number; output: number; }
+  Float: { input: number; output: number; }
+  DateTime: { input: any; output: any; }
+  JSON: { input: any; output: any; }
 };
 
 export type AuthPayload = {
@@ -39,13 +35,21 @@ export type AuthPayload = {
 };
 
 export type CreateGuideInput = {
+  disaster: Scalars['ID']['input'];
   filters?: InputMaybe<Scalars['JSON']['input']>;
-  recoverySituationId: Scalars['ID']['input'];
+  guideType: GuideType;
   resources?: InputMaybe<Array<GuideResourceInput>>;
   userId: Scalars['ID']['input'];
 };
 
-export type CreateRecoverySituationInput = {
+export type CreateResourceInput = {
+  content?: InputMaybe<Scalars['JSON']['input']>;
+  guideType: GuideType;
+  resourceType: Scalars['String']['input'];
+  title: Scalars['String']['input'];
+};
+
+export type CreateSituationInput = {
   disasters?: InputMaybe<Scalars['String']['input']>;
   displayName?: InputMaybe<Scalars['String']['input']>;
   helpTypes?: InputMaybe<HelpTypesInput>;
@@ -53,12 +57,6 @@ export type CreateRecoverySituationInput = {
   household?: InputMaybe<Array<Scalars['String']['input']>>;
   location?: InputMaybe<LocationInput>;
   timeline?: InputMaybe<Scalars['String']['input']>;
-};
-
-export type CreateResourceInput = {
-  content?: InputMaybe<Scalars['JSON']['input']>;
-  resourceType: Scalars['String']['input'];
-  title: Scalars['String']['input'];
 };
 
 export type CreateUserInput = {
@@ -71,10 +69,10 @@ export type CreateUserInput = {
 export type Guide = {
   __typename?: 'Guide';
   createdAt?: Maybe<Scalars['DateTime']['output']>;
+  disaster: Scalars['ID']['output'];
   filters?: Maybe<Scalars['JSON']['output']>;
+  guideType: GuideType;
   id: Scalars['ID']['output'];
-  recoverySituation?: Maybe<RecoverySituation>;
-  recoverySituationId: Scalars['ID']['output'];
   resources?: Maybe<Array<GuideResource>>;
   updatedAt?: Maybe<Scalars['DateTime']['output']>;
   user?: Maybe<User>;
@@ -94,6 +92,10 @@ export type GuideResourceInput = {
   resourceId: Scalars['ID']['input'];
   saved?: InputMaybe<Scalars['Boolean']['input']>;
 };
+
+export type GuideType =
+  | 'preparedness'
+  | 'recovery';
 
 export type HelpTypes = {
   __typename?: 'HelpTypes';
@@ -128,82 +130,97 @@ export type LocationInput = {
 export type Mutation = {
   __typename?: 'Mutation';
   createGuide: Guide;
-  createRecoverySituation: RecoverySituation;
   createResource: Resource;
+  createSituation: Situation;
   createUser: AuthPayload;
   deleteGuide: Scalars['Boolean']['output'];
-  deleteRecoverySituation: Scalars['Boolean']['output'];
   deleteResource: Scalars['Boolean']['output'];
+  deleteSituation: Scalars['Boolean']['output'];
   deleteUser: Scalars['Boolean']['output'];
   forgotPassword: Scalars['Boolean']['output'];
   login: AuthPayload;
   resetPasswordWithToken: Scalars['Boolean']['output'];
   updateGuide: Guide;
-  updateRecoverySituation: RecoverySituation;
   updateResource: Resource;
+  updateSituation: Situation;
   updateUser: User;
 };
+
 
 export type MutationCreateGuideArgs = {
   input: CreateGuideInput;
 };
 
-export type MutationCreateRecoverySituationArgs = {
-  input: CreateRecoverySituationInput;
-};
 
 export type MutationCreateResourceArgs = {
   input: CreateResourceInput;
 };
 
+
+export type MutationCreateSituationArgs = {
+  input: CreateSituationInput;
+};
+
+
 export type MutationCreateUserArgs = {
   input: CreateUserInput;
 };
+
 
 export type MutationDeleteGuideArgs = {
   id: Scalars['ID']['input'];
 };
 
-export type MutationDeleteRecoverySituationArgs = {
-  id: Scalars['ID']['input'];
-};
 
 export type MutationDeleteResourceArgs = {
   id: Scalars['ID']['input'];
 };
 
+
+export type MutationDeleteSituationArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeleteUserArgs = {
   id: Scalars['ID']['input'];
 };
 
+
 export type MutationForgotPasswordArgs = {
   email: Scalars['String']['input'];
 };
+
 
 export type MutationLoginArgs = {
   password: Scalars['String']['input'];
   username: Scalars['String']['input'];
 };
 
+
 export type MutationResetPasswordWithTokenArgs = {
   newPassword: Scalars['String']['input'];
   token: Scalars['String']['input'];
 };
+
 
 export type MutationUpdateGuideArgs = {
   id: Scalars['ID']['input'];
   input: UpdateGuideInput;
 };
 
-export type MutationUpdateRecoverySituationArgs = {
-  id: Scalars['ID']['input'];
-  input: UpdateRecoverySituationInput;
-};
 
 export type MutationUpdateResourceArgs = {
   id: Scalars['ID']['input'];
   input: UpdateResourceInput;
 };
+
+
+export type MutationUpdateSituationArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateSituationInput;
+};
+
 
 export type MutationUpdateUserArgs = {
   id: Scalars['ID']['input'];
@@ -213,67 +230,90 @@ export type MutationUpdateUserArgs = {
 export type Query = {
   __typename?: 'Query';
   getGuide?: Maybe<Guide>;
-  getGuideByRecoverySituation?: Maybe<Guide>;
+  getGuideByDisaster?: Maybe<Guide>;
   getGuidesByUser: Array<Guide>;
-  getRecoverySituation?: Maybe<RecoverySituation>;
-  getRecoverySituationsByUser: Array<RecoverySituation>;
   getResource?: Maybe<Resource>;
   getResources: Array<Resource>;
+  getSituation?: Maybe<Situation>;
+  getSituationsByUser: Array<Situation>;
   getUser?: Maybe<User>;
   getUserByUsername?: Maybe<User>;
   getUsers: Array<User>;
   validateResetToken: Scalars['Boolean']['output'];
 };
 
+
 export type QueryGetGuideArgs = {
   id: Scalars['ID']['input'];
 };
 
-export type QueryGetGuideByRecoverySituationArgs = {
-  recoverySituationId: Scalars['ID']['input'];
+
+export type QueryGetGuideByDisasterArgs = {
+  disaster: Scalars['ID']['input'];
 };
+
 
 export type QueryGetGuidesByUserArgs = {
   userId: Scalars['ID']['input'];
 };
 
-export type QueryGetRecoverySituationArgs = {
-  id: Scalars['ID']['input'];
-};
-
-export type QueryGetRecoverySituationsByUserArgs = {
-  userId: Scalars['ID']['input'];
-};
 
 export type QueryGetResourceArgs = {
   id: Scalars['ID']['input'];
 };
 
+
 export type QueryGetResourcesArgs = {
+  guideType?: InputMaybe<GuideType>;
   limit?: InputMaybe<Scalars['Int']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
   resourceType?: InputMaybe<Scalars['String']['input']>;
 };
 
+
+export type QueryGetSituationArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryGetSituationsByUserArgs = {
+  userId: Scalars['ID']['input'];
+};
+
+
 export type QueryGetUserArgs = {
   id: Scalars['ID']['input'];
 };
 
+
 export type QueryGetUserByUsernameArgs = {
   username: Scalars['String']['input'];
 };
+
 
 export type QueryGetUsersArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
 };
 
+
 export type QueryValidateResetTokenArgs = {
   token: Scalars['String']['input'];
 };
 
-export type RecoverySituation = {
-  __typename?: 'RecoverySituation';
+export type Resource = {
+  __typename?: 'Resource';
+  content?: Maybe<Scalars['JSON']['output']>;
+  createdAt?: Maybe<Scalars['DateTime']['output']>;
+  guideType?: Maybe<GuideType>;
+  id: Scalars['ID']['output'];
+  resourceType?: Maybe<Scalars['String']['output']>;
+  title?: Maybe<Scalars['String']['output']>;
+  updatedAt?: Maybe<Scalars['DateTime']['output']>;
+};
+
+export type Situation = {
+  __typename?: 'Situation';
   createdAt?: Maybe<Scalars['DateTime']['output']>;
   disasters?: Maybe<Scalars['String']['output']>;
   displayName?: Maybe<Scalars['String']['output']>;
@@ -288,22 +328,19 @@ export type RecoverySituation = {
   userId: Scalars['ID']['output'];
 };
 
-export type Resource = {
-  __typename?: 'Resource';
-  content?: Maybe<Scalars['JSON']['output']>;
-  createdAt?: Maybe<Scalars['DateTime']['output']>;
-  id: Scalars['ID']['output'];
-  resourceType?: Maybe<Scalars['String']['output']>;
-  title?: Maybe<Scalars['String']['output']>;
-  updatedAt?: Maybe<Scalars['DateTime']['output']>;
-};
-
 export type UpdateGuideInput = {
   filters?: InputMaybe<Scalars['JSON']['input']>;
   resources?: InputMaybe<Array<GuideResourceInput>>;
 };
 
-export type UpdateRecoverySituationInput = {
+export type UpdateResourceInput = {
+  content?: InputMaybe<Scalars['JSON']['input']>;
+  guideType?: InputMaybe<GuideType>;
+  resourceType?: InputMaybe<Scalars['String']['input']>;
+  title?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UpdateSituationInput = {
   disasters?: InputMaybe<Scalars['String']['input']>;
   displayName?: InputMaybe<Scalars['String']['input']>;
   helpTypes?: InputMaybe<HelpTypesInput>;
@@ -311,12 +348,6 @@ export type UpdateRecoverySituationInput = {
   household?: InputMaybe<Array<Scalars['String']['input']>>;
   location?: InputMaybe<LocationInput>;
   timeline?: InputMaybe<Scalars['String']['input']>;
-};
-
-export type UpdateResourceInput = {
-  content?: InputMaybe<Scalars['JSON']['input']>;
-  resourceType?: InputMaybe<Scalars['String']['input']>;
-  title?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type UpdateUserInput = {
@@ -340,213 +371,83 @@ export type GetUserQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
-export type GetUserQuery = {
-  __typename?: 'Query';
-  getUser?: {
-    __typename?: 'User';
-    id: string;
-    username: string;
-    email?: string | null;
-    firstName?: string | null;
-    createdAt?: any | null;
-    updatedAt?: any | null;
-  } | null;
-};
+
+export type GetUserQuery = { __typename?: 'Query', getUser?: { __typename?: 'User', id: string, username: string, email?: string | null, firstName?: string | null, createdAt?: any | null, updatedAt?: any | null } | null };
 
 export type GetUserByUsernameQueryVariables = Exact<{
   username: Scalars['String']['input'];
 }>;
 
-export type GetUserByUsernameQuery = {
-  __typename?: 'Query';
-  getUserByUsername?: {
-    __typename?: 'User';
-    id: string;
-    username: string;
-    email?: string | null;
-    firstName?: string | null;
-    createdAt?: any | null;
-    updatedAt?: any | null;
-  } | null;
-};
+
+export type GetUserByUsernameQuery = { __typename?: 'Query', getUserByUsername?: { __typename?: 'User', id: string, username: string, email?: string | null, firstName?: string | null, createdAt?: any | null, updatedAt?: any | null } | null };
 
 export type GetUsersQueryVariables = Exact<{
   limit?: InputMaybe<Scalars['Int']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
 }>;
 
-export type GetUsersQuery = {
-  __typename?: 'Query';
-  getUsers: Array<{
-    __typename?: 'User';
-    id: string;
-    username: string;
-    email?: string | null;
-    firstName?: string | null;
-    createdAt?: any | null;
-    updatedAt?: any | null;
-  }>;
-};
+
+export type GetUsersQuery = { __typename?: 'Query', getUsers: Array<{ __typename?: 'User', id: string, username: string, email?: string | null, firstName?: string | null, createdAt?: any | null, updatedAt?: any | null }> };
 
 export type LoginMutationVariables = Exact<{
   username: Scalars['String']['input'];
   password: Scalars['String']['input'];
 }>;
 
-export type LoginMutation = {
-  __typename?: 'Mutation';
-  login: {
-    __typename?: 'AuthPayload';
-    success: boolean;
-    error?: string | null;
-    user?: {
-      __typename?: 'User';
-      id: string;
-      username: string;
-      email?: string | null;
-      firstName?: string | null;
-      createdAt?: any | null;
-      updatedAt?: any | null;
-    } | null;
-  };
-};
+
+export type LoginMutation = { __typename?: 'Mutation', login: { __typename?: 'AuthPayload', success: boolean, error?: string | null, user?: { __typename?: 'User', id: string, username: string, email?: string | null, firstName?: string | null, createdAt?: any | null, updatedAt?: any | null } | null } };
 
 export type CreateUserMutationVariables = Exact<{
   input: CreateUserInput;
 }>;
 
-export type CreateUserMutation = {
-  __typename?: 'Mutation';
-  createUser: {
-    __typename?: 'AuthPayload';
-    success: boolean;
-    error?: string | null;
-    user?: {
-      __typename?: 'User';
-      id: string;
-      username: string;
-      email?: string | null;
-      firstName?: string | null;
-      createdAt?: any | null;
-      updatedAt?: any | null;
-    } | null;
-  };
-};
+
+export type CreateUserMutation = { __typename?: 'Mutation', createUser: { __typename?: 'AuthPayload', success: boolean, error?: string | null, user?: { __typename?: 'User', id: string, username: string, email?: string | null, firstName?: string | null, createdAt?: any | null, updatedAt?: any | null } | null } };
 
 export type ForgotPasswordMutationVariables = Exact<{
   email: Scalars['String']['input'];
 }>;
 
-export type ForgotPasswordMutation = { __typename?: 'Mutation'; forgotPassword: boolean };
+
+export type ForgotPasswordMutation = { __typename?: 'Mutation', forgotPassword: boolean };
 
 export type ValidateResetTokenQueryVariables = Exact<{
   token: Scalars['String']['input'];
 }>;
 
-export type ValidateResetTokenQuery = { __typename?: 'Query'; validateResetToken: boolean };
+
+export type ValidateResetTokenQuery = { __typename?: 'Query', validateResetToken: boolean };
 
 export type ResetPasswordWithTokenMutationVariables = Exact<{
   token: Scalars['String']['input'];
   newPassword: Scalars['String']['input'];
 }>;
 
-export type ResetPasswordWithTokenMutation = {
-  __typename?: 'Mutation';
-  resetPasswordWithToken: boolean;
-};
 
-export type CreateRecoverySituationMutationVariables = Exact<{
-  input: CreateRecoverySituationInput;
+export type ResetPasswordWithTokenMutation = { __typename?: 'Mutation', resetPasswordWithToken: boolean };
+
+export type CreateSituationMutationVariables = Exact<{
+  input: CreateSituationInput;
 }>;
 
-export type CreateRecoverySituationMutation = {
-  __typename?: 'Mutation';
-  createRecoverySituation: {
-    __typename?: 'RecoverySituation';
-    id: string;
-    userId: string;
-    timeline?: string | null;
-    disasters?: string | null;
-    displayName?: string | null;
-    homeStatus?: string | null;
-    household?: Array<string> | null;
-    createdAt?: any | null;
-    updatedAt?: any | null;
-    location?: {
-      __typename?: 'Location';
-      zip?: string | null;
-      city?: string | null;
-      state?: string | null;
-      stateCode?: string | null;
-      countryCode?: string | null;
-    } | null;
-    helpTypes?: {
-      __typename?: 'HelpTypes';
-      housing?: boolean | null;
-      financial?: boolean | null;
-      damage?: boolean | null;
-    } | null;
-  };
-};
 
-export type GetRecoverySituationsByUserQueryVariables = Exact<{
+export type CreateSituationMutation = { __typename?: 'Mutation', createSituation: { __typename?: 'Situation', id: string, userId: string, timeline?: string | null, disasters?: string | null, displayName?: string | null, homeStatus?: string | null, household?: Array<string> | null, createdAt?: any | null, updatedAt?: any | null, location?: { __typename?: 'Location', zip?: string | null, city?: string | null, state?: string | null, stateCode?: string | null, countryCode?: string | null } | null, helpTypes?: { __typename?: 'HelpTypes', housing?: boolean | null, financial?: boolean | null, damage?: boolean | null } | null } };
+
+export type GetSituationsByUserQueryVariables = Exact<{
   userId: Scalars['ID']['input'];
 }>;
 
-export type GetRecoverySituationsByUserQuery = {
-  __typename?: 'Query';
-  getRecoverySituationsByUser: Array<{
-    __typename?: 'RecoverySituation';
-    id: string;
-    userId: string;
-    timeline?: string | null;
-    disasters?: string | null;
-    displayName?: string | null;
-    homeStatus?: string | null;
-    household?: Array<string> | null;
-    createdAt?: any | null;
-    updatedAt?: any | null;
-    location?: {
-      __typename?: 'Location';
-      zip?: string | null;
-      city?: string | null;
-      state?: string | null;
-      stateCode?: string | null;
-      countryCode?: string | null;
-    } | null;
-    helpTypes?: {
-      __typename?: 'HelpTypes';
-      housing?: boolean | null;
-      financial?: boolean | null;
-      damage?: boolean | null;
-    } | null;
-  }>;
-};
 
-export type UpdateRecoverySituationMutationVariables = Exact<{
+export type GetSituationsByUserQuery = { __typename?: 'Query', getSituationsByUser: Array<{ __typename?: 'Situation', id: string, userId: string, timeline?: string | null, disasters?: string | null, displayName?: string | null, homeStatus?: string | null, household?: Array<string> | null, createdAt?: any | null, updatedAt?: any | null, location?: { __typename?: 'Location', zip?: string | null, city?: string | null, state?: string | null, stateCode?: string | null, countryCode?: string | null } | null, helpTypes?: { __typename?: 'HelpTypes', housing?: boolean | null, financial?: boolean | null, damage?: boolean | null } | null }> };
+
+export type UpdateSituationMutationVariables = Exact<{
   id: Scalars['ID']['input'];
-  input: UpdateRecoverySituationInput;
+  input: UpdateSituationInput;
 }>;
 
-export type UpdateRecoverySituationMutation = {
-  __typename?: 'Mutation';
-  updateRecoverySituation: {
-    __typename?: 'RecoverySituation';
-    id: string;
-    timeline?: string | null;
-    disasters?: string | null;
-    displayName?: string | null;
-    homeStatus?: string | null;
-    household?: Array<string> | null;
-    updatedAt?: any | null;
-    helpTypes?: {
-      __typename?: 'HelpTypes';
-      housing?: boolean | null;
-      financial?: boolean | null;
-      damage?: boolean | null;
-    } | null;
-  };
-};
+
+export type UpdateSituationMutation = { __typename?: 'Mutation', updateSituation: { __typename?: 'Situation', id: string, timeline?: string | null, disasters?: string | null, displayName?: string | null, homeStatus?: string | null, household?: Array<string> | null, updatedAt?: any | null, helpTypes?: { __typename?: 'HelpTypes', housing?: boolean | null, financial?: boolean | null, damage?: boolean | null } | null } };
+
 
 export const GetUserDocument = gql`
     query GetUser($id: ID!) {
@@ -577,45 +478,21 @@ export const GetUserDocument = gql`
  *   },
  * });
  */
-export function useGetUserQuery(
-  baseOptions: ApolloReactHooks.QueryHookOptions<GetUserQuery, GetUserQueryVariables> &
-    ({ variables: GetUserQueryVariables; skip?: boolean } | { skip: boolean })
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useQuery<GetUserQuery, GetUserQueryVariables>(GetUserDocument, options);
-}
-export function useGetUserLazyQuery(
-  baseOptions?: ApolloReactHooks.LazyQueryHookOptions<GetUserQuery, GetUserQueryVariables>
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useLazyQuery<GetUserQuery, GetUserQueryVariables>(
-    GetUserDocument,
-    options
-  );
-}
+export function useGetUserQuery(baseOptions: ApolloReactHooks.QueryHookOptions<GetUserQuery, GetUserQueryVariables> & ({ variables: GetUserQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<GetUserQuery, GetUserQueryVariables>(GetUserDocument, options);
+      }
+export function useGetUserLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<GetUserQuery, GetUserQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<GetUserQuery, GetUserQueryVariables>(GetUserDocument, options);
+        }
 // @ts-ignore
-export function useGetUserSuspenseQuery(
-  baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<GetUserQuery, GetUserQueryVariables>
-): ApolloReactHooks.UseSuspenseQueryResult<GetUserQuery, GetUserQueryVariables>;
-export function useGetUserSuspenseQuery(
-  baseOptions?:
-    | ApolloReactHooks.SkipToken
-    | ApolloReactHooks.SuspenseQueryHookOptions<GetUserQuery, GetUserQueryVariables>
-): ApolloReactHooks.UseSuspenseQueryResult<GetUserQuery | undefined, GetUserQueryVariables>;
-export function useGetUserSuspenseQuery(
-  baseOptions?:
-    | ApolloReactHooks.SkipToken
-    | ApolloReactHooks.SuspenseQueryHookOptions<GetUserQuery, GetUserQueryVariables>
-) {
-  const options =
-    baseOptions === ApolloReactHooks.skipToken
-      ? baseOptions
-      : { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useSuspenseQuery<GetUserQuery, GetUserQueryVariables>(
-    GetUserDocument,
-    options
-  );
-}
+export function useGetUserSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<GetUserQuery, GetUserQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetUserQuery, GetUserQueryVariables>;
+export function useGetUserSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetUserQuery, GetUserQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetUserQuery | undefined, GetUserQueryVariables>;
+export function useGetUserSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetUserQuery, GetUserQueryVariables>) {
+          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useSuspenseQuery<GetUserQuery, GetUserQueryVariables>(GetUserDocument, options);
+        }
 export type GetUserQueryHookResult = ReturnType<typeof useGetUserQuery>;
 export type GetUserLazyQueryHookResult = ReturnType<typeof useGetUserLazyQuery>;
 export type GetUserSuspenseQueryHookResult = ReturnType<typeof useGetUserSuspenseQuery>;
@@ -649,75 +526,25 @@ export const GetUserByUsernameDocument = gql`
  *   },
  * });
  */
-export function useGetUserByUsernameQuery(
-  baseOptions: ApolloReactHooks.QueryHookOptions<
-    GetUserByUsernameQuery,
-    GetUserByUsernameQueryVariables
-  > &
-    ({ variables: GetUserByUsernameQueryVariables; skip?: boolean } | { skip: boolean })
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useQuery<GetUserByUsernameQuery, GetUserByUsernameQueryVariables>(
-    GetUserByUsernameDocument,
-    options
-  );
-}
-export function useGetUserByUsernameLazyQuery(
-  baseOptions?: ApolloReactHooks.LazyQueryHookOptions<
-    GetUserByUsernameQuery,
-    GetUserByUsernameQueryVariables
-  >
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useLazyQuery<GetUserByUsernameQuery, GetUserByUsernameQueryVariables>(
-    GetUserByUsernameDocument,
-    options
-  );
-}
+export function useGetUserByUsernameQuery(baseOptions: ApolloReactHooks.QueryHookOptions<GetUserByUsernameQuery, GetUserByUsernameQueryVariables> & ({ variables: GetUserByUsernameQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<GetUserByUsernameQuery, GetUserByUsernameQueryVariables>(GetUserByUsernameDocument, options);
+      }
+export function useGetUserByUsernameLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<GetUserByUsernameQuery, GetUserByUsernameQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<GetUserByUsernameQuery, GetUserByUsernameQueryVariables>(GetUserByUsernameDocument, options);
+        }
 // @ts-ignore
-export function useGetUserByUsernameSuspenseQuery(
-  baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<
-    GetUserByUsernameQuery,
-    GetUserByUsernameQueryVariables
-  >
-): ApolloReactHooks.UseSuspenseQueryResult<GetUserByUsernameQuery, GetUserByUsernameQueryVariables>;
-export function useGetUserByUsernameSuspenseQuery(
-  baseOptions?:
-    | ApolloReactHooks.SkipToken
-    | ApolloReactHooks.SuspenseQueryHookOptions<
-        GetUserByUsernameQuery,
-        GetUserByUsernameQueryVariables
-      >
-): ApolloReactHooks.UseSuspenseQueryResult<
-  GetUserByUsernameQuery | undefined,
-  GetUserByUsernameQueryVariables
->;
-export function useGetUserByUsernameSuspenseQuery(
-  baseOptions?:
-    | ApolloReactHooks.SkipToken
-    | ApolloReactHooks.SuspenseQueryHookOptions<
-        GetUserByUsernameQuery,
-        GetUserByUsernameQueryVariables
-      >
-) {
-  const options =
-    baseOptions === ApolloReactHooks.skipToken
-      ? baseOptions
-      : { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useSuspenseQuery<GetUserByUsernameQuery, GetUserByUsernameQueryVariables>(
-    GetUserByUsernameDocument,
-    options
-  );
-}
+export function useGetUserByUsernameSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<GetUserByUsernameQuery, GetUserByUsernameQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetUserByUsernameQuery, GetUserByUsernameQueryVariables>;
+export function useGetUserByUsernameSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetUserByUsernameQuery, GetUserByUsernameQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetUserByUsernameQuery | undefined, GetUserByUsernameQueryVariables>;
+export function useGetUserByUsernameSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetUserByUsernameQuery, GetUserByUsernameQueryVariables>) {
+          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useSuspenseQuery<GetUserByUsernameQuery, GetUserByUsernameQueryVariables>(GetUserByUsernameDocument, options);
+        }
 export type GetUserByUsernameQueryHookResult = ReturnType<typeof useGetUserByUsernameQuery>;
 export type GetUserByUsernameLazyQueryHookResult = ReturnType<typeof useGetUserByUsernameLazyQuery>;
-export type GetUserByUsernameSuspenseQueryHookResult = ReturnType<
-  typeof useGetUserByUsernameSuspenseQuery
->;
-export type GetUserByUsernameQueryResult = ApolloReactCommon.QueryResult<
-  GetUserByUsernameQuery,
-  GetUserByUsernameQueryVariables
->;
+export type GetUserByUsernameSuspenseQueryHookResult = ReturnType<typeof useGetUserByUsernameSuspenseQuery>;
+export type GetUserByUsernameQueryResult = ApolloReactCommon.QueryResult<GetUserByUsernameQuery, GetUserByUsernameQueryVariables>;
 export const GetUsersDocument = gql`
     query GetUsers($limit: Int = 25, $offset: Int = 0) {
   getUsers(limit: $limit, offset: $offset) {
@@ -748,54 +575,25 @@ export const GetUsersDocument = gql`
  *   },
  * });
  */
-export function useGetUsersQuery(
-  baseOptions?: ApolloReactHooks.QueryHookOptions<GetUsersQuery, GetUsersQueryVariables>
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useQuery<GetUsersQuery, GetUsersQueryVariables>(
-    GetUsersDocument,
-    options
-  );
-}
-export function useGetUsersLazyQuery(
-  baseOptions?: ApolloReactHooks.LazyQueryHookOptions<GetUsersQuery, GetUsersQueryVariables>
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useLazyQuery<GetUsersQuery, GetUsersQueryVariables>(
-    GetUsersDocument,
-    options
-  );
-}
+export function useGetUsersQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<GetUsersQuery, GetUsersQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<GetUsersQuery, GetUsersQueryVariables>(GetUsersDocument, options);
+      }
+export function useGetUsersLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<GetUsersQuery, GetUsersQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<GetUsersQuery, GetUsersQueryVariables>(GetUsersDocument, options);
+        }
 // @ts-ignore
-export function useGetUsersSuspenseQuery(
-  baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<GetUsersQuery, GetUsersQueryVariables>
-): ApolloReactHooks.UseSuspenseQueryResult<GetUsersQuery, GetUsersQueryVariables>;
-export function useGetUsersSuspenseQuery(
-  baseOptions?:
-    | ApolloReactHooks.SkipToken
-    | ApolloReactHooks.SuspenseQueryHookOptions<GetUsersQuery, GetUsersQueryVariables>
-): ApolloReactHooks.UseSuspenseQueryResult<GetUsersQuery | undefined, GetUsersQueryVariables>;
-export function useGetUsersSuspenseQuery(
-  baseOptions?:
-    | ApolloReactHooks.SkipToken
-    | ApolloReactHooks.SuspenseQueryHookOptions<GetUsersQuery, GetUsersQueryVariables>
-) {
-  const options =
-    baseOptions === ApolloReactHooks.skipToken
-      ? baseOptions
-      : { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useSuspenseQuery<GetUsersQuery, GetUsersQueryVariables>(
-    GetUsersDocument,
-    options
-  );
-}
+export function useGetUsersSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<GetUsersQuery, GetUsersQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetUsersQuery, GetUsersQueryVariables>;
+export function useGetUsersSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetUsersQuery, GetUsersQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetUsersQuery | undefined, GetUsersQueryVariables>;
+export function useGetUsersSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetUsersQuery, GetUsersQueryVariables>) {
+          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useSuspenseQuery<GetUsersQuery, GetUsersQueryVariables>(GetUsersDocument, options);
+        }
 export type GetUsersQueryHookResult = ReturnType<typeof useGetUsersQuery>;
 export type GetUsersLazyQueryHookResult = ReturnType<typeof useGetUsersLazyQuery>;
 export type GetUsersSuspenseQueryHookResult = ReturnType<typeof useGetUsersSuspenseQuery>;
-export type GetUsersQueryResult = ApolloReactCommon.QueryResult<
-  GetUsersQuery,
-  GetUsersQueryVariables
->;
+export type GetUsersQueryResult = ApolloReactCommon.QueryResult<GetUsersQuery, GetUsersQueryVariables>;
 export const LoginDocument = gql`
     mutation Login($username: String!, $password: String!) {
   login(username: $username, password: $password) {
@@ -812,10 +610,7 @@ export const LoginDocument = gql`
   }
 }
     `;
-export type LoginMutationFn = ApolloReactCommon.MutationFunction<
-  LoginMutation,
-  LoginMutationVariables
->;
+export type LoginMutationFn = ApolloReactCommon.MutationFunction<LoginMutation, LoginMutationVariables>;
 
 /**
  * __useLoginMutation__
@@ -835,21 +630,13 @@ export type LoginMutationFn = ApolloReactCommon.MutationFunction<
  *   },
  * });
  */
-export function useLoginMutation(
-  baseOptions?: ApolloReactHooks.MutationHookOptions<LoginMutation, LoginMutationVariables>
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useMutation<LoginMutation, LoginMutationVariables>(
-    LoginDocument,
-    options
-  );
-}
+export function useLoginMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<LoginMutation, LoginMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<LoginMutation, LoginMutationVariables>(LoginDocument, options);
+      }
 export type LoginMutationHookResult = ReturnType<typeof useLoginMutation>;
 export type LoginMutationResult = ApolloReactCommon.MutationResult<LoginMutation>;
-export type LoginMutationOptions = ApolloReactCommon.BaseMutationOptions<
-  LoginMutation,
-  LoginMutationVariables
->;
+export type LoginMutationOptions = ApolloReactCommon.BaseMutationOptions<LoginMutation, LoginMutationVariables>;
 export const CreateUserDocument = gql`
     mutation CreateUser($input: CreateUserInput!) {
   createUser(input: $input) {
@@ -866,10 +653,7 @@ export const CreateUserDocument = gql`
   }
 }
     `;
-export type CreateUserMutationFn = ApolloReactCommon.MutationFunction<
-  CreateUserMutation,
-  CreateUserMutationVariables
->;
+export type CreateUserMutationFn = ApolloReactCommon.MutationFunction<CreateUserMutation, CreateUserMutationVariables>;
 
 /**
  * __useCreateUserMutation__
@@ -888,33 +672,19 @@ export type CreateUserMutationFn = ApolloReactCommon.MutationFunction<
  *   },
  * });
  */
-export function useCreateUserMutation(
-  baseOptions?: ApolloReactHooks.MutationHookOptions<
-    CreateUserMutation,
-    CreateUserMutationVariables
-  >
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useMutation<CreateUserMutation, CreateUserMutationVariables>(
-    CreateUserDocument,
-    options
-  );
-}
+export function useCreateUserMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<CreateUserMutation, CreateUserMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<CreateUserMutation, CreateUserMutationVariables>(CreateUserDocument, options);
+      }
 export type CreateUserMutationHookResult = ReturnType<typeof useCreateUserMutation>;
 export type CreateUserMutationResult = ApolloReactCommon.MutationResult<CreateUserMutation>;
-export type CreateUserMutationOptions = ApolloReactCommon.BaseMutationOptions<
-  CreateUserMutation,
-  CreateUserMutationVariables
->;
+export type CreateUserMutationOptions = ApolloReactCommon.BaseMutationOptions<CreateUserMutation, CreateUserMutationVariables>;
 export const ForgotPasswordDocument = gql`
     mutation ForgotPassword($email: String!) {
   forgotPassword(email: $email)
 }
     `;
-export type ForgotPasswordMutationFn = ApolloReactCommon.MutationFunction<
-  ForgotPasswordMutation,
-  ForgotPasswordMutationVariables
->;
+export type ForgotPasswordMutationFn = ApolloReactCommon.MutationFunction<ForgotPasswordMutation, ForgotPasswordMutationVariables>;
 
 /**
  * __useForgotPasswordMutation__
@@ -933,24 +703,13 @@ export type ForgotPasswordMutationFn = ApolloReactCommon.MutationFunction<
  *   },
  * });
  */
-export function useForgotPasswordMutation(
-  baseOptions?: ApolloReactHooks.MutationHookOptions<
-    ForgotPasswordMutation,
-    ForgotPasswordMutationVariables
-  >
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useMutation<ForgotPasswordMutation, ForgotPasswordMutationVariables>(
-    ForgotPasswordDocument,
-    options
-  );
-}
+export function useForgotPasswordMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<ForgotPasswordMutation, ForgotPasswordMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<ForgotPasswordMutation, ForgotPasswordMutationVariables>(ForgotPasswordDocument, options);
+      }
 export type ForgotPasswordMutationHookResult = ReturnType<typeof useForgotPasswordMutation>;
 export type ForgotPasswordMutationResult = ApolloReactCommon.MutationResult<ForgotPasswordMutation>;
-export type ForgotPasswordMutationOptions = ApolloReactCommon.BaseMutationOptions<
-  ForgotPasswordMutation,
-  ForgotPasswordMutationVariables
->;
+export type ForgotPasswordMutationOptions = ApolloReactCommon.BaseMutationOptions<ForgotPasswordMutation, ForgotPasswordMutationVariables>;
 export const ValidateResetTokenDocument = gql`
     query ValidateResetToken($token: String!) {
   validateResetToken(token: $token)
@@ -973,89 +732,31 @@ export const ValidateResetTokenDocument = gql`
  *   },
  * });
  */
-export function useValidateResetTokenQuery(
-  baseOptions: ApolloReactHooks.QueryHookOptions<
-    ValidateResetTokenQuery,
-    ValidateResetTokenQueryVariables
-  > &
-    ({ variables: ValidateResetTokenQueryVariables; skip?: boolean } | { skip: boolean })
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useQuery<ValidateResetTokenQuery, ValidateResetTokenQueryVariables>(
-    ValidateResetTokenDocument,
-    options
-  );
-}
-export function useValidateResetTokenLazyQuery(
-  baseOptions?: ApolloReactHooks.LazyQueryHookOptions<
-    ValidateResetTokenQuery,
-    ValidateResetTokenQueryVariables
-  >
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useLazyQuery<ValidateResetTokenQuery, ValidateResetTokenQueryVariables>(
-    ValidateResetTokenDocument,
-    options
-  );
-}
+export function useValidateResetTokenQuery(baseOptions: ApolloReactHooks.QueryHookOptions<ValidateResetTokenQuery, ValidateResetTokenQueryVariables> & ({ variables: ValidateResetTokenQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<ValidateResetTokenQuery, ValidateResetTokenQueryVariables>(ValidateResetTokenDocument, options);
+      }
+export function useValidateResetTokenLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<ValidateResetTokenQuery, ValidateResetTokenQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<ValidateResetTokenQuery, ValidateResetTokenQueryVariables>(ValidateResetTokenDocument, options);
+        }
 // @ts-ignore
-export function useValidateResetTokenSuspenseQuery(
-  baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<
-    ValidateResetTokenQuery,
-    ValidateResetTokenQueryVariables
-  >
-): ApolloReactHooks.UseSuspenseQueryResult<
-  ValidateResetTokenQuery,
-  ValidateResetTokenQueryVariables
->;
-export function useValidateResetTokenSuspenseQuery(
-  baseOptions?:
-    | ApolloReactHooks.SkipToken
-    | ApolloReactHooks.SuspenseQueryHookOptions<
-        ValidateResetTokenQuery,
-        ValidateResetTokenQueryVariables
-      >
-): ApolloReactHooks.UseSuspenseQueryResult<
-  ValidateResetTokenQuery | undefined,
-  ValidateResetTokenQueryVariables
->;
-export function useValidateResetTokenSuspenseQuery(
-  baseOptions?:
-    | ApolloReactHooks.SkipToken
-    | ApolloReactHooks.SuspenseQueryHookOptions<
-        ValidateResetTokenQuery,
-        ValidateResetTokenQueryVariables
-      >
-) {
-  const options =
-    baseOptions === ApolloReactHooks.skipToken
-      ? baseOptions
-      : { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useSuspenseQuery<
-    ValidateResetTokenQuery,
-    ValidateResetTokenQueryVariables
-  >(ValidateResetTokenDocument, options);
-}
+export function useValidateResetTokenSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<ValidateResetTokenQuery, ValidateResetTokenQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<ValidateResetTokenQuery, ValidateResetTokenQueryVariables>;
+export function useValidateResetTokenSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<ValidateResetTokenQuery, ValidateResetTokenQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<ValidateResetTokenQuery | undefined, ValidateResetTokenQueryVariables>;
+export function useValidateResetTokenSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<ValidateResetTokenQuery, ValidateResetTokenQueryVariables>) {
+          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useSuspenseQuery<ValidateResetTokenQuery, ValidateResetTokenQueryVariables>(ValidateResetTokenDocument, options);
+        }
 export type ValidateResetTokenQueryHookResult = ReturnType<typeof useValidateResetTokenQuery>;
-export type ValidateResetTokenLazyQueryHookResult = ReturnType<
-  typeof useValidateResetTokenLazyQuery
->;
-export type ValidateResetTokenSuspenseQueryHookResult = ReturnType<
-  typeof useValidateResetTokenSuspenseQuery
->;
-export type ValidateResetTokenQueryResult = ApolloReactCommon.QueryResult<
-  ValidateResetTokenQuery,
-  ValidateResetTokenQueryVariables
->;
+export type ValidateResetTokenLazyQueryHookResult = ReturnType<typeof useValidateResetTokenLazyQuery>;
+export type ValidateResetTokenSuspenseQueryHookResult = ReturnType<typeof useValidateResetTokenSuspenseQuery>;
+export type ValidateResetTokenQueryResult = ApolloReactCommon.QueryResult<ValidateResetTokenQuery, ValidateResetTokenQueryVariables>;
 export const ResetPasswordWithTokenDocument = gql`
     mutation ResetPasswordWithToken($token: String!, $newPassword: String!) {
   resetPasswordWithToken(token: $token, newPassword: $newPassword)
 }
     `;
-export type ResetPasswordWithTokenMutationFn = ApolloReactCommon.MutationFunction<
-  ResetPasswordWithTokenMutation,
-  ResetPasswordWithTokenMutationVariables
->;
+export type ResetPasswordWithTokenMutationFn = ApolloReactCommon.MutationFunction<ResetPasswordWithTokenMutation, ResetPasswordWithTokenMutationVariables>;
 
 /**
  * __useResetPasswordWithTokenMutation__
@@ -1075,30 +776,16 @@ export type ResetPasswordWithTokenMutationFn = ApolloReactCommon.MutationFunctio
  *   },
  * });
  */
-export function useResetPasswordWithTokenMutation(
-  baseOptions?: ApolloReactHooks.MutationHookOptions<
-    ResetPasswordWithTokenMutation,
-    ResetPasswordWithTokenMutationVariables
-  >
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useMutation<
-    ResetPasswordWithTokenMutation,
-    ResetPasswordWithTokenMutationVariables
-  >(ResetPasswordWithTokenDocument, options);
-}
-export type ResetPasswordWithTokenMutationHookResult = ReturnType<
-  typeof useResetPasswordWithTokenMutation
->;
-export type ResetPasswordWithTokenMutationResult =
-  ApolloReactCommon.MutationResult<ResetPasswordWithTokenMutation>;
-export type ResetPasswordWithTokenMutationOptions = ApolloReactCommon.BaseMutationOptions<
-  ResetPasswordWithTokenMutation,
-  ResetPasswordWithTokenMutationVariables
->;
-export const CreateRecoverySituationDocument = gql`
-    mutation CreateRecoverySituation($input: CreateRecoverySituationInput!) {
-  createRecoverySituation(input: $input) {
+export function useResetPasswordWithTokenMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<ResetPasswordWithTokenMutation, ResetPasswordWithTokenMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<ResetPasswordWithTokenMutation, ResetPasswordWithTokenMutationVariables>(ResetPasswordWithTokenDocument, options);
+      }
+export type ResetPasswordWithTokenMutationHookResult = ReturnType<typeof useResetPasswordWithTokenMutation>;
+export type ResetPasswordWithTokenMutationResult = ApolloReactCommon.MutationResult<ResetPasswordWithTokenMutation>;
+export type ResetPasswordWithTokenMutationOptions = ApolloReactCommon.BaseMutationOptions<ResetPasswordWithTokenMutation, ResetPasswordWithTokenMutationVariables>;
+export const CreateSituationDocument = gql`
+    mutation CreateSituation($input: CreateSituationInput!) {
+  createSituation(input: $input) {
     id
     userId
     location {
@@ -1123,52 +810,35 @@ export const CreateRecoverySituationDocument = gql`
   }
 }
     `;
-export type CreateRecoverySituationMutationFn = ApolloReactCommon.MutationFunction<
-  CreateRecoverySituationMutation,
-  CreateRecoverySituationMutationVariables
->;
+export type CreateSituationMutationFn = ApolloReactCommon.MutationFunction<CreateSituationMutation, CreateSituationMutationVariables>;
 
 /**
- * __useCreateRecoverySituationMutation__
+ * __useCreateSituationMutation__
  *
- * To run a mutation, you first call `useCreateRecoverySituationMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useCreateRecoverySituationMutation` returns a tuple that includes:
+ * To run a mutation, you first call `useCreateSituationMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateSituationMutation` returns a tuple that includes:
  * - A mutate function that you can call at any time to execute the mutation
  * - An object with fields that represent the current status of the mutation's execution
  *
  * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
  *
  * @example
- * const [createRecoverySituationMutation, { data, loading, error }] = useCreateRecoverySituationMutation({
+ * const [createSituationMutation, { data, loading, error }] = useCreateSituationMutation({
  *   variables: {
  *      input: // value for 'input'
  *   },
  * });
  */
-export function useCreateRecoverySituationMutation(
-  baseOptions?: ApolloReactHooks.MutationHookOptions<
-    CreateRecoverySituationMutation,
-    CreateRecoverySituationMutationVariables
-  >
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useMutation<
-    CreateRecoverySituationMutation,
-    CreateRecoverySituationMutationVariables
-  >(CreateRecoverySituationDocument, options);
-}
-export type CreateRecoverySituationMutationHookResult = ReturnType<
-  typeof useCreateRecoverySituationMutation
->;
-export type CreateRecoverySituationMutationResult =
-  ApolloReactCommon.MutationResult<CreateRecoverySituationMutation>;
-export type CreateRecoverySituationMutationOptions = ApolloReactCommon.BaseMutationOptions<
-  CreateRecoverySituationMutation,
-  CreateRecoverySituationMutationVariables
->;
-export const GetRecoverySituationsByUserDocument = gql`
-    query GetRecoverySituationsByUser($userId: ID!) {
-  getRecoverySituationsByUser(userId: $userId) {
+export function useCreateSituationMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<CreateSituationMutation, CreateSituationMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<CreateSituationMutation, CreateSituationMutationVariables>(CreateSituationDocument, options);
+      }
+export type CreateSituationMutationHookResult = ReturnType<typeof useCreateSituationMutation>;
+export type CreateSituationMutationResult = ApolloReactCommon.MutationResult<CreateSituationMutation>;
+export type CreateSituationMutationOptions = ApolloReactCommon.BaseMutationOptions<CreateSituationMutation, CreateSituationMutationVariables>;
+export const GetSituationsByUserDocument = gql`
+    query GetSituationsByUser($userId: ID!) {
+  getSituationsByUser(userId: $userId) {
     id
     userId
     location {
@@ -1195,100 +865,43 @@ export const GetRecoverySituationsByUserDocument = gql`
     `;
 
 /**
- * __useGetRecoverySituationsByUserQuery__
+ * __useGetSituationsByUserQuery__
  *
- * To run a query within a React component, call `useGetRecoverySituationsByUserQuery` and pass it any options that fit your needs.
- * When your component renders, `useGetRecoverySituationsByUserQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useGetSituationsByUserQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetSituationsByUserQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useGetRecoverySituationsByUserQuery({
+ * const { data, loading, error } = useGetSituationsByUserQuery({
  *   variables: {
  *      userId: // value for 'userId'
  *   },
  * });
  */
-export function useGetRecoverySituationsByUserQuery(
-  baseOptions: ApolloReactHooks.QueryHookOptions<
-    GetRecoverySituationsByUserQuery,
-    GetRecoverySituationsByUserQueryVariables
-  > &
-    ({ variables: GetRecoverySituationsByUserQueryVariables; skip?: boolean } | { skip: boolean })
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useQuery<
-    GetRecoverySituationsByUserQuery,
-    GetRecoverySituationsByUserQueryVariables
-  >(GetRecoverySituationsByUserDocument, options);
-}
-export function useGetRecoverySituationsByUserLazyQuery(
-  baseOptions?: ApolloReactHooks.LazyQueryHookOptions<
-    GetRecoverySituationsByUserQuery,
-    GetRecoverySituationsByUserQueryVariables
-  >
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useLazyQuery<
-    GetRecoverySituationsByUserQuery,
-    GetRecoverySituationsByUserQueryVariables
-  >(GetRecoverySituationsByUserDocument, options);
-}
+export function useGetSituationsByUserQuery(baseOptions: ApolloReactHooks.QueryHookOptions<GetSituationsByUserQuery, GetSituationsByUserQueryVariables> & ({ variables: GetSituationsByUserQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<GetSituationsByUserQuery, GetSituationsByUserQueryVariables>(GetSituationsByUserDocument, options);
+      }
+export function useGetSituationsByUserLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<GetSituationsByUserQuery, GetSituationsByUserQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<GetSituationsByUserQuery, GetSituationsByUserQueryVariables>(GetSituationsByUserDocument, options);
+        }
 // @ts-ignore
-export function useGetRecoverySituationsByUserSuspenseQuery(
-  baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<
-    GetRecoverySituationsByUserQuery,
-    GetRecoverySituationsByUserQueryVariables
-  >
-): ApolloReactHooks.UseSuspenseQueryResult<
-  GetRecoverySituationsByUserQuery,
-  GetRecoverySituationsByUserQueryVariables
->;
-export function useGetRecoverySituationsByUserSuspenseQuery(
-  baseOptions?:
-    | ApolloReactHooks.SkipToken
-    | ApolloReactHooks.SuspenseQueryHookOptions<
-        GetRecoverySituationsByUserQuery,
-        GetRecoverySituationsByUserQueryVariables
-      >
-): ApolloReactHooks.UseSuspenseQueryResult<
-  GetRecoverySituationsByUserQuery | undefined,
-  GetRecoverySituationsByUserQueryVariables
->;
-export function useGetRecoverySituationsByUserSuspenseQuery(
-  baseOptions?:
-    | ApolloReactHooks.SkipToken
-    | ApolloReactHooks.SuspenseQueryHookOptions<
-        GetRecoverySituationsByUserQuery,
-        GetRecoverySituationsByUserQueryVariables
-      >
-) {
-  const options =
-    baseOptions === ApolloReactHooks.skipToken
-      ? baseOptions
-      : { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useSuspenseQuery<
-    GetRecoverySituationsByUserQuery,
-    GetRecoverySituationsByUserQueryVariables
-  >(GetRecoverySituationsByUserDocument, options);
-}
-export type GetRecoverySituationsByUserQueryHookResult = ReturnType<
-  typeof useGetRecoverySituationsByUserQuery
->;
-export type GetRecoverySituationsByUserLazyQueryHookResult = ReturnType<
-  typeof useGetRecoverySituationsByUserLazyQuery
->;
-export type GetRecoverySituationsByUserSuspenseQueryHookResult = ReturnType<
-  typeof useGetRecoverySituationsByUserSuspenseQuery
->;
-export type GetRecoverySituationsByUserQueryResult = ApolloReactCommon.QueryResult<
-  GetRecoverySituationsByUserQuery,
-  GetRecoverySituationsByUserQueryVariables
->;
-export const UpdateRecoverySituationDocument = gql`
-    mutation UpdateRecoverySituation($id: ID!, $input: UpdateRecoverySituationInput!) {
-  updateRecoverySituation(id: $id, input: $input) {
+export function useGetSituationsByUserSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<GetSituationsByUserQuery, GetSituationsByUserQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetSituationsByUserQuery, GetSituationsByUserQueryVariables>;
+export function useGetSituationsByUserSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetSituationsByUserQuery, GetSituationsByUserQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetSituationsByUserQuery | undefined, GetSituationsByUserQueryVariables>;
+export function useGetSituationsByUserSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetSituationsByUserQuery, GetSituationsByUserQueryVariables>) {
+          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useSuspenseQuery<GetSituationsByUserQuery, GetSituationsByUserQueryVariables>(GetSituationsByUserDocument, options);
+        }
+export type GetSituationsByUserQueryHookResult = ReturnType<typeof useGetSituationsByUserQuery>;
+export type GetSituationsByUserLazyQueryHookResult = ReturnType<typeof useGetSituationsByUserLazyQuery>;
+export type GetSituationsByUserSuspenseQueryHookResult = ReturnType<typeof useGetSituationsByUserSuspenseQuery>;
+export type GetSituationsByUserQueryResult = ApolloReactCommon.QueryResult<GetSituationsByUserQuery, GetSituationsByUserQueryVariables>;
+export const UpdateSituationDocument = gql`
+    mutation UpdateSituation($id: ID!, $input: UpdateSituationInput!) {
+  updateSituation(id: $id, input: $input) {
     id
     timeline
     disasters
@@ -1304,47 +917,30 @@ export const UpdateRecoverySituationDocument = gql`
   }
 }
     `;
-export type UpdateRecoverySituationMutationFn = ApolloReactCommon.MutationFunction<
-  UpdateRecoverySituationMutation,
-  UpdateRecoverySituationMutationVariables
->;
+export type UpdateSituationMutationFn = ApolloReactCommon.MutationFunction<UpdateSituationMutation, UpdateSituationMutationVariables>;
 
 /**
- * __useUpdateRecoverySituationMutation__
+ * __useUpdateSituationMutation__
  *
- * To run a mutation, you first call `useUpdateRecoverySituationMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useUpdateRecoverySituationMutation` returns a tuple that includes:
+ * To run a mutation, you first call `useUpdateSituationMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateSituationMutation` returns a tuple that includes:
  * - A mutate function that you can call at any time to execute the mutation
  * - An object with fields that represent the current status of the mutation's execution
  *
  * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
  *
  * @example
- * const [updateRecoverySituationMutation, { data, loading, error }] = useUpdateRecoverySituationMutation({
+ * const [updateSituationMutation, { data, loading, error }] = useUpdateSituationMutation({
  *   variables: {
  *      id: // value for 'id'
  *      input: // value for 'input'
  *   },
  * });
  */
-export function useUpdateRecoverySituationMutation(
-  baseOptions?: ApolloReactHooks.MutationHookOptions<
-    UpdateRecoverySituationMutation,
-    UpdateRecoverySituationMutationVariables
-  >
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useMutation<
-    UpdateRecoverySituationMutation,
-    UpdateRecoverySituationMutationVariables
-  >(UpdateRecoverySituationDocument, options);
-}
-export type UpdateRecoverySituationMutationHookResult = ReturnType<
-  typeof useUpdateRecoverySituationMutation
->;
-export type UpdateRecoverySituationMutationResult =
-  ApolloReactCommon.MutationResult<UpdateRecoverySituationMutation>;
-export type UpdateRecoverySituationMutationOptions = ApolloReactCommon.BaseMutationOptions<
-  UpdateRecoverySituationMutation,
-  UpdateRecoverySituationMutationVariables
->;
+export function useUpdateSituationMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<UpdateSituationMutation, UpdateSituationMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<UpdateSituationMutation, UpdateSituationMutationVariables>(UpdateSituationDocument, options);
+      }
+export type UpdateSituationMutationHookResult = ReturnType<typeof useUpdateSituationMutation>;
+export type UpdateSituationMutationResult = ApolloReactCommon.MutationResult<UpdateSituationMutation>;
+export type UpdateSituationMutationOptions = ApolloReactCommon.BaseMutationOptions<UpdateSituationMutation, UpdateSituationMutationVariables>;

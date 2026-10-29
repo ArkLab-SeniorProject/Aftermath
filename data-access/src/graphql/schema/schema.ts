@@ -51,7 +51,12 @@ export const schema = gql`
     countryCode: String
   }
 
-  # ── Recovery Situation ──────────────────
+  enum GuideType {
+    recovery
+    preparedness
+  }
+
+  # ── Situation ───────────────────────────
   type HelpTypes {
     housing: Boolean
     financial: Boolean
@@ -64,7 +69,7 @@ export const schema = gql`
     damage: Boolean
   }
 
-  type RecoverySituation {
+  type Situation {
     id: ID!
     userId: ID!
     location: Location
@@ -79,7 +84,7 @@ export const schema = gql`
     user: User
   }
 
-  input CreateRecoverySituationInput {
+  input CreateSituationInput {
     location: LocationInput
     timeline: String
     disasters: String
@@ -89,7 +94,7 @@ export const schema = gql`
     household: [String!]
   }
 
-  input UpdateRecoverySituationInput {
+  input UpdateSituationInput {
     location: LocationInput
     timeline: String
     disasters: String
@@ -105,6 +110,7 @@ export const schema = gql`
     resourceType: String
     title: String
     content: JSON
+    guideType: GuideType
     createdAt: DateTime
     updatedAt: DateTime
   }
@@ -113,12 +119,14 @@ export const schema = gql`
     resourceType: String!
     title: String!
     content: JSON
+    guideType: GuideType!
   }
 
   input UpdateResourceInput {
     resourceType: String
     title: String
     content: JSON
+    guideType: GuideType
   }
 
   # ── Guide ────────────────────────────────
@@ -138,18 +146,19 @@ export const schema = gql`
   type Guide {
     id: ID!
     userId: ID!
-    recoverySituationId: ID!
+    disaster: ID!
+    guideType: GuideType!
     resources: [GuideResource!]
     filters: JSON
     createdAt: DateTime
     updatedAt: DateTime
     user: User
-    recoverySituation: RecoverySituation
   }
 
   input CreateGuideInput {
     userId: ID!
-    recoverySituationId: ID!
+    disaster: ID!
+    guideType: GuideType!
     resources: [GuideResourceInput!]
     filters: JSON
   }
@@ -167,18 +176,18 @@ export const schema = gql`
     getUsers(limit: Int = 25, offset: Int = 0): [User!]!
     validateResetToken(token: String!): Boolean!
 
-    # Recovery Situations
-    getRecoverySituation(id: ID!): RecoverySituation
-    getRecoverySituationsByUser(userId: ID!): [RecoverySituation!]!
+    # Situations
+    getSituation(id: ID!): Situation
+    getSituationsByUser(userId: ID!): [Situation!]!
 
     # Resources
     getResource(id: ID!): Resource
-    getResources(resourceType: String, limit: Int = 25, offset: Int = 0): [Resource!]!
+    getResources(resourceType: String, guideType: GuideType, limit: Int = 25, offset: Int = 0): [Resource!]!
 
     # Guides
     getGuide(id: ID!): Guide
     getGuidesByUser(userId: ID!): [Guide!]!
-    getGuideByRecoverySituation(recoverySituationId: ID!): Guide
+    getGuideByDisaster(disaster: ID!): Guide
   }
 
   type Mutation {
@@ -190,10 +199,10 @@ export const schema = gql`
     forgotPassword(email: String!): Boolean!
     resetPasswordWithToken(token: String!, newPassword: String!): Boolean!
 
-    # Recovery Situations
-    createRecoverySituation(input: CreateRecoverySituationInput!): RecoverySituation!
-    updateRecoverySituation(id: ID!, input: UpdateRecoverySituationInput!): RecoverySituation!
-    deleteRecoverySituation(id: ID!): Boolean!
+    # Situations
+    createSituation(input: CreateSituationInput!): Situation!
+    updateSituation(id: ID!, input: UpdateSituationInput!): Situation!
+    deleteSituation(id: ID!): Boolean!
 
     # Resources
     createResource(input: CreateResourceInput!): Resource!

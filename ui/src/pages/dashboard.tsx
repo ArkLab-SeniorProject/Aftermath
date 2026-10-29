@@ -5,9 +5,9 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/useAuth';
 import { apolloClient } from '../lib/apollo-client';
 import {
-  GetRecoverySituationsByUserDocument,
-  type GetRecoverySituationsByUserQuery,
-  type GetRecoverySituationsByUserQueryVariables,
+  GetSituationsByUserDocument,
+  type GetSituationsByUserQuery,
+  type GetSituationsByUserQueryVariables,
 } from '../generated';
 import type { RecoveryQuizAnswers } from './recovery/quiz';
 
@@ -72,15 +72,15 @@ export default function Dashboard() {
       if (user) {
         try {
           const { data } = await apolloClient.query<
-            GetRecoverySituationsByUserQuery,
-            GetRecoverySituationsByUserQueryVariables
+            GetSituationsByUserQuery,
+            GetSituationsByUserQueryVariables
           >({
-            query: GetRecoverySituationsByUserDocument,
+            query: GetSituationsByUserDocument,
             variables: { userId: user.id },
             fetchPolicy: 'network-only',
           });
           if (!cancelled) {
-            const records = data?.getRecoverySituationsByUser;
+            const records = data?.getSituationsByUser;
             if (records && records.length > 0) {
               setSituation(fromDbRecord(records[0]));
             } else {
