@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { LockOutlined, PersonOutline, Visibility, VisibilityOff } from '@mui/icons-material';
 import {
   Alert,
   Box,
@@ -11,11 +11,14 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { LockOutlined, PersonOutline, Visibility, VisibilityOff } from '@mui/icons-material';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/useAuth';
+import { syncRecoverySituationIfNeeded } from '../../lib/sync-recovery-situation';
 
 export function LoginContent() {
   const auth = useAuth();
+  const navigate = useNavigate();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -26,7 +29,10 @@ export function LoginContent() {
     setError('');
 
     const success = await auth.login(username.trim(), password);
-    if (!success) {
+    if (success) {
+      navigate('/dashboard', { replace: true });
+      void syncRecoverySituationIfNeeded();
+    } else {
       setError('Invalid username or password');
     }
   };
@@ -123,12 +129,22 @@ export function LoginContent() {
           <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
             <Typography variant='body2'>
               New to Senior Project?{' '}
-              <Link href='#' underline='hover'>
+              <Link
+                component='button'
+                variant='body2'
+                underline='hover'
+                onClick={() => navigate('/create-account')}
+              >
                 Create an account
               </Link>
             </Typography>
             <Typography variant='body2'>
-              <Link href='#' underline='hover'>
+              <Link
+                component='button'
+                variant='body2'
+                underline='hover'
+                onClick={() => navigate('/forgot-password')}
+              >
                 Forgot password?
               </Link>
             </Typography>

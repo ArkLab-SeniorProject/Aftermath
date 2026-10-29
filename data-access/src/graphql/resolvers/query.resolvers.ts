@@ -1,83 +1,243 @@
+import crypto from 'node:crypto';
 import type { Db } from 'mongodb';
 import { ObjectId } from 'mongodb';
+import { mapId } from '../../db/mongoHelpers.js';
 
-import { findMongoDocuments, userCollections } from '../../db/mongoHelpers.js';
+const MAX_LIMIT = 100;
 
-type Context = {
-  mongoDb: Db;
-};
+type Context = { mongoDb: Db; userId?: string; role?: string };
 
-function mapMongoUser(doc: any) {
+function requireAuth(ctx: Context): string {
+  if (!ctx.userId) throw new Error('Authentication required');
+  return ctx.userId;
+}
+
+function requireAdmin(ctx: Context): string {
+  const userId = requireAuth(ctx);
+  if (ctx.role !== 'admin') throw new Error('Administrator access required');
+  return userId;
+}
+
+function requireSelfOrAdmin(ctx: Context, userId: string): void {
+  const authedUserId = requireAuth(ctx);
+  if (authedUserId !== userId && ctx.role !== 'admin') {
+    throw new Error('Not authorized');
+  }
+}
+
+function clampLimit(limit: number): number {
+  if (!limit || limit <= 0) return 25;
+  return Math.min(limit, MAX_LIMIT);
+}
+
+function mapUser(doc: any) {
+  if (!doc) return null;
   return {
-    _id: String(doc._id),
-    id: String(doc.id ?? doc._id),
-    firstName: doc.first_name ?? doc.firstName ?? null,
-    lastName: doc.last_name ?? doc.lastName ?? null,
-    username: doc.username ?? null,
-    password: doc.password ?? null,
-    profileImg: doc.profile_img ?? doc.profileImg ?? null,
-    role: doc.role ?? null,
-    organization: doc.organizationId ?? doc.organization_id ?? doc.organization ?? null,
-    organizationUsername: doc.organizationUsername ?? doc.organization_username ?? null,
-    createdAt: doc.created_at ?? doc.createdAt ?? null,
-    updatedAt: doc.updated_at ?? doc.updatedAt ?? null,
+    id: String(doc._id),
+    username: doc.username,
+    email: doc.email ?? null,
+    firstName: doc.first_name ?? null,
+    role: doc.role === 'admin' ? 'admin' : 'user',
+    createdAt: doc.created_at ?? null,
+    updatedAt: doc.updated_at ?? null,
   };
 }
 
-function buildUserIdQuery(value: string) {
-  const clauses: Record<string, any>[] = [{ id: value }, { username: value }];
+function mapLocation(loc: any) {
+  if (!loc) return null;
+  return {
+    zip: loc.zip ?? null,
+    city: loc.city ?? null,
+    state: loc.state ?? null,
+    stateCode: loc.state_code ?? null,
+    countryCode: loc.country_code ?? null,
+  };
+}
 
-  if (/^[a-fA-F0-9]{24}$/.test(value)) {
-    clauses.push({ _id: new ObjectId(value) });
-  }
+function mapSituation(doc: any) {
+  if (!doc) return null;
+  return {
+    id: String(doc._id),
+    userId: String(doc.user_id),
+    location: mapLocation(doc.location),
+    timeline: doc.timeline ?? null,
+    disasters: doc.disasters ?? null,
+    displayName: doc.display_name ?? null,
+    helpTypes: doc.help_types ?? null,
+    homeStatus: doc.home_status ?? null,
+    household: doc.household ?? [],
+    createdAt: doc.created_at ?? null,
+    updatedAt: doc.updated_at ?? null,
+  };
+}
 
-  return { $or: clauses };
+function mapResource(doc: any) {
+  if (!doc) return null;
+  return {
+    id: String(doc._id),
+    resourceType: doc.resource_type ?? null,
+    title: doc.title ?? null,
+    content: doc.content ?? null,
+    guideType: doc.guide_type ?? null,
+    createdAt: doc.created_at ?? null,
+    updatedAt: doc.updated_at ?? null,
+  };
+}
+
+function mapGuideResource(item: any) {
+  return {
+    resourceId: String(item.resource_id),
+    progress: item.progress ?? null,
+    saved: item.saved ?? false,
+  };
+}
+
+function mapGuide(doc: any) {
+  if (!doc) return null;
+  return {
+    id: String(doc._id),
+    userId: String(doc.user_id),
+    disaster: String(doc.disaster),
+    guideType: doc.guide_type,
+    resources: (doc.resources ?? []).map(mapGuideResource),
+    filters: doc.filters ?? null,
+    createdAt: doc.created_at ?? null,
+    updatedAt: doc.updated_at ?? null,
+  };
 }
 
 export const queryResolvers = {
-  // ─────────────────────────────
-  // USERS
-  // ─────────────────────────────
-
-  getUsers: async (_: unknown, args: any, ctx: Context) => {
-    const query: any = {};
-
-    if (args.username) query.username = args.username;
-
-    const docs = await findMongoDocuments(userCollections(ctx.mongoDb), query);
-
-    return docs.map(mapMongoUser);
+  // ── Users ──
+  getUser: async (_: unknown, args: { id: string }, ctx: Context) => {
+    requireSelfOrAdmin(ctx, args.id);
+    const doc = await ctx.mongoDb.collection('users').findOne({ _id: new ObjectId(args.id) });
+    return mapUser(doc);
   },
 
-  getUser: async (_: unknown, args: any, ctx: Context) => {
-    const value = args.id;
-    const clauses: Record<string, any>[] = [{ id: value }, { username: value }];
-
-    const numericValue = Number(value);
-    if (value !== '' && !Number.isNaN(numericValue)) {
-      clauses.push({ id: numericValue });
-    }
-
-    if (/^[a-fA-F0-9]{24}$/.test(value)) {
-      clauses.push({ _id: new ObjectId(value) });
-    }
-
-    const docs = await findMongoDocuments(userCollections(ctx.mongoDb), { $or: clauses });
-
-    const doc = docs[0];
-    if (!doc) return null;
-
-    return mapMongoUser(doc);
+  getUserByUsername: async (_: unknown, args: { username: string }, ctx: Context) => {
+    requireAdmin(ctx);
+    const doc = await ctx.mongoDb.collection('users').findOne({ username: args.username });
+    return mapUser(doc);
   },
 
-  getUserByUsername: async (_: unknown, args: any, ctx: Context) => {
-    const docs = await findMongoDocuments(userCollections(ctx.mongoDb), {
-      username: args.username,
+  validateResetToken: async (_: unknown, args: { token: string }, ctx: Context) => {
+    const hashedToken = crypto.createHash('sha256').update(args.token).digest('hex');
+    const doc = await ctx.mongoDb.collection('users').findOne({
+      reset_password_token: hashedToken,
+      reset_password_expires: { $gt: new Date() },
     });
+    return !!doc;
+  },
 
-    const doc = docs[0];
-    if (!doc) return null;
+  getUsers: async (_: unknown, args: { limit: number; offset: number }, ctx: Context) => {
+    requireAdmin(ctx);
+    const docs = await ctx.mongoDb
+      .collection('users')
+      .find()
+      .skip(args.offset)
+      .limit(clampLimit(args.limit))
+      .toArray();
+    return docs.map(mapUser);
+  },
 
-    return mapMongoUser(doc);
+  // ── Recovery Situations ──
+  getSituation: async (_: unknown, args: { id: string }, ctx: Context) => {
+    requireAuth(ctx);
+    const doc = await ctx.mongoDb.collection('situation').findOne({ _id: new ObjectId(args.id) });
+    if (doc) requireSelfOrAdmin(ctx, String(doc.user_id));
+    return mapSituation(doc);
+  },
+
+  getSituationsByUser: async (_: unknown, args: { userId: string }, ctx: Context) => {
+    if (!ctx.userId) throw new Error('Authentication required');
+    if (ctx.userId !== args.userId) throw new Error('Not authorized');
+    const docs = await ctx.mongoDb
+      .collection('situation')
+      .find({ user_id: new ObjectId(args.userId) })
+      .toArray();
+    return docs.map(mapSituation);
+  },
+
+  // ── Resources ──
+  getResource: async (_: unknown, args: { id: string }, ctx: Context) => {
+    const doc = await ctx.mongoDb.collection('resources').findOne({ _id: new ObjectId(args.id) });
+    return mapResource(doc);
+  },
+
+  getResources: async (
+    _: unknown,
+    args: { resourceType?: string; guideType?: string; limit: number; offset: number },
+    ctx: Context
+  ) => {
+    const filter: any = {};
+    if (args.resourceType) filter.resource_type = args.resourceType;
+    if (args.guideType) filter.guide_type = args.guideType;
+
+    const docs = await ctx.mongoDb
+      .collection('resources')
+      .find(filter)
+      .skip(args.offset)
+      .limit(clampLimit(args.limit))
+      .toArray();
+    return docs.map(mapResource);
+  },
+
+  // ── Guides ──
+  getGuide: async (_: unknown, args: { id: string }, ctx: Context) => {
+    requireAuth(ctx);
+    const doc = await ctx.mongoDb.collection('guide').findOne({ _id: new ObjectId(args.id) });
+    if (doc) requireSelfOrAdmin(ctx, String(doc.user_id));
+    return mapGuide(doc);
+  },
+
+  getGuidesByUser: async (_: unknown, args: { userId: string }, ctx: Context) => {
+    if (!ctx.userId) throw new Error('Authentication required');
+    if (ctx.userId !== args.userId) throw new Error('Not authorized');
+    const docs = await ctx.mongoDb
+      .collection('guide')
+      .find({ user_id: new ObjectId(args.userId) })
+      .toArray();
+    return docs.map(mapGuide);
+  },
+
+  getGuideByDisaster: async (_: unknown, args: { disaster: string }, ctx: Context) => {
+    requireAuth(ctx);
+    const doc = await ctx.mongoDb
+      .collection('guide')
+      .findOne({ disaster: new ObjectId(args.disaster) });
+    if (doc) requireSelfOrAdmin(ctx, String(doc.user_id));
+    return mapGuide(doc);
+  },
+};
+
+// Field resolvers for nested relations
+export const typeResolvers = {
+  Situation: {
+    user: async (parent: any, _: unknown, ctx: Context) => {
+      requireSelfOrAdmin(ctx, String(parent.userId));
+      const doc = await ctx.mongoDb
+        .collection('users')
+        .findOne({ _id: new ObjectId(parent.userId) });
+      return mapUser(doc);
+    },
+  },
+
+  Guide: {
+    user: async (parent: any, _: unknown, ctx: Context) => {
+      requireSelfOrAdmin(ctx, String(parent.userId));
+      const doc = await ctx.mongoDb
+        .collection('users')
+        .findOne({ _id: new ObjectId(parent.userId) });
+      return mapUser(doc);
+    },
+  },
+
+  GuideResource: {
+    resource: async (parent: any, _: unknown, ctx: Context) => {
+      const doc = await ctx.mongoDb
+        .collection('resources')
+        .findOne({ _id: new ObjectId(parent.resourceId) });
+      return mapResource(doc);
+    },
   },
 };

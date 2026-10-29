@@ -1,25 +1,29 @@
-import dotenv from 'dotenv';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { ApolloServer } from '@apollo/server';
 import {
   ApolloServerPluginLandingPageLocalDefault,
   ApolloServerPluginLandingPageProductionDefault,
 } from '@apollo/server/plugin/landingPage/default';
-import express from 'express';
 import cors from 'cors';
-import { typeDefs } from './graphql/schema/index.js';
-import { resolvers } from './graphql/resolvers/index.js';
+import dotenv from 'dotenv';
+import express from 'express';
+import { ObjectId } from 'mongodb';
+import { verifyAuthToken } from './auth.js';
 import { getDb } from './db/mongo-client.js';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { resolvers } from './graphql/resolvers/index.js';
+import { typeDefs } from './graphql/schema/index.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const envPath = path.resolve(__dirname, '../../.env.local');
 if (process.env.NODE_ENV !== 'production') {
-  dotenv.config({ path: envPath });
+  dotenv.config({ path: path.resolve(__dirname, '../.env.local') });
+  dotenv.config({ path: path.resolve(__dirname, '../../.env.local') });
 }
 
 export type GraphQLContext = {
   mongoDb: Awaited<ReturnType<typeof getDb>>;
+  userId?: string;
+  role?: string;
 };
 
 let server: ApolloServer<GraphQLContext> | null = null;
@@ -40,8 +44,27 @@ export async function createApolloServer(): Promise<ApolloServer<GraphQLContext>
   return server;
 }
 
-export async function createContext(): Promise<GraphQLContext> {
-  return { mongoDb: await getDb() };
+export async function createContext(req?: express.Request): Promise<GraphQLContext> {
+  const authorization = req?.headers?.authorization?.trim();
+  let userId: string | undefined;
+  if (authorization) {
+    const match = /^Bearer\s+(\S+)$/.exec(authorization);
+    if (!match) {
+      throw new Error('Invalid authorization header');
+    }
+    userId = verifyAuthToken(match[1]);
+  }
+
+  const mongoDb = await getDb();
+  let role: string | undefined;
+  if (userId) {
+    const user = await mongoDb.collection('users').findOne({ _id: new ObjectId(userId) });
+    if (!user) {
+      throw new Error('Invalid or expired authentication token');
+    }
+    role = typeof user.role === 'string' ? user.role : 'user';
+  }
+  return { mongoDb, userId, role };
 }
 
 function parseGraphQLRequest(req: express.Request) {
@@ -92,7 +115,7 @@ const graphqlHandler: express.RequestHandler = async (req, res) => {
     const apolloServer = await createApolloServer();
     const result = await apolloServer.executeOperation(
       { query, variables, operationName },
-      { contextValue: await createContext() }
+      { contextValue: await createContext(req) }
     );
 
     if (result.body.kind === 'single') {

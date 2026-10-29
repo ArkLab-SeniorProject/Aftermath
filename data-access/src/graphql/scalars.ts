@@ -24,17 +24,13 @@ function parseJsonLiteral(ast: any): any {
   }
 }
 
-const createPassthroughScalar = (name: string) =>
-  new GraphQLScalarType({
-    name,
-    serialize: (value) => value,
-    parseValue: (value) => value,
-    parseLiteral: (ast) => (ast.kind === Kind.STRING ? ast.value : null),
-  });
+export const DateTimeScalar = new GraphQLScalarType({
+  name: 'DateTime',
+  serialize: (value) => (value instanceof Date ? value.toISOString() : value),
+  parseValue: (value) => (typeof value === 'string' ? new Date(value) : value),
+  parseLiteral: (ast) => (ast.kind === Kind.STRING ? new Date(ast.value) : null),
+});
 
-export const DateScalar = createPassthroughScalar('Date');
-export const TimeScalar = createPassthroughScalar('Time');
-export const DateTimeScalar = createPassthroughScalar('DateTime');
 export const JsonScalar = new GraphQLScalarType({
   name: 'JSON',
   serialize: (value) => value,
