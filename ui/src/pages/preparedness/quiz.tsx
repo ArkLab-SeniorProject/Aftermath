@@ -17,8 +17,7 @@ export default function PreparednessQuiz() {
         Preparedness Plan
       </Typography>
       <Typography variant='body1' color='text.secondary' sx={{ mb: 3 }}>
-        This quiz flow is coming soon. Check back later to build your
-        preparedness plan.
+        This quiz flow is coming soon. Check back later to build your preparedness plan.
       </Typography>
     </Box>
   );

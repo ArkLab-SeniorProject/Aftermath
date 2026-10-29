@@ -64,8 +64,8 @@ export function ForgotPasswordContent() {
                 Forgot password
               </Typography>
               <Typography variant='body1' color='text.secondary' gutterBottom>
-                Enter the email address you used to create your account and
-                we&rsquo;ll send you a link to reset your password.
+                Enter the email address you used to create your account and we&rsquo;ll send you a
+                link to reset your password.
               </Typography>
 
               {error && (
@@ -97,13 +97,7 @@ export function ForgotPasswordContent() {
                   }}
                   disabled={loading}
                 />
-                <Button
-                  type='submit'
-                  variant='contained'
-                  size='large'
-                  fullWidth
-                  disabled={loading}
-                >
+                <Button type='submit' variant='contained' size='large' fullWidth disabled={loading}>
                   {loading ? 'Sending...' : 'Send reset link'}
                 </Button>
               </Box>
@@ -116,15 +110,10 @@ export function ForgotPasswordContent() {
                 Check your email
               </Typography>
               <Alert severity='success' sx={{ mb: 2 }}>
-                If an account exists for {email}, a password reset link has been
-                sent. The link expires in 15 minutes.
+                If an account exists for {email}, a password reset link has been sent. The link
+                expires in 15 minutes.
               </Alert>
-              <Button
-                variant='contained'
-                size='large'
-                fullWidth
-                onClick={() => navigate('/login')}
-              >
+              <Button variant='contained' size='large' fullWidth onClick={() => navigate('/login')}>
                 Back to sign in
               </Button>
             </>

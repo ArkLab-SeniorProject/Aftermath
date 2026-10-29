@@ -4,7 +4,11 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/useAuth';
 import { apolloClient } from '../lib/apollo-client';
-import { GetRecoverySituationsByUserDocument, type GetRecoverySituationsByUserQuery, type GetRecoverySituationsByUserQueryVariables } from '../generated';
+import {
+  GetRecoverySituationsByUserDocument,
+  type GetRecoverySituationsByUserQuery,
+  type GetRecoverySituationsByUserQueryVariables,
+} from '../generated';
 import type { RecoveryQuizAnswers } from './recovery/quiz';
 
 interface SituationDisplay {
@@ -67,7 +71,10 @@ export default function Dashboard() {
     async function load() {
       if (user) {
         try {
-          const { data } = await apolloClient.query<GetRecoverySituationsByUserQuery, GetRecoverySituationsByUserQueryVariables>({
+          const { data } = await apolloClient.query<
+            GetRecoverySituationsByUserQuery,
+            GetRecoverySituationsByUserQueryVariables
+          >({
             query: GetRecoverySituationsByUserDocument,
             variables: { userId: user.id },
             fetchPolicy: 'network-only',
@@ -90,7 +97,9 @@ export default function Dashboard() {
     }
 
     load();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [user]);
 
   if (loading) {

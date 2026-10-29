@@ -80,7 +80,7 @@ export function ResetPasswordContent() {
         ResetPasswordWithTokenMutationVariables
       >({
         mutation: ResetPasswordWithTokenDocument,
-        variables: { token: token!, newPassword: password },
+        variables: { token: token as string, newPassword: password },
       });
       setStep('success');
     } catch {
@@ -118,8 +118,7 @@ export function ResetPasswordContent() {
                 Link expired
               </Typography>
               <Alert severity='error' sx={{ mb: 2 }}>
-                This password reset link is invalid or has expired. Please
-                request a new one.
+                This password reset link is invalid or has expired. Please request a new one.
               </Alert>
               <Button
                 variant='contained'
@@ -200,13 +199,7 @@ export function ResetPasswordContent() {
                   }}
                   disabled={loading}
                 />
-                <Button
-                  type='submit'
-                  variant='contained'
-                  size='large'
-                  fullWidth
-                  disabled={loading}
-                >
+                <Button type='submit' variant='contained' size='large' fullWidth disabled={loading}>
                   {loading ? 'Resetting...' : 'Reset password'}
                 </Button>
               </Box>
@@ -221,12 +214,7 @@ export function ResetPasswordContent() {
               <Alert severity='success' sx={{ mb: 2 }}>
                 Your password has been reset successfully.
               </Alert>
-              <Button
-                variant='contained'
-                size='large'
-                fullWidth
-                onClick={() => navigate('/login')}
-              >
+              <Button variant='contained' size='large' fullWidth onClick={() => navigate('/login')}>
                 Sign in
               </Button>
             </>

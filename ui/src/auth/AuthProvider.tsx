@@ -131,12 +131,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signup = async (
-    username: string,
-    email: string,
-    firstName: string,
-    password: string
-  ) => {
+  const signup = async (username: string, email: string, firstName: string, password: string) => {
     setLoading(true);
     authActionRef.current++;
     try {

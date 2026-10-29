@@ -1,10 +1,4 @@
-import {
-  AccountCircle,
-  Assignment,
-  Healing,
-  Home,
-  Shield,
-} from '@mui/icons-material';
+import { AccountCircle, Assignment, Healing, Home, Shield } from '@mui/icons-material';
 import { BottomNavigation, BottomNavigationAction, Paper } from '@mui/material';
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -20,9 +14,7 @@ export function BottomNav() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const currentIndex = NAV_ITEMS.findIndex((item) =>
-    location.pathname.startsWith(item.path),
-  );
+  const currentIndex = NAV_ITEMS.findIndex((item) => location.pathname.startsWith(item.path));
 
   return (
     <Paper
@@ -54,11 +46,7 @@ export function BottomNav() {
         }}
       >
         {NAV_ITEMS.map((item) => (
-          <BottomNavigationAction
-            key={item.label}
-            label={item.label}
-            icon={item.icon}
-          />
+          <BottomNavigationAction key={item.label} label={item.label} icon={item.icon} />
         ))}
       </BottomNavigation>
     </Paper>

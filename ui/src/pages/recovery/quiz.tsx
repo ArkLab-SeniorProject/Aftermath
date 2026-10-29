@@ -106,10 +106,7 @@ export default function RecoveryQuiz() {
     navigate('/dashboard');
   };
 
-  const toggleMulti = (
-    field: 'disasters' | 'helpTypes' | 'household',
-    value: string,
-  ) => {
+  const toggleMulti = (field: 'disasters' | 'helpTypes' | 'household', value: string) => {
     setAnswers((prev) => ({
       ...prev,
       [field]: prev[field].includes(value)
@@ -166,11 +163,7 @@ export default function RecoveryQuiz() {
         <Typography variant='h4' fontWeight={700}>
           Thank you, {displayName}.
         </Typography>
-        <Typography
-          variant='body1'
-          color='text.secondary'
-          sx={{ maxWidth: 360 }}
-        >
+        <Typography variant='body1' color='text.secondary' sx={{ maxWidth: 360 }}>
           We&rsquo;ve put together your first steps.
         </Typography>
 
@@ -248,9 +241,7 @@ export default function RecoveryQuiz() {
         >
           <RadioGroup
             value={answers.timeline}
-            onChange={(e) =>
-              setAnswers((prev) => ({ ...prev, timeline: e.target.value }))
-            }
+            onChange={(e) => setAnswers((prev) => ({ ...prev, timeline: e.target.value }))}
           >
             {TIMELINE_OPTIONS.map((opt) => (
               <FormControlLabel
@@ -329,7 +320,7 @@ export default function RecoveryQuiz() {
           question={
             selectedHelpLabels.length > 0
               ? `You indicated that you needed help with ${formatList(selectedHelpLabels)}.`
-              : "You indicated you’re not sure what help you need yet."
+              : 'You indicated you’re not sure what help you need yet.'
           }
           hint='Customizable filters based on your selections will appear here.'
         >
@@ -357,9 +348,7 @@ export default function RecoveryQuiz() {
         >
           <RadioGroup
             value={answers.homeStatus}
-            onChange={(e) =>
-              setAnswers((prev) => ({ ...prev, homeStatus: e.target.value }))
-            }
+            onChange={(e) => setAnswers((prev) => ({ ...prev, homeStatus: e.target.value }))}
           >
             {HOME_OPTIONS.map((opt) => (
               <FormControlLabel
@@ -407,9 +396,7 @@ export default function RecoveryQuiz() {
           <TextField
             label='Name (optional)'
             value={answers.name}
-            onChange={(e) =>
-              setAnswers((prev) => ({ ...prev, name: e.target.value }))
-            }
+            onChange={(e) => setAnswers((prev) => ({ ...prev, name: e.target.value }))}
             fullWidth
             autoFocus
           />
@@ -458,8 +445,9 @@ function formatList(items: (string | undefined)[]): string {
   const filtered = items.filter(Boolean) as string[];
   if (filtered.length === 0) return '';
   if (filtered.length === 1) return `"${filtered[0]}"`;
-  if (filtered.length === 2)
-    return `"${filtered[0]}" and "${filtered[1]}"`;
-  return `${filtered.slice(0, -1).map((i) => `"${i}"`).join(', ')}, and "${filtered[filtered.length - 1]}"`;
-
+  if (filtered.length === 2) return `"${filtered[0]}" and "${filtered[1]}"`;
+  return `${filtered
+    .slice(0, -1)
+    .map((i) => `"${i}"`)
+    .join(', ')}, and "${filtered[filtered.length - 1]}"`;
 }

@@ -202,7 +202,9 @@ export const mutationResolvers = {
   },
 
   forgotPassword: async (_: unknown, args: { email: string }, ctx: Context) => {
-    const doc = await ctx.mongoDb.collection('users').findOne({ email: args.email.toLowerCase().trim() });
+    const doc = await ctx.mongoDb
+      .collection('users')
+      .findOne({ email: args.email.toLowerCase().trim() });
     if (!doc) return true;
 
     const resetToken = crypto.randomBytes(32).toString('hex');
@@ -217,7 +219,7 @@ export const mutationResolvers = {
           reset_password_expires: expires,
           updated_at: new Date(),
         },
-      },
+      }
     );
 
     try {
@@ -229,7 +231,11 @@ export const mutationResolvers = {
     return true;
   },
 
-  resetPasswordWithToken: async (_: unknown, args: { token: string; newPassword: string }, ctx: Context) => {
+  resetPasswordWithToken: async (
+    _: unknown,
+    args: { token: string; newPassword: string },
+    ctx: Context
+  ) => {
     if (!args.newPassword || args.newPassword.length < 6) {
       throw new Error('Password must be at least 6 characters');
     }
@@ -248,7 +254,7 @@ export const mutationResolvers = {
       {
         $set: { password_hash: hashedPassword, updated_at: new Date() },
         $unset: { reset_password_token: '', reset_password_expires: '' },
-      },
+      }
     );
 
     return true;
