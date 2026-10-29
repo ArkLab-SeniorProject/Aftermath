@@ -1,10 +1,13 @@
-import { apolloClient } from './apollo-client';
 import {
   CreateSituationDocument,
   type CreateSituationMutation,
   type CreateSituationMutationVariables,
+  GetSituationsByUserDocument,
+  type GetSituationsByUserQuery,
+  type GetSituationsByUserQueryVariables,
 } from '../generated';
 import type { RecoveryQuizAnswers } from '../pages/recovery/quiz';
+import { apolloClient } from './apollo-client';
 
 const STORAGE_KEY = 'recovery_quiz_answers';
 const SYNCED_KEY = 'recovery_quiz_synced';
@@ -35,6 +38,23 @@ export async function syncRecoverySituationIfNeeded(): Promise<void> {
 
     const answers: RecoveryQuizAnswers = JSON.parse(raw);
     const input = quizAnswersToInput(answers);
+    const storedUser = JSON.parse(localStorage.getItem('authUser') ?? 'null') as {
+      id?: string;
+    } | null;
+    if (!storedUser?.id) return;
+
+    const { data: existingData } = await apolloClient.query<
+      GetSituationsByUserQuery,
+      GetSituationsByUserQueryVariables
+    >({
+      query: GetSituationsByUserDocument,
+      variables: { userId: storedUser.id },
+      fetchPolicy: 'network-only',
+    });
+    if (existingData?.getSituationsByUser.length) {
+      localStorage.setItem(SYNCED_KEY, 'true');
+      return;
+    }
 
     await apolloClient.mutate<CreateSituationMutation, CreateSituationMutationVariables>({
       mutation: CreateSituationDocument,
