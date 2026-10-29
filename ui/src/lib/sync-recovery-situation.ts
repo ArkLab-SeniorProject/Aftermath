@@ -36,10 +36,7 @@ export async function syncRecoverySituationIfNeeded(): Promise<void> {
     const answers: RecoveryQuizAnswers = JSON.parse(raw);
     const input = quizAnswersToInput(answers);
 
-    await apolloClient.mutate<
-      CreateSituationMutation,
-      CreateSituationMutationVariables
-    >({
+    await apolloClient.mutate<CreateSituationMutation, CreateSituationMutationVariables>({
       mutation: CreateSituationDocument,
       variables: { input },
     });

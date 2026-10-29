@@ -120,9 +120,7 @@ export const queryResolvers = {
 
   // ── Recovery Situations ──
   getSituation: async (_: unknown, args: { id: string }, ctx: Context) => {
-    const doc = await ctx.mongoDb
-      .collection('situation')
-      .findOne({ _id: new ObjectId(args.id) });
+    const doc = await ctx.mongoDb.collection('situation').findOne({ _id: new ObjectId(args.id) });
     return mapSituation(doc);
   },
 
@@ -176,11 +174,7 @@ export const queryResolvers = {
     return docs.map(mapGuide);
   },
 
-  getGuideByDisaster: async (
-    _: unknown,
-    args: { disaster: string },
-    ctx: Context
-  ) => {
+  getGuideByDisaster: async (_: unknown, args: { disaster: string }, ctx: Context) => {
     const doc = await ctx.mongoDb
       .collection('guide')
       .findOne({ disaster: new ObjectId(args.disaster) });
