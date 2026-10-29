@@ -5,6 +5,7 @@ export const GET_USER = gql`
     getUser(id: $id) {
       id
       username
+      email
       firstName
       createdAt
       updatedAt
@@ -17,6 +18,7 @@ export const GET_USER_BY_USERNAME = gql`
     getUserByUsername(username: $username) {
       id
       username
+      email
       firstName
       createdAt
       updatedAt
@@ -29,6 +31,7 @@ export const GET_USERS = gql`
     getUsers(limit: $limit, offset: $offset) {
       id
       username
+      email
       firstName
       createdAt
       updatedAt
@@ -44,6 +47,7 @@ export const LOGIN = gql`
       user {
         id
         username
+        email
         firstName
         createdAt
         updatedAt
@@ -60,6 +64,7 @@ export const CREATE_USER = gql`
       user {
         id
         username
+        email
         firstName
         createdAt
         updatedAt
@@ -68,14 +73,97 @@ export const CREATE_USER = gql`
   }
 `;
 
-export const GET_SECURITY_QUESTION = gql`
-  query GetSecurityQuestion($username: String!) {
-    getSecurityQuestion(username: $username)
+export const FORGOT_PASSWORD = gql`
+  mutation ForgotPassword($email: String!) {
+    forgotPassword(email: $email)
   }
 `;
 
-export const RESET_PASSWORD = gql`
-  mutation ResetPassword($username: String!, $securityAnswer: String!, $newPassword: String!) {
-    resetPassword(username: $username, securityAnswer: $securityAnswer, newPassword: $newPassword)
+export const VALIDATE_RESET_TOKEN = gql`
+  query ValidateResetToken($token: String!) {
+    validateResetToken(token: $token)
+  }
+`;
+
+export const RESET_PASSWORD_WITH_TOKEN = gql`
+  mutation ResetPasswordWithToken($token: String!, $newPassword: String!) {
+    resetPasswordWithToken(token: $token, newPassword: $newPassword)
+  }
+`;
+
+// ── Recovery Situation ──
+
+export const CREATE_RECOVERY_SITUATION = gql`
+  mutation CreateRecoverySituation($input: CreateRecoverySituationInput!) {
+    createRecoverySituation(input: $input) {
+      id
+      userId
+      location {
+        zip
+        city
+        state
+        stateCode
+        countryCode
+      }
+      timeline
+      disasters
+      displayName
+      helpTypes {
+        housing
+        financial
+        damage
+      }
+      homeStatus
+      household
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+export const GET_RECOVERY_SITUATIONS_BY_USER = gql`
+  query GetRecoverySituationsByUser($userId: ID!) {
+    getRecoverySituationsByUser(userId: $userId) {
+      id
+      userId
+      location {
+        zip
+        city
+        state
+        stateCode
+        countryCode
+      }
+      timeline
+      disasters
+      displayName
+      helpTypes {
+        housing
+        financial
+        damage
+      }
+      homeStatus
+      household
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+export const UPDATE_RECOVERY_SITUATION = gql`
+  mutation UpdateRecoverySituation($id: ID!, $input: UpdateRecoverySituationInput!) {
+    updateRecoverySituation(id: $id, input: $input) {
+      id
+      timeline
+      disasters
+      displayName
+      helpTypes {
+        housing
+        financial
+        damage
+      }
+      homeStatus
+      household
+      updatedAt
+    }
   }
 `;

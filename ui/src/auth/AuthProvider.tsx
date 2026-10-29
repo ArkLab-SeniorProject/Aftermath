@@ -25,6 +25,7 @@ function toUser(data: any): User | null {
   return {
     id: data.id,
     username: data.username,
+    email: data.email ?? null,
     firstName: data.firstName ?? null,
     createdAt: data.createdAt ?? null,
     updatedAt: data.updatedAt ?? null,
@@ -116,7 +117,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return false;
       }
 
-      setUser(toUser(result.user));
+      const loggedInUser = toUser(result.user);
+      setUser(loggedInUser);
+      if (loggedInUser) {
+        localStorage.setItem('authUser', JSON.stringify(loggedInUser));
+        localStorage.setItem('authToken', loggedInUser.id);
+      }
       return true;
     } catch {
       return false;
@@ -125,13 +131,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signup = async (
-    username: string,
-    firstName: string,
-    password: string,
-    securityQuestion: string,
-    securityAnswer: string
-  ) => {
+  const signup = async (username: string, email: string, firstName: string, password: string) => {
     setLoading(true);
     authActionRef.current++;
     try {
@@ -141,10 +141,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           variables: {
             input: {
               username,
+              email,
               firstName,
               passwordHash: password,
-              securityQuestion,
-              securityAnswer,
             },
           },
         })
@@ -155,7 +154,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: false, error: result?.error ?? 'Failed to create account' };
       }
 
-      setUser(toUser(result.user));
+      const newUser = toUser(result.user);
+      setUser(newUser);
+      if (newUser) {
+        localStorage.setItem('authUser', JSON.stringify(newUser));
+        localStorage.setItem('authToken', newUser.id);
+      }
       return { success: true };
     } catch (err: any) {
       return { success: false, error: err.message ?? 'Something went wrong' };
@@ -167,6 +171,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     authActionRef.current++;
     setUser(null);
+    try {
+      localStorage.removeItem('authUser');
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('recovery_quiz_answers');
+      localStorage.removeItem('recovery_quiz_complete');
+      localStorage.removeItem('recovery_quiz_synced');
+    } catch {}
   };
 
   return (

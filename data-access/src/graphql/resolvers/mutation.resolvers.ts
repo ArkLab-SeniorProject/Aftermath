@@ -1,38 +1,24 @@
 import type { Db } from 'mongodb';
 import { ObjectId } from 'mongodb';
 import bcrypt from 'bcryptjs';
+import crypto from 'node:crypto';
+import { sendPasswordResetEmail } from '../../lib/email.js';
 
 const BCRYPT_ROUNDS = 10;
-const MAX_RESET_ATTEMPTS = 5;
-const RESET_WINDOW_MS = 15 * 60 * 1000;
-
-const resetAttempts = new Map<string, { count: number; firstAttempt: number }>();
-
-function checkResetRateLimit(username: string): boolean {
-  const now = Date.now();
-  const entry = resetAttempts.get(username);
-  if (entry && now - entry.firstAttempt < RESET_WINDOW_MS) {
-    if (entry.count >= MAX_RESET_ATTEMPTS) return false;
-    entry.count++;
-    return true;
-  }
-  resetAttempts.set(username, { count: 1, firstAttempt: now });
-  return true;
-}
 
 type Context = { mongoDb: Db; userId?: string };
 
 function toSnakeCaseDoc(input: any, idFields: string[] = []) {
   const fieldMap: Record<string, string> = {
     firstName: 'first_name',
+    email: 'email',
     passwordHash: 'password_hash',
     userId: 'user_id',
-    eventOccured: 'event_occured',
-    helpNeeded: 'help_needed',
+    displayName: 'display_name',
+    helpTypes: 'help_types',
+    homeStatus: 'home_status',
+    recoverySituationId: 'recovery_situation_id',
     resourceType: 'resource_type',
-    securityQuestion: 'security_question',
-    securityAnswer: 'security_answer',
-    disasterId: 'disaster',
     stateCode: 'state_code',
     countryCode: 'country_code',
   };
@@ -77,14 +63,14 @@ function mapUser(doc: any) {
   return {
     id: String(doc._id),
     username: doc.username,
+    email: doc.email ?? null,
     firstName: doc.first_name ?? null,
-    securityQuestion: doc.security_question ?? null,
     createdAt: doc.created_at ?? null,
     updatedAt: doc.updated_at ?? null,
   };
 }
 
-function mapDisaster(doc: any) {
+function mapRecoverySituation(doc: any) {
   return {
     id: String(doc._id),
     userId: String(doc.user_id),
@@ -97,10 +83,12 @@ function mapDisaster(doc: any) {
           countryCode: doc.location.country_code ?? null,
         }
       : null,
-    eventOccured: doc.event_occured ?? null,
-    disaster: doc.disaster ?? null,
-    helpNeeded: doc.help_needed ?? null,
-    homeownership: doc.homeownership ?? null,
+    timeline: doc.timeline ?? null,
+    disasters: doc.disasters ?? null,
+    displayName: doc.display_name ?? null,
+    helpTypes: doc.help_types ?? null,
+    homeStatus: doc.home_status ?? null,
+    household: doc.household ?? [],
     createdAt: doc.created_at ?? null,
     updatedAt: doc.updated_at ?? null,
   };
@@ -121,7 +109,7 @@ function mapGuide(doc: any) {
   return {
     id: String(doc._id),
     userId: String(doc.user_id),
-    disasterId: String(doc.disaster),
+    recoverySituationId: String(doc.recovery_situation_id),
     resources: (doc.resources ?? []).map((r: any) => ({
       resourceId: String(r.resource_id),
       progress: r.progress ?? null,
@@ -156,15 +144,10 @@ export const mutationResolvers = {
     }
 
     const hashedPassword = await bcrypt.hash(input.passwordHash, BCRYPT_ROUNDS);
-    const hashedAnswer = await bcrypt.hash(
-      (input.securityAnswer ?? '').toLowerCase().trim(),
-      BCRYPT_ROUNDS
-    );
 
     const doc = toSnakeCaseDoc({
       ...input,
       passwordHash: hashedPassword,
-      securityAnswer: hashedAnswer,
     });
 
     try {
@@ -205,13 +188,6 @@ export const mutationResolvers = {
     if (input.passwordHash) {
       input.passwordHash = await bcrypt.hash(input.passwordHash, BCRYPT_ROUNDS);
     }
-    if (input.securityAnswer) {
-      input.securityAnswer = await bcrypt.hash(
-        input.securityAnswer.toLowerCase().trim(),
-        BCRYPT_ROUNDS
-      );
-    }
-
     const fields = toSnakeCaseDoc(input);
     const result = await updateAndReturn(ctx.mongoDb, 'users', args.id, fields);
     return mapUser(result);
@@ -225,55 +201,87 @@ export const mutationResolvers = {
     return result.deletedCount > 0;
   },
 
-  resetPassword: async (_: unknown, args: any, ctx: Context) => {
-    if (!args.securityAnswer || !args.securityAnswer.trim()) return false;
-    if (!args.newPassword || !args.newPassword.trim()) return false;
-    if (!checkResetRateLimit(args.username)) {
-      throw new Error('Too many reset attempts. Try again later.');
+  forgotPassword: async (_: unknown, args: { email: string }, ctx: Context) => {
+    const doc = await ctx.mongoDb
+      .collection('users')
+      .findOne({ email: args.email.toLowerCase().trim() });
+    if (!doc) return true;
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+    const expires = new Date(Date.now() + 15 * 60 * 1000);
+
+    await ctx.mongoDb.collection('users').updateOne(
+      { _id: doc._id },
+      {
+        $set: {
+          reset_password_token: hashedToken,
+          reset_password_expires: expires,
+          updated_at: new Date(),
+        },
+      }
+    );
+
+    try {
+      await sendPasswordResetEmail(doc.email, resetToken);
+    } catch (err) {
+      console.error('[forgotPassword] Failed to send email:', err);
     }
 
-    const doc = await ctx.mongoDb.collection('users').findOne({ username: args.username });
-    if (!doc) return false;
-
-    const storedAnswer = doc.security_answer;
-    if (!storedAnswer) return false;
-
-    const providedAnswer = args.securityAnswer.toLowerCase().trim();
-    const valid = await bcrypt.compare(providedAnswer, storedAnswer);
-    if (!valid) return false;
-
-    const hashedPassword = await bcrypt.hash(args.newPassword, BCRYPT_ROUNDS);
-    await ctx.mongoDb
-      .collection('users')
-      .updateOne(
-        { _id: doc._id },
-        { $set: { password_hash: hashedPassword, updated_at: new Date() } }
-      );
     return true;
   },
 
-  // ── Disasters ──
-  createDisaster: async (_: unknown, args: any, ctx: Context) => {
+  resetPasswordWithToken: async (
+    _: unknown,
+    args: { token: string; newPassword: string },
+    ctx: Context
+  ) => {
+    if (!args.newPassword || args.newPassword.length < 6) {
+      throw new Error('Password must be at least 6 characters');
+    }
+
+    const hashedToken = crypto.createHash('sha256').update(args.token).digest('hex');
+    const doc = await ctx.mongoDb.collection('users').findOne({
+      reset_password_token: hashedToken,
+      reset_password_expires: { $gt: new Date() },
+    });
+
+    if (!doc) throw new Error('Invalid or expired reset link');
+
+    const hashedPassword = await bcrypt.hash(args.newPassword, BCRYPT_ROUNDS);
+    await ctx.mongoDb.collection('users').updateOne(
+      { _id: doc._id },
+      {
+        $set: { password_hash: hashedPassword, updated_at: new Date() },
+        $unset: { reset_password_token: '', reset_password_expires: '' },
+      }
+    );
+
+    return true;
+  },
+
+  // ── Recovery Situations ──
+  createRecoverySituation: async (_: unknown, args: any, ctx: Context) => {
     const authedUserId = requireAuth(ctx);
     const input = { ...args.input, userId: authedUserId };
     const doc = toSnakeCaseDoc(input, ['userId']);
-    const result = await insertAndReturn(ctx.mongoDb, 'disaster', doc);
-    return mapDisaster(result);
+    const result = await insertAndReturn(ctx.mongoDb, 'recovery_situation', doc);
+    return mapRecoverySituation(result);
   },
 
-  updateDisaster: async (_: unknown, args: any, ctx: Context) => {
+  updateRecoverySituation: async (_: unknown, args: any, ctx: Context) => {
     const authedUserId = requireAuth(ctx);
-    await requireOwnership(ctx.mongoDb, 'disaster', args.id, authedUserId);
+    await requireOwnership(ctx.mongoDb, 'recovery_situation', args.id, authedUserId);
     const fields = toSnakeCaseDoc(args.input);
-    const result = await updateAndReturn(ctx.mongoDb, 'disaster', args.id, fields);
-    return mapDisaster(result);
+    const result = await updateAndReturn(ctx.mongoDb, 'recovery_situation', args.id, fields);
+    return mapRecoverySituation(result);
   },
 
-  deleteDisaster: async (_: unknown, args: any, ctx: Context) => {
+  deleteRecoverySituation: async (_: unknown, args: any, ctx: Context) => {
     const authedUserId = requireAuth(ctx);
-    await requireOwnership(ctx.mongoDb, 'disaster', args.id, authedUserId);
+    await requireOwnership(ctx.mongoDb, 'recovery_situation', args.id, authedUserId);
     const result = await ctx.mongoDb
-      .collection('disaster')
+      .collection('recovery_situation')
       .deleteOne({ _id: new ObjectId(args.id) });
     return result.deletedCount > 0;
   },
@@ -305,7 +313,7 @@ export const mutationResolvers = {
   createGuide: async (_: unknown, args: any, ctx: Context) => {
     const authedUserId = requireAuth(ctx);
     const input = { ...args.input, userId: authedUserId };
-    const doc = toSnakeCaseDoc(input, ['userId', 'disasterId']);
+    const doc = toSnakeCaseDoc(input, ['userId', 'recoverySituationId']);
     const result = await insertAndReturn(ctx.mongoDb, 'guide', doc);
     return mapGuide(result);
   },
