@@ -7,6 +7,7 @@ export const GET_USER = gql`
       username
       email
       firstName
+      role
       createdAt
       updatedAt
     }
@@ -20,6 +21,7 @@ export const GET_USER_BY_USERNAME = gql`
       username
       email
       firstName
+      role
       createdAt
       updatedAt
     }
@@ -33,6 +35,7 @@ export const GET_USERS = gql`
       username
       email
       firstName
+      role
       createdAt
       updatedAt
     }
@@ -50,6 +53,7 @@ export const LOGIN = gql`
         username
         email
         firstName
+        role
         createdAt
         updatedAt
       }
@@ -68,6 +72,7 @@ export const CREATE_USER = gql`
         username
         email
         firstName
+        role
         createdAt
         updatedAt
       }

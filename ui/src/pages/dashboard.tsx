@@ -1,14 +1,14 @@
-import { Box, Button, Chip, CircularProgress, Divider, Paper, Typography } from '@mui/material';
 import { LogoutOutlined } from '@mui/icons-material';
+import { Box, Button, Chip, CircularProgress, Divider, Paper, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/useAuth';
-import { apolloClient } from '../lib/apollo-client';
 import {
   GetSituationsByUserDocument,
   type GetSituationsByUserQuery,
   type GetSituationsByUserQueryVariables,
 } from '../generated';
+import { apolloClient } from '../lib/apollo-client';
 import type { RecoveryQuizAnswers } from './recovery/quiz';
 
 interface SituationDisplay {
@@ -46,7 +46,14 @@ function fromDbRecord(record: any): SituationDisplay {
   if (record.helpTypes?.financial) helpTypes.push('Financial');
   if (record.helpTypes?.damage) helpTypes.push('Property Damage');
   const toArray = (val: unknown): string[] =>
-    Array.isArray(val) ? val : typeof val === 'string' && val ? [val] : [];
+    Array.isArray(val)
+      ? val
+      : typeof val === 'string'
+        ? val
+            .split(',')
+            .map((item) => item.trim())
+            .filter(Boolean)
+        : [];
 
   return {
     zipCode: record.location?.zip ?? '',

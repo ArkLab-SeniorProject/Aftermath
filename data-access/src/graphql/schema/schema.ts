@@ -4,12 +4,18 @@ export const schema = gql`
   scalar DateTime
   scalar JSON
 
+  enum UserRole {
+    user
+    admin
+  }
+
   # ── User ──────────────────────────────────
   type User {
     id: ID!
     username: String!
     email: String
     firstName: String
+    role: UserRole!
     createdAt: DateTime
     updatedAt: DateTime
   }

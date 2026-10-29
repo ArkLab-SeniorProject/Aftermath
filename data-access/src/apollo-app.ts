@@ -23,6 +23,7 @@ if (process.env.NODE_ENV !== 'production') {
 export type GraphQLContext = {
   mongoDb: Awaited<ReturnType<typeof getDb>>;
   userId?: string;
+  role?: string;
 };
 
 let server: ApolloServer<GraphQLContext> | null = null;
@@ -55,13 +56,15 @@ export async function createContext(req?: express.Request): Promise<GraphQLConte
   }
 
   const mongoDb = await getDb();
+  let role: string | undefined;
   if (userId) {
     const user = await mongoDb.collection('users').findOne({ _id: new ObjectId(userId) });
     if (!user) {
       throw new Error('Invalid or expired authentication token');
     }
+    role = typeof user.role === 'string' ? user.role : 'user';
   }
-  return { mongoDb, userId };
+  return { mongoDb, userId, role };
 }
 
 function parseGraphQLRequest(req: express.Request) {

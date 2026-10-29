@@ -364,23 +364,28 @@ export type User = {
   email?: Maybe<Scalars['String']['output']>;
   firstName?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
+  role: UserRole;
   updatedAt?: Maybe<Scalars['DateTime']['output']>;
   username: Scalars['String']['output'];
 };
+
+export type UserRole =
+  | 'admin'
+  | 'user';
 
 export type GetUserQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type GetUserQuery = { __typename?: 'Query', getUser?: { __typename?: 'User', id: string, username: string, email?: string | null, firstName?: string | null, createdAt?: any | null, updatedAt?: any | null } | null };
+export type GetUserQuery = { __typename?: 'Query', getUser?: { __typename?: 'User', id: string, username: string, email?: string | null, firstName?: string | null, role: UserRole, createdAt?: any | null, updatedAt?: any | null } | null };
 
 export type GetUserByUsernameQueryVariables = Exact<{
   username: Scalars['String']['input'];
 }>;
 
 
-export type GetUserByUsernameQuery = { __typename?: 'Query', getUserByUsername?: { __typename?: 'User', id: string, username: string, email?: string | null, firstName?: string | null, createdAt?: any | null, updatedAt?: any | null } | null };
+export type GetUserByUsernameQuery = { __typename?: 'Query', getUserByUsername?: { __typename?: 'User', id: string, username: string, email?: string | null, firstName?: string | null, role: UserRole, createdAt?: any | null, updatedAt?: any | null } | null };
 
 export type GetUsersQueryVariables = Exact<{
   limit?: InputMaybe<Scalars['Int']['input']>;
@@ -388,7 +393,7 @@ export type GetUsersQueryVariables = Exact<{
 }>;
 
 
-export type GetUsersQuery = { __typename?: 'Query', getUsers: Array<{ __typename?: 'User', id: string, username: string, email?: string | null, firstName?: string | null, createdAt?: any | null, updatedAt?: any | null }> };
+export type GetUsersQuery = { __typename?: 'Query', getUsers: Array<{ __typename?: 'User', id: string, username: string, email?: string | null, firstName?: string | null, role: UserRole, createdAt?: any | null, updatedAt?: any | null }> };
 
 export type LoginMutationVariables = Exact<{
   username: Scalars['String']['input'];
@@ -396,14 +401,14 @@ export type LoginMutationVariables = Exact<{
 }>;
 
 
-export type LoginMutation = { __typename?: 'Mutation', login: { __typename?: 'AuthPayload', success: boolean, token?: string | null, error?: string | null, user?: { __typename?: 'User', id: string, username: string, email?: string | null, firstName?: string | null, createdAt?: any | null, updatedAt?: any | null } | null } };
+export type LoginMutation = { __typename?: 'Mutation', login: { __typename?: 'AuthPayload', success: boolean, token?: string | null, error?: string | null, user?: { __typename?: 'User', id: string, username: string, email?: string | null, firstName?: string | null, role: UserRole, createdAt?: any | null, updatedAt?: any | null } | null } };
 
 export type CreateUserMutationVariables = Exact<{
   input: CreateUserInput;
 }>;
 
 
-export type CreateUserMutation = { __typename?: 'Mutation', createUser: { __typename?: 'AuthPayload', success: boolean, token?: string | null, error?: string | null, user?: { __typename?: 'User', id: string, username: string, email?: string | null, firstName?: string | null, createdAt?: any | null, updatedAt?: any | null } | null } };
+export type CreateUserMutation = { __typename?: 'Mutation', createUser: { __typename?: 'AuthPayload', success: boolean, token?: string | null, error?: string | null, user?: { __typename?: 'User', id: string, username: string, email?: string | null, firstName?: string | null, role: UserRole, createdAt?: any | null, updatedAt?: any | null } | null } };
 
 export type ForgotPasswordMutationVariables = Exact<{
   email: Scalars['String']['input'];
@@ -457,6 +462,7 @@ export const GetUserDocument = gql`
     username
     email
     firstName
+    role
     createdAt
     updatedAt
   }
@@ -505,6 +511,7 @@ export const GetUserByUsernameDocument = gql`
     username
     email
     firstName
+    role
     createdAt
     updatedAt
   }
@@ -553,6 +560,7 @@ export const GetUsersDocument = gql`
     username
     email
     firstName
+    role
     createdAt
     updatedAt
   }
@@ -606,6 +614,7 @@ export const LoginDocument = gql`
       username
       email
       firstName
+      role
       createdAt
       updatedAt
     }
@@ -650,6 +659,7 @@ export const CreateUserDocument = gql`
       username
       email
       firstName
+      role
       createdAt
       updatedAt
     }

@@ -27,6 +27,7 @@ function toUser(data: any): User | null {
     username: data.username,
     email: data.email ?? null,
     firstName: data.firstName ?? null,
+    role: data.role === 'admin' ? 'admin' : 'user',
     createdAt: data.createdAt ?? null,
     updatedAt: data.updatedAt ?? null,
   };

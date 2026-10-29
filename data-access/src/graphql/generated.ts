@@ -340,9 +340,12 @@ export type User = {
   email?: Maybe<Scalars['String']['output']>;
   firstName?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
+  role: UserRole;
   updatedAt?: Maybe<Scalars['DateTime']['output']>;
   username: Scalars['String']['output'];
 };
+
+export type UserRole = 'admin' | 'user';
 
 export type GetUserQueryVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -356,6 +359,7 @@ export type GetUserQuery = {
     username: string;
     email?: string | null;
     firstName?: string | null;
+    role: UserRole;
     createdAt?: any | null;
     updatedAt?: any | null;
   } | null;
@@ -373,6 +377,7 @@ export type GetUserByUsernameQuery = {
     username: string;
     email?: string | null;
     firstName?: string | null;
+    role: UserRole;
     createdAt?: any | null;
     updatedAt?: any | null;
   } | null;
@@ -391,6 +396,7 @@ export type GetUsersQuery = {
     username: string;
     email?: string | null;
     firstName?: string | null;
+    role: UserRole;
     createdAt?: any | null;
     updatedAt?: any | null;
   }>;
@@ -414,6 +420,7 @@ export type LoginMutation = {
       username: string;
       email?: string | null;
       firstName?: string | null;
+      role: UserRole;
       createdAt?: any | null;
       updatedAt?: any | null;
     } | null;
@@ -437,6 +444,7 @@ export type CreateUserMutation = {
       username: string;
       email?: string | null;
       firstName?: string | null;
+      role: UserRole;
       createdAt?: any | null;
       updatedAt?: any | null;
     } | null;
@@ -565,6 +573,7 @@ export const GetUserDocument = gql`
     username
     email
     firstName
+    role
     createdAt
     updatedAt
   }
@@ -637,6 +646,7 @@ export const GetUserByUsernameDocument = gql`
     username
     email
     firstName
+    role
     createdAt
     updatedAt
   }
@@ -735,6 +745,7 @@ export const GetUsersDocument = gql`
     username
     email
     firstName
+    role
     createdAt
     updatedAt
   }
@@ -817,6 +828,7 @@ export const LoginDocument = gql`
       username
       email
       firstName
+      role
       createdAt
       updatedAt
     }
@@ -872,6 +884,7 @@ export const CreateUserDocument = gql`
       username
       email
       firstName
+      role
       createdAt
       updatedAt
     }

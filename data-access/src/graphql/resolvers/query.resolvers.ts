@@ -1,11 +1,29 @@
+import crypto from 'node:crypto';
 import type { Db } from 'mongodb';
 import { ObjectId } from 'mongodb';
-import crypto from 'node:crypto';
 import { mapId } from '../../db/mongoHelpers.js';
 
 const MAX_LIMIT = 100;
 
-type Context = { mongoDb: Db; userId?: string };
+type Context = { mongoDb: Db; userId?: string; role?: string };
+
+function requireAuth(ctx: Context): string {
+  if (!ctx.userId) throw new Error('Authentication required');
+  return ctx.userId;
+}
+
+function requireAdmin(ctx: Context): string {
+  const userId = requireAuth(ctx);
+  if (ctx.role !== 'admin') throw new Error('Administrator access required');
+  return userId;
+}
+
+function requireSelfOrAdmin(ctx: Context, userId: string): void {
+  const authedUserId = requireAuth(ctx);
+  if (authedUserId !== userId && ctx.role !== 'admin') {
+    throw new Error('Not authorized');
+  }
+}
 
 function clampLimit(limit: number): number {
   if (!limit || limit <= 0) return 25;
@@ -19,6 +37,7 @@ function mapUser(doc: any) {
     username: doc.username,
     email: doc.email ?? null,
     firstName: doc.first_name ?? null,
+    role: doc.role === 'admin' ? 'admin' : 'user',
     createdAt: doc.created_at ?? null,
     updatedAt: doc.updated_at ?? null,
   };
@@ -90,11 +109,13 @@ function mapGuide(doc: any) {
 export const queryResolvers = {
   // ── Users ──
   getUser: async (_: unknown, args: { id: string }, ctx: Context) => {
+    requireSelfOrAdmin(ctx, args.id);
     const doc = await ctx.mongoDb.collection('users').findOne({ _id: new ObjectId(args.id) });
     return mapUser(doc);
   },
 
   getUserByUsername: async (_: unknown, args: { username: string }, ctx: Context) => {
+    requireAdmin(ctx);
     const doc = await ctx.mongoDb.collection('users').findOne({ username: args.username });
     return mapUser(doc);
   },
@@ -109,6 +130,7 @@ export const queryResolvers = {
   },
 
   getUsers: async (_: unknown, args: { limit: number; offset: number }, ctx: Context) => {
+    requireAdmin(ctx);
     const docs = await ctx.mongoDb
       .collection('users')
       .find()
@@ -120,7 +142,9 @@ export const queryResolvers = {
 
   // ── Recovery Situations ──
   getSituation: async (_: unknown, args: { id: string }, ctx: Context) => {
+    requireAuth(ctx);
     const doc = await ctx.mongoDb.collection('situation').findOne({ _id: new ObjectId(args.id) });
+    if (doc) requireSelfOrAdmin(ctx, String(doc.user_id));
     return mapSituation(doc);
   },
 
@@ -160,7 +184,9 @@ export const queryResolvers = {
 
   // ── Guides ──
   getGuide: async (_: unknown, args: { id: string }, ctx: Context) => {
+    requireAuth(ctx);
     const doc = await ctx.mongoDb.collection('guide').findOne({ _id: new ObjectId(args.id) });
+    if (doc) requireSelfOrAdmin(ctx, String(doc.user_id));
     return mapGuide(doc);
   },
 
@@ -175,9 +201,11 @@ export const queryResolvers = {
   },
 
   getGuideByDisaster: async (_: unknown, args: { disaster: string }, ctx: Context) => {
+    requireAuth(ctx);
     const doc = await ctx.mongoDb
       .collection('guide')
       .findOne({ disaster: new ObjectId(args.disaster) });
+    if (doc) requireSelfOrAdmin(ctx, String(doc.user_id));
     return mapGuide(doc);
   },
 };
@@ -186,6 +214,7 @@ export const queryResolvers = {
 export const typeResolvers = {
   Situation: {
     user: async (parent: any, _: unknown, ctx: Context) => {
+      requireSelfOrAdmin(ctx, String(parent.userId));
       const doc = await ctx.mongoDb
         .collection('users')
         .findOne({ _id: new ObjectId(parent.userId) });
@@ -195,6 +224,7 @@ export const typeResolvers = {
 
   Guide: {
     user: async (parent: any, _: unknown, ctx: Context) => {
+      requireSelfOrAdmin(ctx, String(parent.userId));
       const doc = await ctx.mongoDb
         .collection('users')
         .findOne({ _id: new ObjectId(parent.userId) });

@@ -23,6 +23,10 @@ cp .env.example .env.local
 
 Fill in `.env.local` with your MongoDB credentials (`DB_USERNAME`, `DB_PASSWORD`, `DB_HOST`, `DB_APP_NAME`) and a long random `AUTH_SECRET` used to sign authentication tokens. The `DB_NAME` defaults to `senior-project`.
 
+Every account created through signup is assigned `role: "user"`. Resource mutations are restricted to users whose MongoDB document has `role: "admin"`. Set `role: "user"` for normal accounts, and grant `"admin"` only to trusted resource administrators. Do not expose role assignment through the public signup or profile-update inputs.
+
+The `users` collection stores the role as a required application field with the values `"user"` or `"admin"`.
+
 3. Start the backend and frontend (in separate terminals):
 
 ```bash

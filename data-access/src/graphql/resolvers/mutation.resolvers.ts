@@ -7,7 +7,7 @@ import { sendPasswordResetEmail } from '../../lib/email.js';
 
 const BCRYPT_ROUNDS = 10;
 
-type Context = { mongoDb: Db; userId?: string };
+type Context = { mongoDb: Db; userId?: string; role?: string };
 
 function toSnakeCaseDoc(input: any, idFields: string[] = []) {
   const fieldMap: Record<string, string> = {
@@ -67,6 +67,7 @@ function mapUser(doc: any) {
     username: doc.username,
     email: doc.email ?? null,
     firstName: doc.first_name ?? null,
+    role: doc.role === 'admin' ? 'admin' : 'user',
     createdAt: doc.created_at ?? null,
     updatedAt: doc.updated_at ?? null,
   };
@@ -130,6 +131,12 @@ function requireAuth(ctx: Context): string {
   return ctx.userId;
 }
 
+function requireAdmin(ctx: Context): string {
+  const userId = requireAuth(ctx);
+  if (ctx.role !== 'admin') throw new Error('Administrator access required');
+  return userId;
+}
+
 async function requireOwnership(db: Db, collection: string, recordId: string, userId: string) {
   const doc = await db.collection(collection).findOne({ _id: new ObjectId(recordId) });
   if (!doc) throw new Error('Record not found');
@@ -152,6 +159,7 @@ export const mutationResolvers = {
     const doc = toSnakeCaseDoc({
       ...input,
       passwordHash: hashedPassword,
+      role: 'user',
     });
 
     try {
@@ -241,6 +249,17 @@ export const mutationResolvers = {
       await sendPasswordResetEmail(doc.email, resetToken);
     } catch (err) {
       console.error('[forgotPassword] Failed to send email:', err);
+      await ctx.mongoDb.collection('users').updateOne(
+        { _id: doc._id },
+        {
+          $unset: {
+            reset_password_token: '',
+            reset_password_expires: '',
+          },
+          $set: { updated_at: new Date() },
+        }
+      );
+      throw new Error('Unable to send password reset email');
     }
 
     return true;
@@ -307,21 +326,21 @@ export const mutationResolvers = {
 
   // ── Resources ──
   createResource: async (_: unknown, args: any, ctx: Context) => {
-    requireAuth(ctx);
+    requireAdmin(ctx);
     const doc = toSnakeCaseDoc(args.input);
     const result = await insertAndReturn(ctx.mongoDb, 'resources', doc);
     return mapResource(result);
   },
 
   updateResource: async (_: unknown, args: any, ctx: Context) => {
-    requireAuth(ctx);
+    requireAdmin(ctx);
     const fields = toSnakeCaseDoc(args.input);
     const result = await updateAndReturn(ctx.mongoDb, 'resources', args.id, fields);
     return mapResource(result);
   },
 
   deleteResource: async (_: unknown, args: any, ctx: Context) => {
-    requireAuth(ctx);
+    requireAdmin(ctx);
     const result = await ctx.mongoDb
       .collection('resources')
       .deleteOne({ _id: new ObjectId(args.id) });
@@ -331,6 +350,7 @@ export const mutationResolvers = {
   // ── Guides ──
   createGuide: async (_: unknown, args: any, ctx: Context) => {
     const authedUserId = requireAuth(ctx);
+    await requireOwnership(ctx.mongoDb, 'situation', args.input.disaster, authedUserId);
     const input = { ...args.input, userId: authedUserId };
     const existing = await ctx.mongoDb.collection('guide').findOne({
       user_id: new ObjectId(authedUserId),
