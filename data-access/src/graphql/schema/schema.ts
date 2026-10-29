@@ -17,6 +17,7 @@ export const schema = gql`
   type AuthPayload {
     success: Boolean!
     user: User
+    token: String
     error: String
   }
 

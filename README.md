@@ -21,7 +21,7 @@ npm install
 cp .env.example .env.local
 ```
 
-Fill in `.env.local` with your MongoDB credentials (`DB_USERNAME`, `DB_PASSWORD`, `DB_HOST`, `DB_APP_NAME`). The `DB_NAME` defaults to `senior-project`.
+Fill in `.env.local` with your MongoDB credentials (`DB_USERNAME`, `DB_PASSWORD`, `DB_HOST`, `DB_APP_NAME`) and a long random `AUTH_SECRET` used to sign authentication tokens. The `DB_NAME` defaults to `senior-project`.
 
 3. Start the backend and frontend (in separate terminals):
 

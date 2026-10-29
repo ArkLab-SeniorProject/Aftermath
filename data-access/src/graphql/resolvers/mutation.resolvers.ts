@@ -1,7 +1,8 @@
+import crypto from 'node:crypto';
+import bcrypt from 'bcryptjs';
 import type { Db } from 'mongodb';
 import { ObjectId } from 'mongodb';
-import bcrypt from 'bcryptjs';
-import crypto from 'node:crypto';
+import { createAuthToken } from '../../auth.js';
 import { sendPasswordResetEmail } from '../../lib/email.js';
 
 const BCRYPT_ROUNDS = 10;
@@ -155,7 +156,13 @@ export const mutationResolvers = {
 
     try {
       const result = await insertAndReturn(ctx.mongoDb, 'users', doc);
-      return { success: true, user: mapUser(result), error: null };
+      if (!result) throw new Error('Failed to create user');
+      return {
+        success: true,
+        user: mapUser(result),
+        token: createAuthToken(String(result._id)),
+        error: null,
+      };
     } catch (err: any) {
       if (err.code === 11000) {
         return { success: false, user: null, error: 'Username already taken' };
@@ -167,20 +174,25 @@ export const mutationResolvers = {
   login: async (_: unknown, args: { username: string; password: string }, ctx: Context) => {
     const doc = await ctx.mongoDb.collection('users').findOne({ username: args.username });
     if (!doc) {
-      return { success: false, user: null, error: 'Invalid username or password' };
+      return { success: false, user: null, token: null, error: 'Invalid username or password' };
     }
 
     const storedHash = doc.password_hash ?? doc.password;
     if (!storedHash) {
-      return { success: false, user: null, error: 'Invalid username or password' };
+      return { success: false, user: null, token: null, error: 'Invalid username or password' };
     }
 
     const valid = await bcrypt.compare(args.password, storedHash);
     if (!valid) {
-      return { success: false, user: null, error: 'Invalid username or password' };
+      return { success: false, user: null, token: null, error: 'Invalid username or password' };
     }
 
-    return { success: true, user: mapUser(doc), error: null };
+    return {
+      success: true,
+      user: mapUser(doc),
+      token: createAuthToken(String(doc._id)),
+      error: null,
+    };
   },
 
   updateUser: async (_: unknown, args: any, ctx: Context) => {

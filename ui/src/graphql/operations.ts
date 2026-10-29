@@ -43,6 +43,7 @@ export const LOGIN = gql`
   mutation Login($username: String!, $password: String!) {
     login(username: $username, password: $password) {
       success
+      token
       error
       user {
         id
@@ -60,6 +61,7 @@ export const CREATE_USER = gql`
   mutation CreateUser($input: CreateUserInput!) {
     createUser(input: $input) {
       success
+      token
       error
       user {
         id

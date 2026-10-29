@@ -31,6 +31,7 @@ export type AuthPayload = {
   __typename?: 'AuthPayload';
   error?: Maybe<Scalars['String']['output']>;
   success: Scalars['Boolean']['output'];
+  token?: Maybe<Scalars['String']['output']>;
   user?: Maybe<User>;
 };
 
@@ -395,14 +396,14 @@ export type LoginMutationVariables = Exact<{
 }>;
 
 
-export type LoginMutation = { __typename?: 'Mutation', login: { __typename?: 'AuthPayload', success: boolean, error?: string | null, user?: { __typename?: 'User', id: string, username: string, email?: string | null, firstName?: string | null, createdAt?: any | null, updatedAt?: any | null } | null } };
+export type LoginMutation = { __typename?: 'Mutation', login: { __typename?: 'AuthPayload', success: boolean, token?: string | null, error?: string | null, user?: { __typename?: 'User', id: string, username: string, email?: string | null, firstName?: string | null, createdAt?: any | null, updatedAt?: any | null } | null } };
 
 export type CreateUserMutationVariables = Exact<{
   input: CreateUserInput;
 }>;
 
 
-export type CreateUserMutation = { __typename?: 'Mutation', createUser: { __typename?: 'AuthPayload', success: boolean, error?: string | null, user?: { __typename?: 'User', id: string, username: string, email?: string | null, firstName?: string | null, createdAt?: any | null, updatedAt?: any | null } | null } };
+export type CreateUserMutation = { __typename?: 'Mutation', createUser: { __typename?: 'AuthPayload', success: boolean, token?: string | null, error?: string | null, user?: { __typename?: 'User', id: string, username: string, email?: string | null, firstName?: string | null, createdAt?: any | null, updatedAt?: any | null } | null } };
 
 export type ForgotPasswordMutationVariables = Exact<{
   email: Scalars['String']['input'];
@@ -598,6 +599,7 @@ export const LoginDocument = gql`
     mutation Login($username: String!, $password: String!) {
   login(username: $username, password: $password) {
     success
+    token
     error
     user {
       id
@@ -641,6 +643,7 @@ export const CreateUserDocument = gql`
     mutation CreateUser($input: CreateUserInput!) {
   createUser(input: $input) {
     success
+    token
     error
     user {
       id

@@ -1,16 +1,16 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { apolloClient } from '../lib/apollo-client';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 import {
-  GetUserDocument,
-  LoginDocument,
   CreateUserDocument,
-  type GetUserQuery,
-  type GetUserQueryVariables,
-  type LoginMutation,
-  type LoginMutationVariables,
   type CreateUserMutation,
   type CreateUserMutationVariables,
+  GetUserDocument,
+  type GetUserQuery,
+  type GetUserQueryVariables,
+  LoginDocument,
+  type LoginMutation,
+  type LoginMutationVariables,
 } from '../generated';
+import { apolloClient } from '../lib/apollo-client';
 import { AuthContext, type User } from './AuthContext';
 
 function withTimeout<T>(promise: Promise<T>, ms = 8000): Promise<T> {
@@ -48,8 +48,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (user) {
       try {
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+          setUser(null);
+          return;
+        }
         localStorage.setItem('authUser', JSON.stringify(user));
-        localStorage.setItem('authToken', user.id);
       } catch {}
     } else {
       try {
@@ -69,7 +73,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     })();
 
-    if (!savedUser) {
+    const savedToken = localStorage.getItem('authToken');
+    if (!savedUser || !savedToken) {
+      localStorage.removeItem('authUser');
+      localStorage.removeItem('authToken');
       setLoading(false);
       return;
     }
@@ -113,7 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       );
 
       const result = data?.login;
-      if (!result?.success || !result.user) {
+      if (!result?.success || !result.user || !result.token) {
         return false;
       }
 
@@ -121,7 +128,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(loggedInUser);
       if (loggedInUser) {
         localStorage.setItem('authUser', JSON.stringify(loggedInUser));
-        localStorage.setItem('authToken', loggedInUser.id);
+        localStorage.setItem('authToken', result.token);
       }
       return true;
     } catch {
@@ -150,7 +157,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       );
 
       const result = data?.createUser;
-      if (!result?.success || !result.user) {
+      if (!result?.success || !result.user || !result.token) {
         return { success: false, error: result?.error ?? 'Failed to create account' };
       }
 
@@ -158,7 +165,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(newUser);
       if (newUser) {
         localStorage.setItem('authUser', JSON.stringify(newUser));
-        localStorage.setItem('authToken', newUser.id);
+        localStorage.setItem('authToken', result.token);
       }
       return { success: true };
     } catch (err: any) {

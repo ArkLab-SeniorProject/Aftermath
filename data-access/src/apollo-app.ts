@@ -1,16 +1,18 @@
-import dotenv from 'dotenv';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { ApolloServer } from '@apollo/server';
 import {
   ApolloServerPluginLandingPageLocalDefault,
   ApolloServerPluginLandingPageProductionDefault,
 } from '@apollo/server/plugin/landingPage/default';
-import express from 'express';
 import cors from 'cors';
-import { typeDefs } from './graphql/schema/index.js';
-import { resolvers } from './graphql/resolvers/index.js';
+import dotenv from 'dotenv';
+import express from 'express';
+import { ObjectId } from 'mongodb';
+import { verifyAuthToken } from './auth.js';
 import { getDb } from './db/mongo-client.js';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { resolvers } from './graphql/resolvers/index.js';
+import { typeDefs } from './graphql/schema/index.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const envPath = path.resolve(__dirname, '../../.env.local');
@@ -42,9 +44,23 @@ export async function createApolloServer(): Promise<ApolloServer<GraphQLContext>
 }
 
 export async function createContext(req?: express.Request): Promise<GraphQLContext> {
+  const authorization = req?.headers?.authorization;
+  let userId: string | undefined;
+  if (authorization) {
+    const match = /^Bearer\s+(\S+)$/.exec(authorization);
+    if (!match) {
+      throw new Error('Invalid authorization header');
+    }
+    userId = verifyAuthToken(match[1]);
+  }
+
   const mongoDb = await getDb();
-  const authToken = req?.headers?.authorization?.replace('Bearer ', '') ?? '';
-  const userId = authToken || undefined;
+  if (userId) {
+    const user = await mongoDb.collection('users').findOne({ _id: new ObjectId(userId) });
+    if (!user) {
+      throw new Error('Invalid or expired authentication token');
+    }
+  }
   return { mongoDb, userId };
 }
 
