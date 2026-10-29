@@ -15,9 +15,9 @@ import { resolvers } from './graphql/resolvers/index.js';
 import { typeDefs } from './graphql/schema/index.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const envPath = path.resolve(__dirname, '../../.env.local');
 if (process.env.NODE_ENV !== 'production') {
-  dotenv.config({ path: envPath });
+  dotenv.config({ path: path.resolve(__dirname, '../.env.local') });
+  dotenv.config({ path: path.resolve(__dirname, '../../.env.local') });
 }
 
 export type GraphQLContext = {
@@ -45,7 +45,7 @@ export async function createApolloServer(): Promise<ApolloServer<GraphQLContext>
 }
 
 export async function createContext(req?: express.Request): Promise<GraphQLContext> {
-  const authorization = req?.headers?.authorization;
+  const authorization = req?.headers?.authorization?.trim();
   let userId: string | undefined;
   if (authorization) {
     const match = /^Bearer\s+(\S+)$/.exec(authorization);

@@ -13,6 +13,10 @@ import {
 import { apolloClient } from '../lib/apollo-client';
 import { AuthContext, type User } from './AuthContext';
 
+function isSignedAuthToken(token: string | null): token is string {
+  return token !== null && token.split('.').length === 3;
+}
+
 function withTimeout<T>(promise: Promise<T>, ms = 8000): Promise<T> {
   return Promise.race([
     promise,
@@ -50,7 +54,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (user) {
       try {
         const token = localStorage.getItem('authToken');
-        if (!token) {
+        if (!isSignedAuthToken(token)) {
+          localStorage.removeItem('authUser');
+          localStorage.removeItem('authToken');
           setUser(null);
           return;
         }
@@ -75,7 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })();
 
     const savedToken = localStorage.getItem('authToken');
-    if (!savedUser || !savedToken) {
+    if (!savedUser || !isSignedAuthToken(savedToken)) {
       localStorage.removeItem('authUser');
       localStorage.removeItem('authToken');
       setLoading(false);
@@ -132,7 +138,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.setItem('authToken', result.token);
       }
       return true;
-    } catch {
+    } catch (error) {
+      console.error('[auth] Login failed:', error);
       return false;
     } finally {
       setLoading(false);

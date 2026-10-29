@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { LockOutlined, PersonOutline, Visibility, VisibilityOff } from '@mui/icons-material';
 import {
   Alert,
   Box,
@@ -11,18 +11,10 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { LockOutlined, PersonOutline, Visibility, VisibilityOff } from '@mui/icons-material';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/useAuth';
 import { syncRecoverySituationIfNeeded } from '../../lib/sync-recovery-situation';
-
-function hasCompletedQuiz(): boolean {
-  try {
-    return localStorage.getItem('recovery_quiz_complete') === 'true';
-  } catch {
-    return false;
-  }
-}
 
 export function LoginContent() {
   const auth = useAuth();
@@ -38,8 +30,8 @@ export function LoginContent() {
 
     const success = await auth.login(username.trim(), password);
     if (success) {
-      await syncRecoverySituationIfNeeded();
-      navigate(hasCompletedQuiz() ? '/dashboard' : '/', { replace: true });
+      navigate('/dashboard', { replace: true });
+      void syncRecoverySituationIfNeeded();
     } else {
       setError('Invalid username or password');
     }

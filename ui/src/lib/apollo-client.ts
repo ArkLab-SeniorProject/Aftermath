@@ -23,12 +23,16 @@ const httpLink = new HttpLink({
   credentials: 'include',
 });
 
+function isSignedAuthToken(token: string | null): token is string {
+  return token !== null && token.split('.').length === 3;
+}
+
 const authLink = setContext((_, { headers }) => {
   const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
   return {
     headers: {
       ...headers,
-      ...(token ? { authorization: `Bearer ${token}` } : {}),
+      ...(isSignedAuthToken(token) ? { authorization: `Bearer ${token}` } : {}),
     },
   };
 });

@@ -1,4 +1,11 @@
-import { useState } from 'react';
+import {
+  BadgeOutlined,
+  EmailOutlined,
+  LockOutlined,
+  PersonOutline,
+  Visibility,
+  VisibilityOff,
+} from '@mui/icons-material';
 import {
   Alert,
   Box,
@@ -11,25 +18,10 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import {
-  EmailOutlined,
-  LockOutlined,
-  PersonOutline,
-  BadgeOutlined,
-  Visibility,
-  VisibilityOff,
-} from '@mui/icons-material';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/useAuth';
 import { syncRecoverySituationIfNeeded } from '../../lib/sync-recovery-situation';
-
-function hasCompletedQuiz(): boolean {
-  try {
-    return localStorage.getItem('recovery_quiz_complete') === 'true';
-  } catch {
-    return false;
-  }
-}
 
 export function CreateAccountContent() {
   const auth = useAuth();
@@ -63,8 +55,8 @@ export function CreateAccountContent() {
       password
     );
     if (result.success) {
-      await syncRecoverySituationIfNeeded();
-      navigate(hasCompletedQuiz() ? '/dashboard' : '/', { replace: true });
+      navigate('/dashboard', { replace: true });
+      void syncRecoverySituationIfNeeded();
     } else {
       setError(result.error ?? 'Failed to create account');
     }
