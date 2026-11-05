@@ -35,14 +35,23 @@ const here = await getActiveAlerts(place.latitude, place.longitude);
 if (here.length === 0) {
   console.log('None right now (this is normal).');
 } else {
-  console.table(here.map((a) => ({ event: a.event, severity: a.severity, urgency: a.urgency, expires: a.expires })));
+  console.table(
+    here.map((a) => ({
+      event: a.event,
+      severity: a.severity,
+      urgency: a.urgency,
+      expires: a.expires,
+    }))
+  );
 }
 
 console.log(`\n--- active alerts anywhere in ${state.toUpperCase()} ---`);
 const statewide = await getActiveAlertsForState(state);
 console.log(`${statewide.length} active alerts.`);
 console.table(
-  statewide.slice(0, 5).map((a) => ({ event: a.event, severity: a.severity, area: a.areaDesc.slice(0, 50) }))
+  statewide
+    .slice(0, 5)
+    .map((a) => ({ event: a.event, severity: a.severity, area: a.areaDesc.slice(0, 50) }))
 );
 
 if (statewide[0]) {
