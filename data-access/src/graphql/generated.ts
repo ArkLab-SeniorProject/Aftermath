@@ -40,10 +40,10 @@ export type AuthPayload = {
 };
 
 export type CreateGuideInput = {
-  disaster: Scalars['ID']['input'];
   filters?: InputMaybe<Scalars['JSON']['input']>;
   guideType: GuideType;
   resources?: InputMaybe<Array<GuideResourceInput>>;
+  situation: Scalars['ID']['input'];
   userId: Scalars['ID']['input'];
 };
 
@@ -74,11 +74,11 @@ export type CreateUserInput = {
 export type Guide = {
   __typename?: 'Guide';
   createdAt?: Maybe<Scalars['DateTime']['output']>;
-  disaster: Scalars['ID']['output'];
   filters?: Maybe<Scalars['JSON']['output']>;
   guideType: GuideType;
   id: Scalars['ID']['output'];
   resources?: Maybe<Array<GuideResource>>;
+  situation: Scalars['ID']['output'];
   updatedAt?: Maybe<Scalars['DateTime']['output']>;
   user?: Maybe<User>;
   userId: Scalars['ID']['output'];
@@ -218,7 +218,7 @@ export type MutationUpdateUserArgs = {
 export type Query = {
   __typename?: 'Query';
   getGuide?: Maybe<Guide>;
-  getGuideByDisaster?: Maybe<Guide>;
+  getGuideBySituation?: Maybe<Guide>;
   getGuidesByUser: Array<Guide>;
   getResource?: Maybe<Resource>;
   getResources: Array<Resource>;
@@ -234,8 +234,8 @@ export type QueryGetGuideArgs = {
   id: Scalars['ID']['input'];
 };
 
-export type QueryGetGuideByDisasterArgs = {
-  disaster: Scalars['ID']['input'];
+export type QueryGetGuideBySituationArgs = {
+  situation: Scalars['ID']['input'];
 };
 
 export type QueryGetGuidesByUserArgs = {

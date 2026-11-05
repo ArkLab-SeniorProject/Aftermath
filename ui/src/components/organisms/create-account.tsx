@@ -33,7 +33,16 @@ export function CreateAccountContent() {
   const navigate = useNavigate();
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
-  const [firstName, setFirstName] = useState('');
+  const [firstName, setFirstName] = useState(() => {
+    try {
+      const stored = localStorage.getItem('recovery_quiz_answers');
+      if (stored) {
+        const answers = JSON.parse(stored);
+        if (answers.name?.trim()) return answers.name.trim();
+      }
+    } catch {}
+    return '';
+  });
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -94,8 +103,8 @@ export function CreateAccountContent() {
         <DialogTitle>Access Code Required</DialogTitle>
         <DialogContent>
           <DialogContentText sx={{ mb: 2 }}>
-            Account creation is currently limited to authorized testers. Please
-            enter your access code to continue.
+            Account creation is currently limited to authorized testers. Please enter your access
+            code to continue.
           </DialogContentText>
           {accessError && (
             <Alert severity='error' sx={{ mb: 2 }}>
@@ -123,7 +132,7 @@ export function CreateAccountContent() {
       </Dialog>
 
       <Container maxWidth='sm'>
-        <Paper elevation={2} sx={{ p: 4, borderRadius: 3 }}>
+        <Paper elevation={2} sx={{ p: 4 }}>
           <Typography variant='h4' component='h1' gutterBottom fontWeight={600}>
             Create an account
           </Typography>

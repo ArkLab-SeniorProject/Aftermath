@@ -1,5 +1,7 @@
 import { createTheme } from '@mui/material/styles';
 
+export const CONTENT_MAX_WIDTH = 600;
+
 export const theme = createTheme({
   palette: {
     primary: {
@@ -29,6 +31,23 @@ export const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 10,
+        },
+      },
+    },
+    MuiPaper: {
+      defaultProps: {
+        elevation: 1,
+      },
+      styleOverrides: {
+        rounded: {
+          borderRadius: 12,
+        },
+      },
+    },
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          borderRadius: 12,
         },
       },
     },

@@ -102,7 +102,7 @@ export function ResetPasswordContent() {
       }}
     >
       <Container maxWidth='sm'>
-        <Paper elevation={2} sx={{ p: 4, borderRadius: 3 }}>
+        <Paper elevation={2} sx={{ p: 4 }}>
           {step === 'validating' && (
             <Box sx={{ textAlign: 'center', py: 4 }}>
               <CircularProgress size={40} />
