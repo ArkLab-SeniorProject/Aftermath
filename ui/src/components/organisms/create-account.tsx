@@ -11,6 +11,11 @@ import {
   Box,
   Button,
   Container,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   IconButton,
   InputAdornment,
   Link,
@@ -33,6 +38,18 @@ export function CreateAccountContent() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [accessGranted, setAccessGranted] = useState(false);
+  const [accessCode, setAccessCode] = useState('');
+  const [accessError, setAccessError] = useState('');
+
+  const handleAccessSubmit = () => {
+    if (accessCode === import.meta.env.VITE_ACCESS_CODE) {
+      setAccessGranted(true);
+      setAccessError('');
+    } else {
+      setAccessError('Invalid access code');
+    }
+  };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -73,6 +90,38 @@ export function CreateAccountContent() {
         p: 2,
       }}
     >
+      <Dialog open={!accessGranted} disableEscapeKeyDown>
+        <DialogTitle>Access Code Required</DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ mb: 2 }}>
+            Account creation is currently limited to authorized testers. Please
+            enter your access code to continue.
+          </DialogContentText>
+          {accessError && (
+            <Alert severity='error' sx={{ mb: 2 }}>
+              {accessError}
+            </Alert>
+          )}
+          <TextField
+            autoFocus
+            label='Access Code'
+            type='password'
+            fullWidth
+            value={accessCode}
+            onChange={(e) => setAccessCode(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleAccessSubmit();
+            }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => navigate('/login')}>Back to Login</Button>
+          <Button onClick={handleAccessSubmit} variant='contained'>
+            Submit
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <Container maxWidth='sm'>
         <Paper elevation={2} sx={{ p: 4, borderRadius: 3 }}>
           <Typography variant='h4' component='h1' gutterBottom fontWeight={600}>
