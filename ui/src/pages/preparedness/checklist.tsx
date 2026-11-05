@@ -1,5 +1,13 @@
 import { ArrowBack } from '@mui/icons-material';
-import { Box, Checkbox, FormControlLabel, FormGroup, IconButton, Paper, Typography } from '@mui/material';
+import {
+  Box,
+  Checkbox,
+  FormControlLabel,
+  FormGroup,
+  IconButton,
+  Paper,
+  Typography,
+} from '@mui/material';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageContainer } from '../../components/molecules/page-container';
@@ -47,9 +55,8 @@ export default function PreparednessChecklist() {
     });
   };
 
-  const progress = CHECKLIST_ITEMS.length > 0
-    ? Math.round((checked.length / CHECKLIST_ITEMS.length) * 100)
-    : 0;
+  const progress =
+    CHECKLIST_ITEMS.length > 0 ? Math.round((checked.length / CHECKLIST_ITEMS.length) * 100) : 0;
 
   return (
     <PageContainer>
@@ -72,10 +79,7 @@ export default function PreparednessChecklist() {
             <FormControlLabel
               key={item.id}
               control={
-                <Checkbox
-                  checked={checked.includes(item.id)}
-                  onChange={() => toggle(item.id)}
-                />
+                <Checkbox checked={checked.includes(item.id)} onChange={() => toggle(item.id)} />
               }
               label={item.label}
               sx={{

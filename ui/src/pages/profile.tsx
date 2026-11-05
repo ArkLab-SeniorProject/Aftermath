@@ -40,8 +40,7 @@ export default function ProfilePage() {
     );
   }
 
-  const displayName =
-    user.firstName?.trim() || user.username?.trim() || 'User';
+  const displayName = user.firstName?.trim() || user.username?.trim() || 'User';
   const initials = displayName.charAt(0).toUpperCase();
 
   return (
@@ -70,10 +69,7 @@ export default function ProfilePage() {
         <InfoRow label='Email' value={user.email || '—'} />
         <InfoRow label='Role' value={user.role} />
         {user.createdAt && (
-          <InfoRow
-            label='Member since'
-            value={new Date(user.createdAt).toLocaleDateString()}
-          />
+          <InfoRow label='Member since' value={new Date(user.createdAt).toLocaleDateString()} />
         )}
       </Paper>
 

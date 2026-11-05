@@ -21,8 +21,7 @@ export default function PreparednessHub() {
         Preparedness
       </Typography>
       <Typography variant='body2' color='text.secondary' sx={{ mb: 3 }}>
-        Get ready before disaster strikes. Build a plan, gather supplies, and
-        know what to do.
+        Get ready before disaster strikes. Build a plan, gather supplies, and know what to do.
       </Typography>
 
       <Paper sx={{ mb: 3 }}>
@@ -76,8 +75,7 @@ export default function PreparednessHub() {
           Not sure where to start?
         </Typography>
         <Typography variant='body2' sx={{ mb: 2, opacity: 0.9 }}>
-          Take the preparedness quiz and we'll build a personalized plan for
-          you.
+          Take the preparedness quiz and we'll build a personalized plan for you.
         </Typography>
         <Button
           variant='outlined'
