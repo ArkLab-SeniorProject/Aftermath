@@ -6,10 +6,19 @@
 //  - requests are small (radius capped, short server timeout)
 //  - results are cached in memory (best effort; serverless instances each have their own)
 //  - never send requests in parallel
+//  - if one server is busy or down, try the next one in ENDPOINTS (one at a time)
 
 // The UI must also show the attribution "© OpenStreetMap contributors" (ODbL license)
 
-const ENDPOINT = 'https://overpass-api.de/api/interpreter';
+// tried in order, one at a time
+// re-check with a quick curl if this order ever needs to change
+const ENDPOINTS = [
+  'https://gall.openstreetmap.de/api/interpreter',
+  'https://overpass-api.de/api/interpreter',
+  'https://overpass.kumi.systems/api/interpreter',
+];
+// busy or temporarily unavailable: worth trying the next server
+const RETRYABLE_STATUSES = new Set([429, 502, 503, 504]);
 const USER_AGENT =
   process.env.OVERPASS_USER_AGENT ?? 'AftermathSeniorProject/1.0 (replace with a team contact)';
 const SERVER_TIMEOUT_S = 25; // overpass aborts the query after this long
@@ -127,30 +136,47 @@ function buildQuery(
   return `[out:json][timeout:${SERVER_TIMEOUT_S}];\n(\n  ${parts}\n);\nout tags center;`;
 }
 
+// sends the query to each server in ENDPOINTS, one at a time, until one answers
 async function runQuery(query: string): Promise<OverpassElement[]> {
-  const res = await fetch(ENDPOINT, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': USER_AGENT },
-    body: `data=${encodeURIComponent(query)}`,
-    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-  });
+  let lastError = new Error('Overpass request failed');
 
-  if (res.status === 429) {
-    throw new Error('Overpass is rate limiting us (429). Wait a minute and try again.');
-  }
-  if (res.status === 504) {
-    throw new Error('Overpass timed out (504). Try a smaller radius.');
-  }
-  if (!res.ok) {
-    throw new Error(`Overpass request failed: ${res.status}`);
+  for (const endpoint of ENDPOINTS) {
+    const host = new URL(endpoint).host;
+
+    let res: Response;
+    try {
+      res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': USER_AGENT },
+        body: `data=${encodeURIComponent(query)}`,
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      });
+    } catch (err) {
+      // network error or timeout: try the next server
+      lastError = err instanceof Error ? err : new Error(String(err));
+      continue;
+    }
+
+    // 429 = rate limited, 502/503 = server down, 504 = query too slow (try a smaller radius)
+    if (RETRYABLE_STATUSES.has(res.status)) {
+      lastError = new Error(`Overpass busy or unavailable (${res.status} from ${host})`);
+      continue;
+    }
+    if (!res.ok) {
+      // anything else (for example 400) means our query is wrong, so trying another server won't help
+      throw new Error(`Overpass request failed: ${res.status} from ${host}`);
+    }
+
+    const json = (await res.json()) as OverpassResponse;
+    // Overpass can answer 200 but report that the query was aborted partway through.
+    if (json.remark?.includes('runtime error')) {
+      lastError = new Error(`Overpass aborted the query on ${host}: ${json.remark}`);
+      continue;
+    }
+    return json.elements ?? [];
   }
 
-  const json = (await res.json()) as OverpassResponse;
-  // Overpass can answer 200 but report that the query was aborted partway through.
-  if (json.remark?.includes('runtime error')) {
-    throw new Error(`Overpass aborted the query: ${json.remark}`);
-  }
-  return json.elements ?? [];
+  throw lastError;
 }
 
 // public API
