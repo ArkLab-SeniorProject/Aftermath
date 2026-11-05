@@ -94,8 +94,8 @@ export function CreateAccountContent() {
         <DialogTitle>Access Code Required</DialogTitle>
         <DialogContent>
           <DialogContentText sx={{ mb: 2 }}>
-            Account creation is currently limited to authorized testers. Please
-            enter your access code to continue.
+            Account creation is currently limited to authorized testers. Please enter your access
+            code to continue.
           </DialogContentText>
           {accessError && (
             <Alert severity='error' sx={{ mb: 2 }}>
