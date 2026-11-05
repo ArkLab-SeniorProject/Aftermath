@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { CONTENT_MAX_WIDTH } from '../../theme';
 
 const TOTAL_STEPS = 9;
 
@@ -191,7 +192,7 @@ export default function RecoveryQuiz() {
   }
 
   return (
-    <Box sx={{ maxWidth: 480, mx: 'auto', px: 2, py: 3 }}>
+    <Box sx={{ maxWidth: CONTENT_MAX_WIDTH, mx: 'auto', px: 2, py: 3 }}>
       {/* Progress bar */}
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 4, gap: 1 }}>
         <IconButton onClick={handleBack} size='small' aria-label='back'>
@@ -329,7 +330,6 @@ export default function RecoveryQuiz() {
               p: 3,
               border: '1px dashed',
               borderColor: 'divider',
-              borderRadius: 2,
               textAlign: 'center',
             }}
           >

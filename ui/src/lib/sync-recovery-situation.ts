@@ -52,6 +52,8 @@ export async function syncRecoverySituationIfNeeded(): Promise<void> {
       fetchPolicy: 'network-only',
     });
     if (existingData?.getSituationsByUser.length) {
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem('recovery_quiz_complete');
       localStorage.setItem(SYNCED_KEY, 'true');
       return;
     }
@@ -61,6 +63,8 @@ export async function syncRecoverySituationIfNeeded(): Promise<void> {
       variables: { input },
     });
 
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem('recovery_quiz_complete');
     localStorage.setItem(SYNCED_KEY, 'true');
   } catch (err) {
     console.error('[syncRecoverySituation] Failed:', err);

@@ -57,7 +57,7 @@ export function ForgotPasswordContent() {
       }}
     >
       <Container maxWidth='sm'>
-        <Paper elevation={2} sx={{ p: 4, borderRadius: 3 }}>
+        <Paper elevation={2} sx={{ p: 4 }}>
           {step === 'email' && (
             <>
               <Typography variant='h4' component='h1' gutterBottom fontWeight={600}>

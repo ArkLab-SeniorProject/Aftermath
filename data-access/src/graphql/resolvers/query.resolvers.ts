@@ -97,7 +97,7 @@ function mapGuide(doc: any) {
   return {
     id: String(doc._id),
     userId: String(doc.user_id),
-    disaster: String(doc.disaster),
+    situation: String(doc.situation),
     guideType: doc.guide_type,
     resources: (doc.resources ?? []).map(mapGuideResource),
     filters: doc.filters ?? null,
@@ -200,11 +200,11 @@ export const queryResolvers = {
     return docs.map(mapGuide);
   },
 
-  getGuideByDisaster: async (_: unknown, args: { disaster: string }, ctx: Context) => {
+  getGuideBySituation: async (_: unknown, args: { situation: string }, ctx: Context) => {
     requireAuth(ctx);
     const doc = await ctx.mongoDb
       .collection('guide')
-      .findOne({ disaster: new ObjectId(args.disaster) });
+      .findOne({ situation: new ObjectId(args.situation) });
     if (doc) requireSelfOrAdmin(ctx, String(doc.user_id));
     return mapGuide(doc);
   },
