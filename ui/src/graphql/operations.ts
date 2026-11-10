@@ -1,5 +1,22 @@
 import { gql } from '@apollo/client';
 
+// new edit: shared location fields, including the geocoded ones
+const SITUATION_LOCATION_FIELDS = gql`
+  fragment SituationLocationFields on Location {
+    zip
+    city
+    state
+    stateCode
+    countryCode
+    stateFips
+    countyFips
+    countyName
+    latitude
+    longitude
+    precision
+  }
+`;
+
 export const GET_USER = gql`
   query GetUser($id: ID!) {
     getUser(id: $id) {
@@ -98,19 +115,16 @@ export const RESET_PASSWORD_WITH_TOKEN = gql`
   }
 `;
 
-// ── Recovery Situation ──
+// Recovery situation
 
 export const CREATE_SITUATION = gql`
   mutation CreateSituation($input: CreateSituationInput!) {
     createSituation(input: $input) {
       id
       userId
+      # CHANGED: uses the shared location fragment
       location {
-        zip
-        city
-        state
-        stateCode
-        countryCode
+        ...SituationLocationFields
       }
       timeline
       disasters
@@ -126,6 +140,7 @@ export const CREATE_SITUATION = gql`
       updatedAt
     }
   }
+  ${SITUATION_LOCATION_FIELDS}
 `;
 
 export const GET_SITUATIONS_BY_USER = gql`
@@ -133,12 +148,9 @@ export const GET_SITUATIONS_BY_USER = gql`
     getSituationsByUser(userId: $userId) {
       id
       userId
+      # CHANGED: uses the shared location fragment
       location {
-        zip
-        city
-        state
-        stateCode
-        countryCode
+        ...SituationLocationFields
       }
       timeline
       disasters
@@ -154,6 +166,7 @@ export const GET_SITUATIONS_BY_USER = gql`
       updatedAt
     }
   }
+  ${SITUATION_LOCATION_FIELDS}
 `;
 
 export const UPDATE_SITUATION = gql`
@@ -171,6 +184,108 @@ export const UPDATE_SITUATION = gql`
       homeStatus
       household
       updatedAt
+    }
+  }
+`;
+
+// Recovery quiz: location, disasters, guest saves
+
+const GEOCODE_FIELDS = gql`
+  fragment GeocodeFields on GeocodeResult {
+    matchedAddress
+    zip
+    city
+    stateCode
+    stateFips
+    countyFips
+    countyName
+    latitude
+    longitude
+    precision
+  }
+`;
+
+export const GEOCODE_ADDRESS = gql`
+  query GeocodeAddress($address: String!) {
+    geocodeAddress(address: $address) {
+      ...GeocodeFields
+    }
+  }
+  ${GEOCODE_FIELDS}
+`;
+
+export const GEOCODE_ZIP = gql`
+  query GeocodeZip($zip: String!) {
+    geocodeZip(zip: $zip) {
+      ...GeocodeFields
+    }
+  }
+  ${GEOCODE_FIELDS}
+`;
+
+export const GET_DISASTERS_FOR_LOCATION = gql`
+  query GetDisastersForLocation($stateFips: String!, $countyFips: String!, $timeline: String) {
+    getDisastersForLocation(stateFips: $stateFips, countyFips: $countyFips, timeline: $timeline) {
+      id
+      disasterNumber
+      title
+      incidentType
+      declarationType
+      incidentBeginDate
+      declarationDate
+      individualAssistance
+    }
+  }
+`;
+
+const GUEST_SITUATION_FIELDS = gql`
+  fragment GuestSituationFields on Situation {
+    id
+    userId
+    location {
+      ...SituationLocationFields
+    }
+    timeline
+    disasters
+    displayName
+    helpTypes {
+      housing
+      financial
+      damage
+    }
+    homeStatus
+    household
+    createdAt
+    updatedAt
+  }
+  ${SITUATION_LOCATION_FIELDS}
+`;
+
+export const SAVE_GUEST_SITUATION = gql`
+  mutation SaveGuestSituation($input: CreateSituationInput!, $guestToken: String) {
+    saveGuestSituation(input: $input, guestToken: $guestToken) {
+      guestToken
+      situation {
+        ...GuestSituationFields
+      }
+    }
+  }
+  ${GUEST_SITUATION_FIELDS}
+`;
+
+export const GET_GUEST_SITUATION = gql`
+  query GetGuestSituation($guestToken: String!) {
+    getGuestSituation(guestToken: $guestToken) {
+      ...GuestSituationFields
+    }
+  }
+  ${GUEST_SITUATION_FIELDS}
+`;
+
+export const CLAIM_GUEST_SITUATION = gql`
+  mutation ClaimGuestSituation($guestToken: String!) {
+    claimGuestSituation(guestToken: $guestToken) {
+      id
     }
   }
 `;

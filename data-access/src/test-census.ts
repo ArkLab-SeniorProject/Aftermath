@@ -1,6 +1,7 @@
 // test file - can delete after testing
 
-import { geocodeAddress, geocodeCoordinates } from './census-geocoder.js';
+// added geocodeZip
+import { geocodeAddress, geocodeCoordinates, geocodeZip } from './census-geocoder.js';
 
 console.log('--- address match ---');
 const hit = await geocodeAddress('1400 John F Kennedy Blvd, Philadelphia, PA 19107');
@@ -13,6 +14,11 @@ console.log('--- coordinates ---');
 if (hit) {
   console.log(await geocodeCoordinates(hit.latitude, hit.longitude));
 }
+
+// new edits
+console.log('--- ZIP only (TIGERweb -> coordinates) ---');
+console.log(await geocodeZip('19107'));
+console.log(await geocodeZip('00000')); // not a ZIP area -> null
 
 console.log('--- bad input ---');
 try {

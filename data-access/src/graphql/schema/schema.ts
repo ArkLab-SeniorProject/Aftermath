@@ -48,6 +48,14 @@ export const schema = gql`
     state: String
     stateCode: String
     countryCode: String
+    # NEW: geocoded fields (Tiff, tiff-branch-2)
+    # From the Census Geocoder. The street address itself is never stored.
+    stateFips: String
+    countyFips: String
+    countyName: String
+    latitude: Float # rounded to ~1 km before saving
+    longitude: Float
+    precision: LocationPrecision
   }
 
   input LocationInput {
@@ -56,6 +64,46 @@ export const schema = gql`
     state: String
     stateCode: String
     countryCode: String
+    # NEW: geocoded fields (Tiff, tiff-branch-2)
+    # From the Census Geocoder. The street address itself is never stored.
+    stateFips: String
+    countyFips: String
+    countyName: String
+    latitude: Float # rounded to ~1 km before saving
+    longitude: Float
+    precision: LocationPrecision
+  }
+
+  # NEW: LocationPrecision, GeocodeResult, DisasterOption (recovery quiz)
+  enum LocationPrecision {
+    address
+    zip
+  }
+
+  # Result of a Census Geocoder lookup (not saved by itself)
+  type GeocodeResult {
+    matchedAddress: String
+    zip: String
+    city: String
+    stateCode: String
+    stateFips: String
+    countyFips: String
+    countyName: String
+    latitude: Float!
+    longitude: Float!
+    precision: LocationPrecision!
+  }
+
+  # A FEMA disaster declaration that covers the user's county
+  type DisasterOption {
+    id: ID! # ex: "DR-4883-PA"
+    disasterNumber: Int!
+    title: String!
+    incidentType: String
+    declarationType: String
+    incidentBeginDate: DateTime
+    declarationDate: DateTime
+    individualAssistance: Boolean!
   }
 
   enum GuideType {
@@ -78,7 +126,8 @@ export const schema = gql`
 
   type Situation {
     id: ID!
-    userId: ID!
+    # CHANGED: was ID! (guest situations have no user)
+    userId: ID # null for guest situations
     location: Location
     timeline: String
     disasters: String
@@ -109,6 +158,13 @@ export const schema = gql`
     helpTypes: HelpTypesInput
     homeStatus: String
     household: [String!]
+  }
+
+  # NEW
+  type GuestSituationPayload {
+    situation: Situation!
+    # Secret that lets this browser reopen the guest situation. Store it; it is not shown again.
+    guestToken: String!
   }
 
   # ── Resource ─────────────────────────────
@@ -186,6 +242,13 @@ export const schema = gql`
     # Situations
     getSituation(id: ID!): Situation
     getSituationsByUser(userId: ID!): [Situation!]!
+    # NEW: recovery quiz queries
+    getGuestSituation(guestToken: String!): Situation
+
+    # Location (Census Geocoder) and disasters (OpenFEMA)
+    geocodeAddress(address: String!): GeocodeResult
+    geocodeZip(zip: String!): GeocodeResult
+    getDisastersForLocation(stateFips: String!, countyFips: String!, timeline: String): [DisasterOption!]!
 
     # Resources
     getResource(id: ID!): Resource
@@ -210,6 +273,11 @@ export const schema = gql`
     createSituation(input: CreateSituationInput!): Situation!
     updateSituation(id: ID!, input: UpdateSituationInput!): Situation!
     deleteSituation(id: ID!): Boolean!
+    # NEW: recovery quiz mutations
+    # No login needed. Creates a guest situation, or updates it when guestToken is given.
+    saveGuestSituation(input: CreateSituationInput!, guestToken: String): GuestSituationPayload!
+    # Moves a guest situation onto the logged-in user's account
+    claimGuestSituation(guestToken: String!): Situation
 
     # Resources
     createResource(input: CreateResourceInput!): Resource!

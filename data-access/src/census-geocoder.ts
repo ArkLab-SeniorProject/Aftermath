@@ -23,10 +23,16 @@ interface AddressResponse {
     addressMatches?: Array<{
       matchedAddress: string;
       coordinates: { x: number; y: number };
-      addressComponents?: { zip?: string };
+      addressComponents?: { zip?: string; city?: string; state?: string };
       geographies?: Geographies;
     }>;
   };
+}
+
+// TIGERweb ZCTA layer response (ZIP Code Tabulation Areas)
+interface ZctaResponse {
+  features?: Array<{ attributes?: { ZCTA5?: string; INTPTLAT?: string; INTPTLON?: string } }>;
+  error?: { message?: string };
 }
 
 interface CoordinatesResponse {
@@ -35,6 +41,7 @@ interface CoordinatesResponse {
 
 export interface CensusGeography {
   stateFips?: string; // ex: "42"
+  stateCode?: string; // ex: "PA"
   countyFips?: string; // ex: "101" (3 digits)
   countyName?: string;
   tract?: string;
@@ -45,6 +52,14 @@ export interface GeocodeResult extends CensusGeography {
   latitude: number;
   longitude: number;
   zip?: string;
+  city?: string;
+}
+
+// result of a ZIP-only lookup. The point is the ZIP area's internal point, not a home
+export interface ZipLookupResult extends CensusGeography {
+  zip: string;
+  latitude: number;
+  longitude: number;
 }
 
 // finds the first record in a layer whose name matches
@@ -61,8 +76,11 @@ function readGeographies(geos: Geographies | undefined): CensusGeography {
   // so "County Subdivisions" is not picked by mistake
   const county = pickLayer(geos, /^count(y|ies)$/i) ?? pickLayer(geos, /count/i);
   const tract = pickLayer(geos, /^census tracts?$/i) ?? pickLayer(geos, /tract/i);
+  // get state abbreviation from the States layer
+  const state = pickLayer(geos, /^states$/i);
   return {
     stateFips: county?.STATE,
+    stateCode: state?.STUSAB,
     countyFips: county?.COUNTY,
     countyName: county?.NAME,
     tract: tract?.TRACT,
@@ -100,13 +118,60 @@ export async function geocodeAddress(address: string): Promise<GeocodeResult | n
   const match = json.result?.addressMatches?.[0];
   if (!match) return null;
 
+  // read geographies once, add city and stateCode
+  const geography = readGeographies(match.geographies);
   return {
     matchedAddress: match.matchedAddress,
     latitude: match.coordinates.y,
     longitude: match.coordinates.x,
     zip: match.addressComponents?.zip,
-    ...readGeographies(match.geographies),
+    city: match.addressComponents?.city,
+    ...geography,
+    // fall back to the parsed state if the States layer was not returned
+    stateCode: geography.stateCode ?? match.addressComponents?.state,
   };
+}
+
+// NEW: everything from here to the end of geocodeZip
+// ZIP -> county
+// the Census Geocoder cannot match a ZIP code on its own as it needs a street
+// we ask TIGERweb for the ZIP area's internal point, then look that point up
+// A ZIP can cross county lines; this returns the county that holds the internal point
+// returns null when the ZIP is not a Census ZIP Code Tabulation Area (ex: PO-box-only ZIPs)
+const ZCTA_URL =
+  'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/PUMA_TAD_TAZ_UGA_ZCTA/MapServer/1/query';
+
+export async function geocodeZip(zip: string): Promise<ZipLookupResult | null> {
+  const trimmed = zip.trim();
+  if (!/^\d{5}$/.test(trimmed)) {
+    throw new Error('zip must be 5 digits');
+  }
+
+  const query = new URLSearchParams({
+    where: `ZCTA5='${trimmed}'`, // safe: validated as 5 digits above
+    outFields: 'ZCTA5,INTPTLAT,INTPTLON',
+    returnGeometry: 'false',
+    f: 'json',
+  });
+  const res = await fetch(`${ZCTA_URL}?${query}`, { signal: AbortSignal.timeout(TIMEOUT_MS) });
+  if (!res.ok) {
+    throw new Error(`TIGERweb request failed: ${res.status}`);
+  }
+  const json = (await res.json()) as ZctaResponse;
+  if (json.error) {
+    throw new Error(`TIGERweb request failed: ${json.error.message ?? 'unknown error'}`);
+  }
+
+  const attrs = json.features?.[0]?.attributes;
+  // values look like "+39.9520613" / "-075.1580448"
+  const latitude = Number.parseFloat(attrs?.INTPTLAT ?? '');
+  const longitude = Number.parseFloat(attrs?.INTPTLON ?? '');
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
+
+  const geography = await geocodeCoordinates(latitude, longitude);
+  if (!geography) return null;
+
+  return { zip: trimmed, latitude, longitude, ...geography };
 }
 
 // coordinates -> county/tract (for a "use my location" feature). Returns null if nothing is found
