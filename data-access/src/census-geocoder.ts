@@ -72,9 +72,9 @@ function pickLayer(geos: Geographies | undefined, pattern: RegExp): GeoRecord | 
 
 // pulls the pieces we care about out of the geographies object
 function readGeographies(geos: Geographies | undefined): CensusGeography {
-  // prefer the exact "Counties"/"Census Tracts" layers, then fall back to a looser match
-  // so "County Subdivisions" is not picked by mistake
-  const county = pickLayer(geos, /^count(y|ies)$/i) ?? pickLayer(geos, /count/i);
+  // exact "Counties" layer only
+  // no county means no match, and the quiz falls back to the ZIP lookup
+  const county = pickLayer(geos, /^count(y|ies)$/i);
   const tract = pickLayer(geos, /^census tracts?$/i) ?? pickLayer(geos, /tract/i);
   // get state abbreviation from the States layer
   const state = pickLayer(geos, /^states$/i);
