@@ -1,28 +1,47 @@
-import { ArrowBack } from '@mui/icons-material';
+import { ArrowBack, Close } from '@mui/icons-material';
 import {
   Box,
   Button,
   Checkbox,
+  CircularProgress,
   FormControlLabel,
   FormGroup,
   IconButton,
-  LinearProgress,
   Radio,
   RadioGroup,
   TextField,
   Typography,
 } from '@mui/material';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CONTENT_MAX_WIDTH } from '../../theme';
+import { useAuth } from '../../auth/useAuth';
+import {
+  CreateSituationDocument,
+  type CreateSituationMutation,
+  type CreateSituationMutationVariables,
+  GetSituationsByUserDocument,
+  type GetSituationsByUserQuery,
+  type GetSituationsByUserQueryVariables,
+  UpdateSituationDocument,
+  type UpdateSituationMutation,
+  type UpdateSituationMutationVariables,
+} from '../../generated';
+import { apolloClient } from '../../lib/apollo-client';
+import {
+  deriveQuizStep,
+  quizAnswersToInput,
+  situationToQuizAnswers,
+} from '../../lib/situation-utils';
+import { colors } from '../../theme';
 
-const TOTAL_STEPS = 9;
+const TOTAL_STEPS_LOGGED_IN = 7; // steps 0-6
+const TOTAL_STEPS_LOGGED_OUT = 9; // steps 0-6 + name (7) + ending (8)
 
 const TIMELINE_OPTIONS = [
   { value: 'lt6months', label: 'Less than 6 months' },
   { value: '6to12months', label: '6 to 12 months' },
   { value: '1to3years', label: '1 to 3 years' },
-  { value: 'gt3years', label: 'More than 3 years' },
+  { value: 'gt3years', label: 'More than 3+ years' },
   { value: 'unsure', label: "I'm not sure" },
 ];
 
@@ -34,16 +53,31 @@ const MOCK_DISASTERS = [
 ];
 
 const HELP_OPTIONS = [
-  { value: 'damage_recovery', label: 'Damage recovery' },
-  { value: 'financial_assistance', label: 'Financial assistance' },
-  { value: 'housing_shelter', label: 'Housing and shelter' },
-  { value: 'unsure', label: "I'm not sure yet" },
+  {
+    value: 'damage_recovery',
+    label: 'Damage recovery',
+    description: 'Temporary housing, shelter, or help staying in your home',
+  },
+  {
+    value: 'financial_assistance',
+    label: 'Financial assistance',
+    description: 'Temporary housing, shelter, or help staying in your home',
+  },
+  {
+    value: 'housing_shelter',
+    label: 'Housing and shelter',
+    description: 'Temporary housing, shelter, or help staying in your home',
+  },
+  {
+    value: 'unsure',
+    label: "I'm not sure yet",
+  },
 ];
 
 const HOME_OPTIONS = [
   { value: 'own', label: 'I own my home' },
   { value: 'rent', label: 'I rent my home' },
-  { value: 'unstable', label: "I don't have stable housing right now" },
+  { value: 'unstable', label: "I don't have stable housing right now", description: 'For example, staying with family or friends, in a shelter, or in a car' },
   { value: 'prefer_not_to_say', label: 'Prefer not to say' },
 ];
 
@@ -77,22 +111,227 @@ const EMPTY_ANSWERS: RecoveryQuizAnswers = {
   name: '',
 };
 
-const STORAGE_KEY = 'recovery_quiz_answers';
+const ANON_STORAGE_KEY = 'recovery_quiz_answers';
 
-function saveAnswers(answers: RecoveryQuizAnswers) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(answers));
-  localStorage.setItem('recovery_quiz_complete', 'true');
+function loadAnonDraft(): RecoveryQuizAnswers | null {
+  try {
+    const stored = localStorage.getItem(ANON_STORAGE_KEY);
+    if (stored) return JSON.parse(stored);
+  } catch { /* ignore */ }
+  return null;
+}
+
+function saveAnonDraft(answers: RecoveryQuizAnswers) {
+  try {
+    localStorage.setItem(ANON_STORAGE_KEY, JSON.stringify(answers));
+  } catch { /* ignore */ }
+}
+
+function clearAnonDraft() {
+  try {
+    localStorage.removeItem(ANON_STORAGE_KEY);
+    localStorage.removeItem('recovery_quiz_complete');
+    localStorage.removeItem('recovery_quiz_draft_step');
+  } catch { /* ignore */ }
+}
+
+async function saveSituationToServer(
+  situationId: string | null,
+  answers: RecoveryQuizAnswers
+): Promise<string | null> {
+  const input = quizAnswersToInput(answers);
+  if (situationId) {
+    await apolloClient.mutate<UpdateSituationMutation, UpdateSituationMutationVariables>({
+      mutation: UpdateSituationDocument,
+      variables: { id: situationId, input },
+    });
+    return situationId;
+  }
+  const { data } = await apolloClient.mutate<CreateSituationMutation, CreateSituationMutationVariables>({
+    mutation: CreateSituationDocument,
+    variables: { input },
+  });
+  return data?.createSituation.id ?? null;
+}
+
+const DOT_KEYS = Array.from({ length: TOTAL_STEPS_LOGGED_OUT - 1 }, (_, i) => `step-${i}`);
+
+function StepDots({ current, total }: { current: number; total: number }) {
+  return (
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+      {DOT_KEYS.slice(0, total).map((key, i) => (
+        <Box
+          key={key}
+          sx={{
+            height: 8,
+            borderRadius: 4,
+            bgcolor: colors.black,
+            width: i === current ? 24 : 8,
+            transition: 'width 0.2s ease',
+          }}
+        />
+      ))}
+    </Box>
+  );
+}
+
+function QuizCard({ children }: { children: React.ReactNode }) {
+  return (
+    <Box
+      sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        bgcolor: colors.heroGray,
+      }}
+    >
+      <Box
+        sx={{
+          flexShrink: 0,
+          height: { xs: '14vh', md: '18vh' },
+          minHeight: { xs: 100, md: 140 },
+          display: 'flex',
+          alignItems: 'flex-start',
+          justifyContent: 'center',
+          pt: { xs: 2, md: 4 },
+        }}
+      >
+        <Typography
+          variant="h6"
+          sx={{
+            color: colors.black,
+            fontWeight: 700,
+            letterSpacing: '0.02em',
+          }}
+        >
+          Aftermath
+        </Typography>
+      </Box>
+
+      <Box
+        sx={{
+          position: 'relative',
+          mt: { xs: -3, md: -4 },
+          borderRadius: { xs: '24px 24px 0 0', md: '32px 32px 0 0' },
+          bgcolor: 'background.paper',
+          zIndex: 1,
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          maxWidth: { md: 720, lg: 800 },
+          mx: 'auto',
+          width: '100%',
+          boxShadow: { md: '0 -4px 24px rgba(0,0,0,0.08)' },
+        }}
+      >
+        {children}
+      </Box>
+    </Box>
+  );
+}
+
+function StepWrapper({
+  question,
+  hint,
+  children,
+}: {
+  question: string;
+  hint: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Box>
+      <Typography
+        variant="h5"
+        sx={{
+          fontWeight: 700,
+          fontSize: { xs: '1.5rem', md: '1.75rem' },
+          mb: 1.5,
+        }}
+      >
+        {question}
+      </Typography>
+      {hint && (
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+          {hint}
+        </Typography>
+      )}
+      {children}
+    </Box>
+  );
 }
 
 export default function RecoveryQuiz() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<RecoveryQuizAnswers>(EMPTY_ANSWERS);
+  const [situationId, setSituationId] = useState<string | null>(null);
 
-  const progress = ((step + 1) / TOTAL_STEPS) * 100;
+  const totalSteps = user ? TOTAL_STEPS_LOGGED_IN : TOTAL_STEPS_LOGGED_OUT;
+  const isSubmitStep = !!user && step === 6;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      let loaded = false;
+
+      if (user) {
+        try {
+          const { data } = await apolloClient.query<
+            GetSituationsByUserQuery,
+            GetSituationsByUserQueryVariables
+          >({
+            query: GetSituationsByUserDocument,
+            variables: { userId: user.id },
+            fetchPolicy: 'network-only',
+          });
+          if (!cancelled && data?.getSituationsByUser.length) {
+            const record = data.getSituationsByUser[0];
+            const restored = situationToQuizAnswers(record);
+            setSituationId(record.id);
+            setAnswers(restored);
+            setStep(deriveQuizStep(restored, true));
+            loaded = true;
+          }
+        } catch {
+          // fall through to anonymous draft
+        }
+      }
+
+      if (!cancelled && !loaded) {
+        const draft = loadAnonDraft();
+        if (draft) {
+          setAnswers(draft);
+          setStep(deriveQuizStep(draft, false));
+        }
+      }
+
+      if (!cancelled) setLoading(false);
+    }
+
+    load();
+    return () => { cancelled = true; };
+  }, [user]);
+
+  const persistAnswers = async (answersToSave: RecoveryQuizAnswers) => {
+    if (user) {
+      try {
+        const id = await saveSituationToServer(situationId, answersToSave);
+        if (id) setSituationId(id);
+        clearAnonDraft();
+      } catch {
+        saveAnonDraft(answersToSave);
+      }
+    } else {
+      saveAnonDraft(answersToSave);
+    }
+  };
 
   const handleNext = () => {
-    if (step < TOTAL_STEPS - 1) {
+    if (step < totalSteps - 1) {
       setStep((s) => s + 1);
     }
   };
@@ -102,9 +341,24 @@ export default function RecoveryQuiz() {
     else navigate('/');
   };
 
+  const handleClose = () => {
+    void persistAnswers(answers);
+    navigate('/');
+  };
+
   const handleFinish = () => {
-    saveAnswers(answers);
+    void persistAnswers(answers);
     navigate('/dashboard');
+  };
+
+  const handleSaveAndExit = () => {
+    if (user) {
+      void persistAnswers(answers);
+      navigate('/');
+    } else {
+      saveAnonDraft(answers);
+      navigate('/create-account');
+    }
   };
 
   const toggleMulti = (field: 'disasters' | 'helpTypes' | 'household', value: string) => {
@@ -127,13 +381,13 @@ export default function RecoveryQuiz() {
       case 3:
         return answers.helpTypes.length > 0;
       case 4:
-        return true; // filter confirmation — always continuable
+        return true;
       case 5:
         return !!answers.homeStatus;
       case 6:
         return answers.household.length > 0;
       case 7:
-        return true; // name is optional
+        return true;
       default:
         return false;
     }
@@ -146,298 +400,386 @@ export default function RecoveryQuiz() {
     .map((v) => HELP_OPTIONS.find((o) => o.value === v)?.label)
     .filter(Boolean);
 
-  // Step 8: Ending page
-  if (step === 8) {
+  if (loading) {
     return (
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '70vh',
-          textAlign: 'center',
-          gap: 3,
-          px: 3,
-        }}
-      >
-        <Typography variant='h4' fontWeight={700}>
-          Thank you, {displayName}.
-        </Typography>
-        <Typography variant='body1' color='text.secondary' sx={{ maxWidth: 360 }}>
-          We&rsquo;ve put together your first steps.
-        </Typography>
+      <QuizCard>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1, py: 8 }}>
+          <CircularProgress />
+        </Box>
+      </QuizCard>
+    );
+  }
 
-        <Button
-          variant='contained'
-          size='large'
-          sx={{ mt: 2, px: 5, py: 1.75 }}
-          onClick={handleFinish}
-        >
-          See my plan
-        </Button>
-        <Button
-          variant='outlined'
-          size='large'
-          sx={{ px: 5, py: 1.75 }}
-          onClick={() => {
-            saveAnswers(answers);
-            navigate('/create-account');
+  if (!user && step === 8) {
+    return (
+      <QuizCard>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            flex: 1,
+            px: 3,
+            pt: { xs: 6, md: 8 },
+            pb: 6,
           }}
         >
-          Create an account
-        </Button>
-      </Box>
+          <Typography
+            variant="h4"
+            fontWeight={700}
+            sx={{ mb: 1.5, textAlign: 'center' }}
+          >
+            Thank you, {displayName}. We&rsquo;ve put together your first steps.
+          </Typography>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ mb: 4, textAlign: 'center', maxWidth: 360 }}
+          >
+            You can change your answers any time in Profile.
+          </Typography>
+
+          <Button
+            variant="contained"
+            size="large"
+            fullWidth
+            sx={{ py: 1.75, maxWidth: 400 }}
+            onClick={handleFinish}
+          >
+            See my plan
+          </Button>
+
+          {/* OR divider */}
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              width: '100%',
+              maxWidth: 400,
+              my: 2,
+            }}
+          >
+            <Box sx={{ flex: 1, borderBottom: '1px solid', borderColor: 'divider' }} />
+            <Typography variant="body2" color="text.secondary" sx={{ px: 2 }}>
+              OR
+            </Typography>
+            <Box sx={{ flex: 1, borderBottom: '1px solid', borderColor: 'divider' }} />
+          </Box>
+
+          <Button
+            variant="outlined"
+            size="large"
+            fullWidth
+            sx={{ py: 1.75, maxWidth: 400 }}
+            onClick={() => {
+              saveAnonDraft(answers);
+              navigate('/create-account');
+            }}
+          >
+            Create an account
+          </Button>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ mt: 1, textAlign: 'center' }}
+          >
+            Create an account to save your progress.
+          </Typography>
+        </Box>
+      </QuizCard>
     );
   }
 
   return (
-    <Box sx={{ maxWidth: CONTENT_MAX_WIDTH, mx: 'auto', px: 2, py: 3 }}>
-      {/* Progress bar */}
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 4, gap: 1 }}>
-        <IconButton onClick={handleBack} size='small' aria-label='back'>
+    <QuizCard>
+      {/* Navigation bar: back, dots, close */}
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          px: { xs: 2, md: 4 },
+          pt: { xs: 2.5, md: 3 },
+          pb: 1,
+        }}
+      >
+        <IconButton onClick={handleBack} size="small" aria-label="back">
           <ArrowBack />
         </IconButton>
-        <Box sx={{ flex: 1 }}>
-          <LinearProgress
-            variant='determinate'
-            value={progress}
-            sx={{ height: 6, borderRadius: 3 }}
-          />
-        </Box>
-        <Typography
-          variant='caption'
-          color='text.secondary'
-          sx={{ minWidth: 36, textAlign: 'right' }}
-        >
-          {step + 1}/{TOTAL_STEPS}
-        </Typography>
+        <StepDots current={step} total={totalSteps - 1} />
+        <IconButton onClick={handleClose} size="small" aria-label="close">
+          <Close />
+        </IconButton>
       </Box>
 
-      {/* Step 0: Zip code */}
-      {step === 0 && (
-        <StepWrapper
-          question='Where are you located?'
-          hint='We use your ZIP code to find disasters and help near you.'
-        >
-          <TextField
-            label='ZIP Code'
-            value={answers.zipCode}
-            onChange={(e) => {
-              const val = e.target.value.replace(/\D/g, '').slice(0, 5);
-              setAnswers((prev) => ({ ...prev, zipCode: val }));
-            }}
-            inputProps={{ inputMode: 'numeric', maxLength: 5 }}
-            fullWidth
-            autoFocus
-          />
-        </StepWrapper>
-      )}
-
-      {/* Step 1: Timeline */}
-      {step === 1 && (
-        <StepWrapper
-          question='When did the disaster happen?'
-          hint='A rough estimate is fine. Some deadlines depend on the date.'
-        >
-          <RadioGroup
-            value={answers.timeline}
-            onChange={(e) => setAnswers((prev) => ({ ...prev, timeline: e.target.value }))}
-          >
-            {TIMELINE_OPTIONS.map((opt) => (
-              <FormControlLabel
-                key={opt.value}
-                value={opt.value}
-                control={<Radio />}
-                label={opt.label}
-                sx={{ mb: 1 }}
-              />
-            ))}
-          </RadioGroup>
-        </StepWrapper>
-      )}
-
-      {/* Step 2: Disaster selection */}
-      {step === 2 && (
-        <StepWrapper
-          question='Which disaster affected you?'
-          hint={`These disasters were reported in your area, ${answers.zipCode}, during that time. Select all that apply.`}
-        >
-          <FormGroup>
-            {MOCK_DISASTERS.map((d) => (
-              <FormControlLabel
-                key={d.id}
-                control={
-                  <Checkbox
-                    checked={answers.disasters.includes(d.id)}
-                    onChange={() => toggleMulti('disasters', d.id)}
-                  />
-                }
-                label={`${d.title} — ${d.date}`}
-                sx={{ mb: 0.5 }}
-              />
-            ))}
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={answers.disasters.includes('not_listed')}
-                  onChange={() => toggleMulti('disasters', 'not_listed')}
-                />
-              }
-              label="I don't see my event"
-              sx={{ mb: 0.5 }}
-            />
-          </FormGroup>
-        </StepWrapper>
-      )}
-
-      {/* Step 3: Help types */}
-      {step === 3 && (
-        <StepWrapper
-          question='What do you need help with?'
-          hint='Select all that apply. You can always change this later.'
-        >
-          <FormGroup>
-            {HELP_OPTIONS.map((opt) => (
-              <FormControlLabel
-                key={opt.value}
-                control={
-                  <Checkbox
-                    checked={answers.helpTypes.includes(opt.value)}
-                    onChange={() => toggleMulti('helpTypes', opt.value)}
-                  />
-                }
-                label={opt.label}
-                sx={{ mb: 0.5 }}
-              />
-            ))}
-          </FormGroup>
-        </StepWrapper>
-      )}
-
-      {/* Step 4: Filter confirmation (placeholder) */}
-      {step === 4 && (
-        <StepWrapper
-          question={
-            selectedHelpLabels.length > 0
-              ? `You indicated that you needed help with ${formatList(selectedHelpLabels)}.`
-              : 'You indicated you’re not sure what help you need yet.'
-          }
-          hint='Customizable filters based on your selections will appear here.'
-        >
-          <Box
-            sx={{
-              p: 3,
-              border: '1px dashed',
-              borderColor: 'divider',
-              textAlign: 'center',
-            }}
-          >
-            <Typography variant='body2' color='text.secondary'>
-              Filter options coming soon
-            </Typography>
-          </Box>
-        </StepWrapper>
-      )}
-
-      {/* Step 5: Home status */}
-      {step === 5 && (
-        <StepWrapper
-          question='Which best describes your home?'
-          hint='This helps us show the kinds of help that may apply to you.'
-        >
-          <RadioGroup
-            value={answers.homeStatus}
-            onChange={(e) => setAnswers((prev) => ({ ...prev, homeStatus: e.target.value }))}
-          >
-            {HOME_OPTIONS.map((opt) => (
-              <FormControlLabel
-                key={opt.value}
-                value={opt.value}
-                control={<Radio />}
-                label={opt.label}
-                sx={{ mb: 1 }}
-              />
-            ))}
-          </RadioGroup>
-        </StepWrapper>
-      )}
-
-      {/* Step 6: Household */}
-      {step === 6 && (
-        <StepWrapper
-          question='Who lives with you?'
-          hint='This helps us point you to help that fits everyone in your home. Select all that apply.'
-        >
-          <FormGroup>
-            {HOUSEHOLD_OPTIONS.map((opt) => (
-              <FormControlLabel
-                key={opt.value}
-                control={
-                  <Checkbox
-                    checked={answers.household.includes(opt.value)}
-                    onChange={() => toggleMulti('household', opt.value)}
-                  />
-                }
-                label={opt.label}
-                sx={{ mb: 0.5 }}
-              />
-            ))}
-          </FormGroup>
-        </StepWrapper>
-      )}
-
-      {/* Step 7: Name */}
-      {step === 7 && (
-        <StepWrapper
-          question='What would you like us to call you?'
-          hint='A first name or nickname is fine. You can skip this.'
-        >
-          <TextField
-            label='Name (optional)'
-            value={answers.name}
-            onChange={(e) => setAnswers((prev) => ({ ...prev, name: e.target.value }))}
-            fullWidth
-            autoFocus
-          />
-        </StepWrapper>
-      )}
-
-      <Button
-        variant='contained'
-        size='large'
-        fullWidth
-        disabled={!canContinue()}
-        onClick={handleNext}
-        sx={{ mt: 3, py: 1.75 }}
+      {/* Question content */}
+      <Box
+        sx={{
+          flex: 1,
+          px: { xs: 3, md: 5 },
+          pt: { xs: 2, md: 3 },
+          pb: 2,
+        }}
       >
-        {step === TOTAL_STEPS - 2 ? 'Finish' : 'Continue'}
-      </Button>
-    </Box>
-  );
-}
+        {step === 0 && (
+          <StepWrapper
+            question="Where are you located?"
+            hint="We use your ZIP code to find disasters and help near you."
+          >
+            <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
+              Zipcode:
+            </Typography>
+            <TextField
+              placeholder="Ex. 12345"
+              value={answers.zipCode}
+              onChange={(e) => {
+                const val = e.target.value.replace(/\D/g, '').slice(0, 5);
+                setAnswers((prev) => ({ ...prev, zipCode: val }));
+              }}
+              inputProps={{ inputMode: 'numeric', maxLength: 5 }}
+              fullWidth
+              autoFocus
+            />
+          </StepWrapper>
+        )}
 
-function StepWrapper({
-  question,
-  hint,
-  children,
-}: {
-  question: string;
-  hint: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <Box>
-      <Typography variant='h5' fontWeight={600} gutterBottom>
-        {question}
-      </Typography>
-      {hint && (
-        <Typography variant='body2' color='text.secondary' sx={{ mb: 3 }}>
-          {hint}
-        </Typography>
-      )}
-      {children}
-    </Box>
+        {step === 1 && (
+          <StepWrapper
+            question="When did the disaster happen?"
+            hint="A rough estimate is fine. Some deadlines depend on the date."
+          >
+            <RadioGroup
+              value={answers.timeline}
+              onChange={(e) => setAnswers((prev) => ({ ...prev, timeline: e.target.value }))}
+            >
+              {TIMELINE_OPTIONS.map((opt) => (
+                <FormControlLabel
+                  key={opt.value}
+                  value={opt.value}
+                  control={<Radio />}
+                  label={opt.label}
+                  sx={{ mb: 1 }}
+                />
+              ))}
+            </RadioGroup>
+          </StepWrapper>
+        )}
+
+        {step === 2 && (
+          <StepWrapper
+            question="Which disaster affected you?"
+            hint={`These disasters were reported in your area, ${answers.zipCode}, during that time. Select all that apply.`}
+          >
+            <FormGroup>
+              {MOCK_DISASTERS.map((d) => (
+                <FormControlLabel
+                  key={d.id}
+                  control={
+                    <Checkbox
+                      checked={answers.disasters.includes(d.id)}
+                      onChange={() => toggleMulti('disasters', d.id)}
+                    />
+                  }
+                  label={`${d.title}, ${d.date}`}
+                  sx={{ mb: 0.5 }}
+                />
+              ))}
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={answers.disasters.includes('not_listed')}
+                    onChange={() => toggleMulti('disasters', 'not_listed')}
+                  />
+                }
+                label="I don't see my event"
+                sx={{ mb: 0.5 }}
+              />
+            </FormGroup>
+          </StepWrapper>
+        )}
+
+        {step === 3 && (
+          <StepWrapper
+            question="What do you need help with?"
+            hint="Select all that apply. You can always change this later in your Profile."
+          >
+            <FormGroup>
+              {HELP_OPTIONS.map((opt) => (
+                <FormControlLabel
+                  key={opt.value}
+                  control={
+                    <Checkbox
+                      checked={answers.helpTypes.includes(opt.value)}
+                      onChange={() => toggleMulti('helpTypes', opt.value)}
+                    />
+                  }
+                  label={
+                    <Box>
+                      <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                        {opt.label}
+                      </Typography>
+                      {'description' in opt && opt.description && (
+                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
+                          {opt.description}
+                        </Typography>
+                      )}
+                    </Box>
+                  }
+                  sx={{ mb: 1.5, alignItems: 'flex-start', '& .MuiCheckbox-root': { pt: 0.5 } }}
+                />
+              ))}
+            </FormGroup>
+          </StepWrapper>
+        )}
+
+        {step === 4 && (
+          <StepWrapper
+            question={
+              selectedHelpLabels.length > 0
+                ? `You indicated that you needed help with ${formatList(selectedHelpLabels)}.`
+                : "You indicated you're not sure what help you need yet."
+            }
+            hint="Customizable filters based on your selections will appear here."
+          >
+            <Box
+              sx={{
+                p: 3,
+                border: '1px dashed',
+                borderColor: 'divider',
+                borderRadius: 2,
+                textAlign: 'center',
+              }}
+            >
+              <Typography variant="body2" color="text.secondary">
+                Filter options coming soon
+              </Typography>
+            </Box>
+          </StepWrapper>
+        )}
+
+        {step === 5 && (
+          <StepWrapper
+            question="Which best describes your home?"
+            hint="This helps us show the kinds of help that may apply to you."
+          >
+            <RadioGroup
+              value={answers.homeStatus}
+              onChange={(e) => setAnswers((prev) => ({ ...prev, homeStatus: e.target.value }))}
+            >
+              {HOME_OPTIONS.map((opt) => (
+                <FormControlLabel
+                  key={opt.value}
+                  value={opt.value}
+                  control={<Radio />}
+                  label={
+                    'description' in opt && opt.description ? (
+                      <Box>
+                        <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                          {opt.label}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
+                          {opt.description}
+                        </Typography>
+                      </Box>
+                    ) : (
+                      opt.label
+                    )
+                  }
+                  sx={{
+                    mb: 1.5,
+                    ...('description' in opt && opt.description
+                      ? { alignItems: 'flex-start', '& .MuiRadio-root': { pt: 0.5 } }
+                      : {}),
+                  }}
+                />
+              ))}
+            </RadioGroup>
+          </StepWrapper>
+        )}
+
+        {step === 6 && (
+          <StepWrapper
+            question="Who lives with you?"
+            hint="This helps us point you to help that fits everyone in your home. Select all that apply."
+          >
+            <FormGroup>
+              {HOUSEHOLD_OPTIONS.map((opt) => (
+                <FormControlLabel
+                  key={opt.value}
+                  control={
+                    <Checkbox
+                      checked={answers.household.includes(opt.value)}
+                      onChange={() => toggleMulti('household', opt.value)}
+                    />
+                  }
+                  label={opt.label}
+                  sx={{ mb: 0.5 }}
+                />
+              ))}
+            </FormGroup>
+          </StepWrapper>
+        )}
+
+        {!user && step === 7 && (
+          <StepWrapper
+            question="What would you like us to call you?"
+            hint="Sharing your first name or nickname is optional. This helps us tailor the website to you."
+          >
+            <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
+              Name:
+            </Typography>
+            <TextField
+              placeholder="Enter your name or nickname"
+              value={answers.name}
+              onChange={(e) => setAnswers((prev) => ({ ...prev, name: e.target.value }))}
+              fullWidth
+              autoFocus
+            />
+            <Button
+              variant="outlined"
+              size="large"
+              fullWidth
+              sx={{ mt: 2, py: 1.5 }}
+              onClick={() => {
+                setAnswers((prev) => ({ ...prev, name: '' }));
+                handleNext();
+              }}
+            >
+              Skip
+            </Button>
+          </StepWrapper>
+        )}
+      </Box>
+
+      {/* Bottom buttons */}
+      <Box
+        sx={{
+          px: { xs: 3, md: 5 },
+          pb: { xs: 3, md: 4 },
+          pt: 1,
+        }}
+      >
+        <Button
+          variant="contained"
+          size="large"
+          fullWidth
+          disabled={!canContinue()}
+          onClick={isSubmitStep ? handleFinish : handleNext}
+          sx={{ py: 1.75, mb: 1.5 }}
+        >
+          {isSubmitStep ? 'Submit' : 'Next'}
+        </Button>
+        <Button
+          variant="outlined"
+          size="large"
+          fullWidth
+          onClick={handleSaveAndExit}
+          sx={{ py: 1.75 }}
+        >
+          Save and come back later
+        </Button>
+      </Box>
+    </QuizCard>
   );
 }
 

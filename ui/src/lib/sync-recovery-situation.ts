@@ -8,24 +8,15 @@ import {
 } from '../generated';
 import type { RecoveryQuizAnswers } from '../pages/recovery/quiz';
 import { apolloClient } from './apollo-client';
+import { quizAnswersToInput } from './situation-utils';
 
 const STORAGE_KEY = 'recovery_quiz_answers';
 const SYNCED_KEY = 'recovery_quiz_synced';
 
-function quizAnswersToInput(answers: RecoveryQuizAnswers) {
-  return {
-    location: { zip: answers.zipCode },
-    timeline: answers.timeline,
-    disasters: answers.disasters.join(','),
-    displayName: answers.name || null,
-    helpTypes: {
-      housing: answers.helpTypes.includes('housing_shelter'),
-      financial: answers.helpTypes.includes('financial_assistance'),
-      damage: answers.helpTypes.includes('damage_recovery'),
-    },
-    homeStatus: answers.homeStatus,
-    household: answers.household,
-  };
+function clearLocalQuizData() {
+  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem('recovery_quiz_complete');
+  localStorage.removeItem('recovery_quiz_draft_step');
 }
 
 export async function syncRecoverySituationIfNeeded(): Promise<void> {
@@ -52,8 +43,7 @@ export async function syncRecoverySituationIfNeeded(): Promise<void> {
       fetchPolicy: 'network-only',
     });
     if (existingData?.getSituationsByUser.length) {
-      localStorage.removeItem(STORAGE_KEY);
-      localStorage.removeItem('recovery_quiz_complete');
+      clearLocalQuizData();
       localStorage.setItem(SYNCED_KEY, 'true');
       return;
     }
@@ -63,8 +53,7 @@ export async function syncRecoverySituationIfNeeded(): Promise<void> {
       variables: { input },
     });
 
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem('recovery_quiz_complete');
+    clearLocalQuizData();
     localStorage.setItem(SYNCED_KEY, 'true');
   } catch (err) {
     console.error('[syncRecoverySituation] Failed:', err);

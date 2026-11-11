@@ -9,6 +9,7 @@ export const colors = {
   lightGray: '#F5F5F5',
   white: '#FFFFFF',
   border: '#E0E0E0',
+  heroGray: '#C8C8C8',
 };
 
 export const theme = createTheme({
