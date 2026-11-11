@@ -47,7 +47,9 @@ function useQuizStatus(): QuizStatus {
             setStatus(isQuizComplete(answers) ? 'complete' : 'in-progress');
             return;
           }
-        } catch { /* fall through */ }
+        } catch {
+          /* fall through */
+        }
       }
 
       if (!cancelled) {
@@ -57,13 +59,17 @@ function useQuizStatus(): QuizStatus {
             setStatus('in-progress');
             return;
           }
-        } catch { /* ignore */ }
+        } catch {
+          /* ignore */
+        }
         setStatus('not-started');
       }
     }
 
     check();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [user]);
 
   return status;

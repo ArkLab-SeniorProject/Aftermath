@@ -82,7 +82,7 @@ export function ResetPasswordContent() {
       {step === 'validating' && (
         <Box sx={{ textAlign: 'center', py: 6 }}>
           <CircularProgress size={40} />
-          <Typography variant="body1" color="text.secondary" sx={{ mt: 2 }}>
+          <Typography variant='body1' color='text.secondary' sx={{ mt: 2 }}>
             Verifying your reset link...
           </Typography>
         </Box>
@@ -90,15 +90,15 @@ export function ResetPasswordContent() {
 
       {step === 'invalid' && (
         <>
-          <Typography variant="h4" component="h1" sx={{ fontWeight: 700, mb: 1 }}>
+          <Typography variant='h4' component='h1' sx={{ fontWeight: 700, mb: 1 }}>
             Link expired
           </Typography>
-          <Alert severity="error" sx={{ mb: 3 }}>
+          <Alert severity='error' sx={{ mb: 3 }}>
             This password reset link is invalid or has expired. Please request a new one.
           </Alert>
           <Button
-            variant="contained"
-            size="large"
+            variant='contained'
+            size='large'
             fullWidth
             sx={{ py: 1.75 }}
             onClick={() => navigate('/forgot-password')}
@@ -110,30 +110,30 @@ export function ResetPasswordContent() {
 
       {step === 'form' && (
         <>
-          <Typography variant="h4" component="h1" sx={{ fontWeight: 700, mb: 1 }}>
+          <Typography variant='h4' component='h1' sx={{ fontWeight: 700, mb: 1 }}>
             Set a new password.
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+          <Typography variant='body2' color='text.secondary' sx={{ mb: 3 }}>
             Enter your new password below.
           </Typography>
 
           {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
+            <Alert severity='error' sx={{ mb: 2 }}>
               {error}
             </Alert>
           )}
 
           <Box
-            component="form"
+            component='form'
             onSubmit={handleReset}
             sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}
           >
-            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+            <Typography variant='body2' sx={{ fontWeight: 500 }}>
               New password:
             </Typography>
             <TextField
-              placeholder="Enter your new password"
-              type="password"
+              placeholder='Enter your new password'
+              type='password'
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -142,12 +142,12 @@ export function ResetPasswordContent() {
               sx={{ mb: 2 }}
             />
 
-            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+            <Typography variant='body2' sx={{ fontWeight: 500 }}>
               Confirm password:
             </Typography>
             <TextField
-              placeholder="Re-enter your password"
-              type="password"
+              placeholder='Re-enter your password'
+              type='password'
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
@@ -157,9 +157,9 @@ export function ResetPasswordContent() {
             />
 
             <Button
-              type="submit"
-              variant="contained"
-              size="large"
+              type='submit'
+              variant='contained'
+              size='large'
               fullWidth
               disabled={loading}
               sx={{ py: 1.75 }}
@@ -172,15 +172,15 @@ export function ResetPasswordContent() {
 
       {step === 'success' && (
         <>
-          <Typography variant="h4" component="h1" sx={{ fontWeight: 700, mb: 1 }}>
+          <Typography variant='h4' component='h1' sx={{ fontWeight: 700, mb: 1 }}>
             Password updated.
           </Typography>
-          <Alert severity="success" sx={{ mb: 3 }}>
+          <Alert severity='success' sx={{ mb: 3 }}>
             Your password has been reset successfully.
           </Alert>
           <Button
-            variant="contained"
-            size="large"
+            variant='contained'
+            size='large'
             fullWidth
             sx={{ py: 1.75 }}
             onClick={() => navigate('/login')}

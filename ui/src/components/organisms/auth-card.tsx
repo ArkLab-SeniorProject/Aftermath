@@ -33,7 +33,7 @@ export function AuthCard({
         }}
       >
         <Typography
-          variant="h6"
+          variant='h6'
           sx={{ color: colors.black, fontWeight: 700, letterSpacing: '0.02em' }}
         >
           Aftermath
@@ -66,14 +66,10 @@ export function AuthCard({
             pb: 1,
           }}
         >
-          <IconButton
-            onClick={onBack ?? (() => navigate(-1))}
-            size="small"
-            aria-label="back"
-          >
+          <IconButton onClick={onBack ?? (() => navigate(-1))} size='small' aria-label='back'>
             <ArrowBack />
           </IconButton>
-          <IconButton onClick={() => navigate('/')} size="small" aria-label="close">
+          <IconButton onClick={() => navigate('/')} size='small' aria-label='close'>
             <Close />
           </IconButton>
         </Box>
@@ -91,7 +87,7 @@ export function AuthCard({
         </Box>
 
         <Box sx={{ textAlign: 'center', pb: { xs: 4, md: 5 }, px: 3 }}>
-          <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.8rem' }}>
+          <Typography variant='body2' sx={{ color: 'text.secondary', fontSize: '0.8rem' }}>
             Terms, privacy policy, and data use
           </Typography>
         </Box>

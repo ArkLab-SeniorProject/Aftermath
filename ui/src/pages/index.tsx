@@ -27,7 +27,7 @@ export default function LandingPage() {
         }}
       >
         <Typography
-          variant="h6"
+          variant='h6'
           sx={{
             color: colors.black,
             fontWeight: 700,
@@ -68,8 +68,8 @@ export default function LandingPage() {
           {/* Left column: text */}
           <Box sx={{ flex: { md: 1 }, maxWidth: { md: 520 } }}>
             <Typography
-              variant="h3"
-              component="h1"
+              variant='h3'
+              component='h1'
               sx={{
                 fontWeight: 700,
                 fontSize: { xs: '2rem', sm: '2.4rem', md: '2.8rem' },
@@ -82,7 +82,7 @@ export default function LandingPage() {
             </Typography>
 
             <Typography
-              variant="body1"
+              variant='body1'
               sx={{
                 color: 'text.primary',
                 mb: 1.5,
@@ -93,7 +93,7 @@ export default function LandingPage() {
             </Typography>
 
             <Typography
-              variant="body1"
+              variant='body1'
               sx={{
                 color: 'text.primary',
                 mb: { xs: 4, md: 5 },
@@ -115,8 +115,8 @@ export default function LandingPage() {
             }}
           >
             <Button
-              variant="contained"
-              size="large"
+              variant='contained'
+              size='large'
               fullWidth
               sx={{ py: 1.75, fontSize: '0.95rem', mb: 1.5 }}
               onClick={() => navigate('/recovery/quiz')}
@@ -125,8 +125,8 @@ export default function LandingPage() {
             </Button>
 
             <Button
-              variant="contained"
-              size="large"
+              variant='contained'
+              size='large'
               fullWidth
               sx={{ py: 1.75, fontSize: '0.95rem', mb: 3 }}
               onClick={() => navigate('/preparedness/quiz')}
@@ -135,7 +135,7 @@ export default function LandingPage() {
             </Button>
 
             <Typography
-              variant="caption"
+              variant='caption'
               sx={{
                 textAlign: 'center',
                 color: 'text.secondary',
@@ -157,20 +157,20 @@ export default function LandingPage() {
             px: 3,
           }}
         >
-          <Typography variant="body2" sx={{ mb: 1, color: 'text.primary' }}>
+          <Typography variant='body2' sx={{ mb: 1, color: 'text.primary' }}>
             Already have an account?{' '}
             <Link
-              component="button"
-              variant="body2"
+              component='button'
+              variant='body2'
               onClick={() => navigate('/login')}
-              underline="always"
+              underline='always'
               sx={{ color: 'text.primary', fontWeight: 600 }}
             >
               Sign in
             </Link>
           </Typography>
 
-          <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.8rem' }}>
+          <Typography variant='body2' sx={{ color: 'text.secondary', fontSize: '0.8rem' }}>
             Terms, privacy policy, and data use
           </Typography>
         </Box>

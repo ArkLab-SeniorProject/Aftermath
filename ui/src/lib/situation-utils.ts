@@ -21,7 +21,11 @@ export function situationToQuizAnswers(record: {
   timeline?: string | null;
   disasters?: string | null;
   displayName?: string | null;
-  helpTypes?: { housing?: boolean | null; financial?: boolean | null; damage?: boolean | null } | null;
+  helpTypes?: {
+    housing?: boolean | null;
+    financial?: boolean | null;
+    damage?: boolean | null;
+  } | null;
   homeStatus?: string | null;
   household?: string[] | null;
 }): RecoveryQuizAnswers {
@@ -31,7 +35,10 @@ export function situationToQuizAnswers(record: {
   if (record.helpTypes?.housing) helpTypes.push('housing_shelter');
 
   const disasters = record.disasters
-    ? record.disasters.split(',').map((s) => s.trim()).filter(Boolean)
+    ? record.disasters
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
     : [];
 
   return {

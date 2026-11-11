@@ -27,33 +27,29 @@ export function LoginContent() {
 
   return (
     <AuthCard onBack={() => navigate('/')}>
-      <Typography
-        variant="h4"
-        component="h1"
-        sx={{ fontWeight: 700, mb: 1 }}
-      >
+      <Typography variant='h4' component='h1' sx={{ fontWeight: 700, mb: 1 }}>
         Sign-in your account.
       </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+      <Typography variant='body2' color='text.secondary' sx={{ mb: 3 }}>
         Enter your username and password to see your plan.
       </Typography>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Alert severity='error' sx={{ mb: 2 }}>
           {error}
         </Alert>
       )}
 
       <Box
-        component="form"
+        component='form'
         onSubmit={handleSubmit}
         sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}
       >
-        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+        <Typography variant='body2' sx={{ fontWeight: 500 }}>
           Username:
         </Typography>
         <TextField
-          placeholder="Enter your username"
+          placeholder='Enter your username'
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           required
@@ -62,12 +58,12 @@ export function LoginContent() {
           sx={{ mb: 2 }}
         />
 
-        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+        <Typography variant='body2' sx={{ fontWeight: 500 }}>
           Password:
         </Typography>
         <TextField
-          placeholder="Enter your password"
-          type="password"
+          placeholder='Enter your password'
+          type='password'
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
@@ -77,9 +73,9 @@ export function LoginContent() {
         />
 
         <Button
-          type="submit"
-          variant="contained"
-          size="large"
+          type='submit'
+          variant='contained'
+          size='large'
           fullWidth
           disabled={auth.loading}
           sx={{ py: 1.75 }}
@@ -90,9 +86,9 @@ export function LoginContent() {
 
       <Box sx={{ textAlign: 'center', mt: 2 }}>
         <Link
-          component="button"
-          variant="body2"
-          underline="always"
+          component='button'
+          variant='body2'
+          underline='always'
           onClick={() => navigate('/forgot-password')}
           sx={{ color: 'text.primary', fontWeight: 500 }}
         >
@@ -102,12 +98,12 @@ export function LoginContent() {
 
       <Box sx={{ flex: 1 }} />
 
-      <Typography variant="body2" sx={{ textAlign: 'center', mt: 4 }}>
+      <Typography variant='body2' sx={{ textAlign: 'center', mt: 4 }}>
         New here?{' '}
         <Link
-          component="button"
-          variant="body2"
-          underline="always"
+          component='button'
+          variant='body2'
+          underline='always'
           onClick={() => navigate('/create-account')}
           sx={{ color: 'text.primary', fontWeight: 600 }}
         >

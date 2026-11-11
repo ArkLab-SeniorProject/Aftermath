@@ -77,7 +77,11 @@ const HELP_OPTIONS = [
 const HOME_OPTIONS = [
   { value: 'own', label: 'I own my home' },
   { value: 'rent', label: 'I rent my home' },
-  { value: 'unstable', label: "I don't have stable housing right now", description: 'For example, staying with family or friends, in a shelter, or in a car' },
+  {
+    value: 'unstable',
+    label: "I don't have stable housing right now",
+    description: 'For example, staying with family or friends, in a shelter, or in a car',
+  },
   { value: 'prefer_not_to_say', label: 'Prefer not to say' },
 ];
 
@@ -117,14 +121,18 @@ function loadAnonDraft(): RecoveryQuizAnswers | null {
   try {
     const stored = localStorage.getItem(ANON_STORAGE_KEY);
     if (stored) return JSON.parse(stored);
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   return null;
 }
 
 function saveAnonDraft(answers: RecoveryQuizAnswers) {
   try {
     localStorage.setItem(ANON_STORAGE_KEY, JSON.stringify(answers));
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 }
 
 function clearAnonDraft() {
@@ -132,7 +140,9 @@ function clearAnonDraft() {
     localStorage.removeItem(ANON_STORAGE_KEY);
     localStorage.removeItem('recovery_quiz_complete');
     localStorage.removeItem('recovery_quiz_draft_step');
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 }
 
 async function saveSituationToServer(
@@ -147,7 +157,10 @@ async function saveSituationToServer(
     });
     return situationId;
   }
-  const { data } = await apolloClient.mutate<CreateSituationMutation, CreateSituationMutationVariables>({
+  const { data } = await apolloClient.mutate<
+    CreateSituationMutation,
+    CreateSituationMutationVariables
+  >({
     mutation: CreateSituationDocument,
     variables: { input },
   });
@@ -197,7 +210,7 @@ function QuizCard({ children }: { children: React.ReactNode }) {
         }}
       >
         <Typography
-          variant="h6"
+          variant='h6'
           sx={{
             color: colors.black,
             fontWeight: 700,
@@ -242,7 +255,7 @@ function StepWrapper({
   return (
     <Box>
       <Typography
-        variant="h5"
+        variant='h5'
         sx={{
           fontWeight: 700,
           fontSize: { xs: '1.5rem', md: '1.75rem' },
@@ -252,7 +265,7 @@ function StepWrapper({
         {question}
       </Typography>
       {hint && (
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+        <Typography variant='body2' color='text.secondary' sx={{ mb: 3 }}>
           {hint}
         </Typography>
       )}
@@ -313,7 +326,9 @@ export default function RecoveryQuiz() {
     }
 
     load();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [user]);
 
   const persistAnswers = async (answersToSave: RecoveryQuizAnswers) => {
@@ -403,7 +418,9 @@ export default function RecoveryQuiz() {
   if (loading) {
     return (
       <QuizCard>
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1, py: 8 }}>
+        <Box
+          sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1, py: 8 }}
+        >
           <CircularProgress />
         </Box>
       </QuizCard>
@@ -424,24 +441,20 @@ export default function RecoveryQuiz() {
             pb: 6,
           }}
         >
-          <Typography
-            variant="h4"
-            fontWeight={700}
-            sx={{ mb: 1.5, textAlign: 'center' }}
-          >
+          <Typography variant='h4' fontWeight={700} sx={{ mb: 1.5, textAlign: 'center' }}>
             Thank you, {displayName}. We&rsquo;ve put together your first steps.
           </Typography>
           <Typography
-            variant="body2"
-            color="text.secondary"
+            variant='body2'
+            color='text.secondary'
             sx={{ mb: 4, textAlign: 'center', maxWidth: 360 }}
           >
             You can change your answers any time in Profile.
           </Typography>
 
           <Button
-            variant="contained"
-            size="large"
+            variant='contained'
+            size='large'
             fullWidth
             sx={{ py: 1.75, maxWidth: 400 }}
             onClick={handleFinish}
@@ -460,15 +473,15 @@ export default function RecoveryQuiz() {
             }}
           >
             <Box sx={{ flex: 1, borderBottom: '1px solid', borderColor: 'divider' }} />
-            <Typography variant="body2" color="text.secondary" sx={{ px: 2 }}>
+            <Typography variant='body2' color='text.secondary' sx={{ px: 2 }}>
               OR
             </Typography>
             <Box sx={{ flex: 1, borderBottom: '1px solid', borderColor: 'divider' }} />
           </Box>
 
           <Button
-            variant="outlined"
-            size="large"
+            variant='outlined'
+            size='large'
             fullWidth
             sx={{ py: 1.75, maxWidth: 400 }}
             onClick={() => {
@@ -478,11 +491,7 @@ export default function RecoveryQuiz() {
           >
             Create an account
           </Button>
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            sx={{ mt: 1, textAlign: 'center' }}
-          >
+          <Typography variant='caption' color='text.secondary' sx={{ mt: 1, textAlign: 'center' }}>
             Create an account to save your progress.
           </Typography>
         </Box>
@@ -503,11 +512,11 @@ export default function RecoveryQuiz() {
           pb: 1,
         }}
       >
-        <IconButton onClick={handleBack} size="small" aria-label="back">
+        <IconButton onClick={handleBack} size='small' aria-label='back'>
           <ArrowBack />
         </IconButton>
         <StepDots current={step} total={totalSteps - 1} />
-        <IconButton onClick={handleClose} size="small" aria-label="close">
+        <IconButton onClick={handleClose} size='small' aria-label='close'>
           <Close />
         </IconButton>
       </Box>
@@ -523,14 +532,14 @@ export default function RecoveryQuiz() {
       >
         {step === 0 && (
           <StepWrapper
-            question="Where are you located?"
-            hint="We use your ZIP code to find disasters and help near you."
+            question='Where are you located?'
+            hint='We use your ZIP code to find disasters and help near you.'
           >
-            <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
+            <Typography variant='body2' sx={{ mb: 1, fontWeight: 500 }}>
               Zipcode:
             </Typography>
             <TextField
-              placeholder="Ex. 12345"
+              placeholder='Ex. 12345'
               value={answers.zipCode}
               onChange={(e) => {
                 const val = e.target.value.replace(/\D/g, '').slice(0, 5);
@@ -545,8 +554,8 @@ export default function RecoveryQuiz() {
 
         {step === 1 && (
           <StepWrapper
-            question="When did the disaster happen?"
-            hint="A rough estimate is fine. Some deadlines depend on the date."
+            question='When did the disaster happen?'
+            hint='A rough estimate is fine. Some deadlines depend on the date.'
           >
             <RadioGroup
               value={answers.timeline}
@@ -567,7 +576,7 @@ export default function RecoveryQuiz() {
 
         {step === 2 && (
           <StepWrapper
-            question="Which disaster affected you?"
+            question='Which disaster affected you?'
             hint={`These disasters were reported in your area, ${answers.zipCode}, during that time. Select all that apply.`}
           >
             <FormGroup>
@@ -600,8 +609,8 @@ export default function RecoveryQuiz() {
 
         {step === 3 && (
           <StepWrapper
-            question="What do you need help with?"
-            hint="Select all that apply. You can always change this later in your Profile."
+            question='What do you need help with?'
+            hint='Select all that apply. You can always change this later in your Profile.'
           >
             <FormGroup>
               {HELP_OPTIONS.map((opt) => (
@@ -615,11 +624,15 @@ export default function RecoveryQuiz() {
                   }
                   label={
                     <Box>
-                      <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                      <Typography variant='body1' sx={{ fontWeight: 500 }}>
                         {opt.label}
                       </Typography>
                       {'description' in opt && opt.description && (
-                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
+                        <Typography
+                          variant='body2'
+                          color='text.secondary'
+                          sx={{ fontSize: '0.85rem' }}
+                        >
                           {opt.description}
                         </Typography>
                       )}
@@ -639,7 +652,7 @@ export default function RecoveryQuiz() {
                 ? `You indicated that you needed help with ${formatList(selectedHelpLabels)}.`
                 : "You indicated you're not sure what help you need yet."
             }
-            hint="Customizable filters based on your selections will appear here."
+            hint='Customizable filters based on your selections will appear here.'
           >
             <Box
               sx={{
@@ -650,7 +663,7 @@ export default function RecoveryQuiz() {
                 textAlign: 'center',
               }}
             >
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant='body2' color='text.secondary'>
                 Filter options coming soon
               </Typography>
             </Box>
@@ -659,8 +672,8 @@ export default function RecoveryQuiz() {
 
         {step === 5 && (
           <StepWrapper
-            question="Which best describes your home?"
-            hint="This helps us show the kinds of help that may apply to you."
+            question='Which best describes your home?'
+            hint='This helps us show the kinds of help that may apply to you.'
           >
             <RadioGroup
               value={answers.homeStatus}
@@ -674,10 +687,14 @@ export default function RecoveryQuiz() {
                   label={
                     'description' in opt && opt.description ? (
                       <Box>
-                        <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                        <Typography variant='body1' sx={{ fontWeight: 500 }}>
                           {opt.label}
                         </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
+                        <Typography
+                          variant='body2'
+                          color='text.secondary'
+                          sx={{ fontSize: '0.85rem' }}
+                        >
                           {opt.description}
                         </Typography>
                       </Box>
@@ -699,8 +716,8 @@ export default function RecoveryQuiz() {
 
         {step === 6 && (
           <StepWrapper
-            question="Who lives with you?"
-            hint="This helps us point you to help that fits everyone in your home. Select all that apply."
+            question='Who lives with you?'
+            hint='This helps us point you to help that fits everyone in your home. Select all that apply.'
           >
             <FormGroup>
               {HOUSEHOLD_OPTIONS.map((opt) => (
@@ -722,22 +739,22 @@ export default function RecoveryQuiz() {
 
         {!user && step === 7 && (
           <StepWrapper
-            question="What would you like us to call you?"
-            hint="Sharing your first name or nickname is optional. This helps us tailor the website to you."
+            question='What would you like us to call you?'
+            hint='Sharing your first name or nickname is optional. This helps us tailor the website to you.'
           >
-            <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
+            <Typography variant='body2' sx={{ mb: 1, fontWeight: 500 }}>
               Name:
             </Typography>
             <TextField
-              placeholder="Enter your name or nickname"
+              placeholder='Enter your name or nickname'
               value={answers.name}
               onChange={(e) => setAnswers((prev) => ({ ...prev, name: e.target.value }))}
               fullWidth
               autoFocus
             />
             <Button
-              variant="outlined"
-              size="large"
+              variant='outlined'
+              size='large'
               fullWidth
               sx={{ mt: 2, py: 1.5 }}
               onClick={() => {
@@ -760,8 +777,8 @@ export default function RecoveryQuiz() {
         }}
       >
         <Button
-          variant="contained"
-          size="large"
+          variant='contained'
+          size='large'
           fullWidth
           disabled={!canContinue()}
           onClick={isSubmitStep ? handleFinish : handleNext}
@@ -770,8 +787,8 @@ export default function RecoveryQuiz() {
           {isSubmitStep ? 'Submit' : 'Next'}
         </Button>
         <Button
-          variant="outlined"
-          size="large"
+          variant='outlined'
+          size='large'
           fullWidth
           onClick={handleSaveAndExit}
           sx={{ py: 1.75 }}
