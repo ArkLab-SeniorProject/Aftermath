@@ -112,7 +112,7 @@ flowchart TD
 
     USERS ---|user_id| SIT
     USERS ---|user_id| GUIDES
-    SIT ---|disaster ref| GUIDES
+    SIT ---|situation ref| GUIDES
     RES ---|resource_id| GUIDES
 
     DASH -->|getSituationsByUser| GQL

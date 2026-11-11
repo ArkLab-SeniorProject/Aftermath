@@ -1,8 +1,26 @@
-import { Alert, Box, Button, Link, TextField, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Link,
+  TextField,
+  Typography,
+} from '@mui/material';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/useAuth';
-import { syncRecoverySituationIfNeeded } from '../../lib/sync-recovery-situation';
+import {
+  type SyncResult,
+  dismissConflictAndKeepServer,
+  overwriteSituationWithLocal,
+  syncRecoverySituationIfNeeded,
+} from '../../lib/sync-recovery-situation';
+import type { RecoveryQuizAnswers } from '../../pages/recovery/quiz';
 import { AuthCard } from './auth-card';
 
 export function LoginContent() {
@@ -11,6 +29,10 @@ export function LoginContent() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [conflict, setConflict] = useState<{
+    localAnswers: RecoveryQuizAnswers;
+    situationId: string;
+  } | null>(null);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -18,15 +40,53 @@ export function LoginContent() {
 
     const success = await auth.login(username.trim(), password);
     if (success) {
-      navigate('/dashboard', { replace: true });
-      void syncRecoverySituationIfNeeded();
+      const result: SyncResult = await syncRecoverySituationIfNeeded();
+      if (result.status === 'conflict') {
+        setConflict({ localAnswers: result.localAnswers, situationId: result.situationId });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
     } else {
       setError('Invalid username or password');
     }
   };
 
+  const handleKeepServer = () => {
+    dismissConflictAndKeepServer();
+    setConflict(null);
+    navigate('/dashboard', { replace: true });
+  };
+
+  const handleUseLocal = async () => {
+    if (conflict) {
+      try {
+        await overwriteSituationWithLocal(conflict.situationId, conflict.localAnswers);
+      } catch {
+        /* best-effort */
+      }
+    }
+    setConflict(null);
+    navigate('/dashboard', { replace: true });
+  };
+
   return (
     <AuthCard onBack={() => navigate('/')}>
+      <Dialog open={!!conflict} onClose={handleKeepServer}>
+        <DialogTitle>Update your answers?</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            You just completed a recovery quiz, but your account already has saved answers. Would
+            you like to update to the new answers or keep your existing ones?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleKeepServer}>Keep existing</Button>
+          <Button onClick={handleUseLocal} variant='contained'>
+            Use new answers
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <Typography variant='h4' component='h1' sx={{ fontWeight: 700, mb: 1 }}>
         Sign-in your account.
       </Typography>

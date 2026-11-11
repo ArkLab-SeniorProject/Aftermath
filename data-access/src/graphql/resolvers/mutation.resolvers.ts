@@ -303,8 +303,18 @@ export const mutationResolvers = {
     if (existing) throw new Error('A user can only have one situation');
     const input = { ...args.input, userId: authedUserId };
     const doc = toSnakeCaseDoc(input, ['userId']);
-    const result = await insertAndReturn(ctx.mongoDb, 'situation', doc);
-    return mapSituation(result);
+    try {
+      const result = await insertAndReturn(ctx.mongoDb, 'situation', doc);
+      return mapSituation(result);
+    } catch (err: any) {
+      if (err?.code === 11000) {
+        const fallback = await ctx.mongoDb.collection('situation').findOne({
+          user_id: new ObjectId(authedUserId),
+        });
+        if (fallback) return mapSituation(fallback);
+      }
+      throw err;
+    }
   },
 
   updateSituation: async (_: unknown, args: any, ctx: Context) => {

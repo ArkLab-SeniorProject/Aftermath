@@ -353,7 +353,7 @@ export default function RecoveryQuiz() {
 
   const handleBack = () => {
     if (step > 0) setStep((s) => s - 1);
-    else navigate('/');
+    else navigate('/recovery');
   };
 
   const handleClose = () => {

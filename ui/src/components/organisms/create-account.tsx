@@ -14,7 +14,13 @@ import {
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/useAuth';
-import { syncRecoverySituationIfNeeded } from '../../lib/sync-recovery-situation';
+import {
+  type SyncResult,
+  dismissConflictAndKeepServer,
+  overwriteSituationWithLocal,
+  syncRecoverySituationIfNeeded,
+} from '../../lib/sync-recovery-situation';
+import type { RecoveryQuizAnswers } from '../../pages/recovery/quiz';
 import { AuthCard } from './auth-card';
 
 export function CreateAccountContent() {
@@ -38,6 +44,10 @@ export function CreateAccountContent() {
   const [accessGranted, setAccessGranted] = useState(false);
   const [accessCode, setAccessCode] = useState('');
   const [accessError, setAccessError] = useState('');
+  const [conflict, setConflict] = useState<{
+    localAnswers: RecoveryQuizAnswers;
+    situationId: string;
+  } | null>(null);
 
   const handleAccessSubmit = () => {
     if (accessCode === import.meta.env.VITE_ACCESS_CODE) {
@@ -69,11 +79,36 @@ export function CreateAccountContent() {
       password
     );
     if (result.success) {
-      navigate('/dashboard', { replace: true });
-      void syncRecoverySituationIfNeeded();
+      const syncResult: SyncResult = await syncRecoverySituationIfNeeded();
+      if (syncResult.status === 'conflict') {
+        setConflict({
+          localAnswers: syncResult.localAnswers,
+          situationId: syncResult.situationId,
+        });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
     } else {
       setError(result.error ?? 'Failed to create account');
     }
+  };
+
+  const handleKeepServer = () => {
+    dismissConflictAndKeepServer();
+    setConflict(null);
+    navigate('/dashboard', { replace: true });
+  };
+
+  const handleUseLocal = async () => {
+    if (conflict) {
+      try {
+        await overwriteSituationWithLocal(conflict.situationId, conflict.localAnswers);
+      } catch {
+        /* best-effort */
+      }
+    }
+    setConflict(null);
+    navigate('/dashboard', { replace: true });
   };
 
   return (
@@ -106,6 +141,22 @@ export function CreateAccountContent() {
           <Button onClick={() => navigate('/login')}>Back to Login</Button>
           <Button onClick={handleAccessSubmit} variant='contained'>
             Submit
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={!!conflict} onClose={handleKeepServer}>
+        <DialogTitle>Update your answers?</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            You just completed a recovery quiz, but your account already has saved answers. Would
+            you like to update to the new answers or keep your existing ones?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleKeepServer}>Keep existing</Button>
+          <Button onClick={handleUseLocal} variant='contained'>
+            Use new answers
           </Button>
         </DialogActions>
       </Dialog>
