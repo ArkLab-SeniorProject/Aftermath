@@ -13,22 +13,18 @@ export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
-export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = {
-  [_ in K]?: never;
-};
-export type Incremental<T> =
-  | T
-  | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
+export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
+export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
 const defaultOptions = {} as const;
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
-  ID: { input: string; output: string };
-  String: { input: string; output: string };
-  Boolean: { input: boolean; output: boolean };
-  Int: { input: number; output: number };
-  Float: { input: number; output: number };
-  DateTime: { input: any; output: any };
-  JSON: { input: any; output: any };
+  ID: { input: string; output: string; }
+  String: { input: string; output: string; }
+  Boolean: { input: boolean; output: boolean; }
+  Int: { input: number; output: number; }
+  Float: { input: number; output: number; }
+  DateTime: { input: any; output: any; }
+  JSON: { input: any; output: any; }
 };
 
 export type AuthPayload = {
@@ -40,6 +36,7 @@ export type AuthPayload = {
 };
 
 export type CreateGuideInput = {
+  femaStatus?: InputMaybe<Scalars['JSON']['input']>;
   filters?: InputMaybe<Scalars['JSON']['input']>;
   guideType: GuideType;
   resources?: InputMaybe<Array<GuideResourceInput>>;
@@ -50,17 +47,24 @@ export type CreateGuideInput = {
 export type CreateResourceInput = {
   content?: InputMaybe<Scalars['JSON']['input']>;
   guideType: GuideType;
+  lastChecked?: InputMaybe<Scalars['DateTime']['input']>;
   resourceType: Scalars['String']['input'];
+  sectionGates?: InputMaybe<Scalars['JSON']['input']>;
+  sourceUrl?: InputMaybe<Scalars['String']['input']>;
+  tags?: InputMaybe<Scalars['JSON']['input']>;
   title: Scalars['String']['input'];
 };
 
 export type CreateSituationInput = {
-  disasters?: InputMaybe<Scalars['String']['input']>;
-  displayName?: InputMaybe<Scalars['String']['input']>;
-  helpTypes?: InputMaybe<HelpTypesInput>;
+  disaster?: InputMaybe<Scalars['String']['input']>;
+  femaApplied?: InputMaybe<Scalars['Boolean']['input']>;
+  helpDetails?: InputMaybe<Array<Scalars['String']['input']>>;
+  helpTypes?: InputMaybe<Array<Scalars['String']['input']>>;
   homeStatus?: InputMaybe<Scalars['String']['input']>;
   household?: InputMaybe<Array<Scalars['String']['input']>>;
+  insurance?: InputMaybe<Array<Scalars['String']['input']>>;
   location?: InputMaybe<LocationInput>;
+  primaryResidence?: InputMaybe<Scalars['Boolean']['input']>;
   timeline?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -106,6 +110,7 @@ export type GuestSituationPayload = {
 export type Guide = {
   __typename?: 'Guide';
   createdAt?: Maybe<Scalars['DateTime']['output']>;
+  femaStatus?: Maybe<Scalars['JSON']['output']>;
   filters?: Maybe<Scalars['JSON']['output']>;
   guideType: GuideType;
   id: Scalars['ID']['output'];
@@ -130,20 +135,9 @@ export type GuideResourceInput = {
   saved?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
-export type GuideType = 'preparedness' | 'recovery';
-
-export type HelpTypes = {
-  __typename?: 'HelpTypes';
-  damage?: Maybe<Scalars['Boolean']['output']>;
-  financial?: Maybe<Scalars['Boolean']['output']>;
-  housing?: Maybe<Scalars['Boolean']['output']>;
-};
-
-export type HelpTypesInput = {
-  damage?: InputMaybe<Scalars['Boolean']['input']>;
-  financial?: InputMaybe<Scalars['Boolean']['input']>;
-  housing?: InputMaybe<Scalars['Boolean']['input']>;
-};
+export type GuideType =
+  | 'preparedness'
+  | 'recovery';
 
 export type Location = {
   __typename?: 'Location';
@@ -174,7 +168,9 @@ export type LocationInput = {
   zip?: InputMaybe<Scalars['String']['input']>;
 };
 
-export type LocationPrecision = 'address' | 'zip';
+export type LocationPrecision =
+  | 'address'
+  | 'zip';
 
 export type Mutation = {
   __typename?: 'Mutation';
@@ -197,75 +193,92 @@ export type Mutation = {
   updateUser: User;
 };
 
+
 export type MutationClaimGuestSituationArgs = {
   guestToken: Scalars['String']['input'];
 };
+
 
 export type MutationCreateGuideArgs = {
   input: CreateGuideInput;
 };
 
+
 export type MutationCreateResourceArgs = {
   input: CreateResourceInput;
 };
+
 
 export type MutationCreateSituationArgs = {
   input: CreateSituationInput;
 };
 
+
 export type MutationCreateUserArgs = {
   input: CreateUserInput;
 };
+
 
 export type MutationDeleteGuideArgs = {
   id: Scalars['ID']['input'];
 };
 
+
 export type MutationDeleteResourceArgs = {
   id: Scalars['ID']['input'];
 };
+
 
 export type MutationDeleteSituationArgs = {
   id: Scalars['ID']['input'];
 };
 
+
 export type MutationDeleteUserArgs = {
   id: Scalars['ID']['input'];
 };
 
+
 export type MutationForgotPasswordArgs = {
   email: Scalars['String']['input'];
 };
+
 
 export type MutationLoginArgs = {
   password: Scalars['String']['input'];
   username: Scalars['String']['input'];
 };
 
+
 export type MutationResetPasswordWithTokenArgs = {
   newPassword: Scalars['String']['input'];
   token: Scalars['String']['input'];
 };
+
 
 export type MutationSaveGuestSituationArgs = {
   guestToken?: InputMaybe<Scalars['String']['input']>;
   input: CreateSituationInput;
 };
 
+
 export type MutationUpdateGuideArgs = {
   id: Scalars['ID']['input'];
   input: UpdateGuideInput;
 };
+
 
 export type MutationUpdateResourceArgs = {
   id: Scalars['ID']['input'];
   input: UpdateResourceInput;
 };
 
+
 export type MutationUpdateSituationArgs = {
   id: Scalars['ID']['input'];
   input: UpdateSituationInput;
 };
+
 
 export type MutationUpdateUserArgs = {
   id: Scalars['ID']['input'];
@@ -281,6 +294,7 @@ export type Query = {
   getGuide?: Maybe<Guide>;
   getGuideBySituation?: Maybe<Guide>;
   getGuidesByUser: Array<Guide>;
+  getMatchingResources: Array<Resource>;
   getResource?: Maybe<Resource>;
   getResources: Array<Resource>;
   getSituation?: Maybe<Situation>;
@@ -291,13 +305,16 @@ export type Query = {
   validateResetToken: Scalars['Boolean']['output'];
 };
 
+
 export type QueryGeocodeAddressArgs = {
   address: Scalars['String']['input'];
 };
 
+
 export type QueryGeocodeZipArgs = {
   zip: Scalars['String']['input'];
 };
+
 
 export type QueryGetDisastersForLocationArgs = {
   countyFips: Scalars['String']['input'];
@@ -305,25 +322,38 @@ export type QueryGetDisastersForLocationArgs = {
   timeline?: InputMaybe<Scalars['String']['input']>;
 };
 
+
 export type QueryGetGuestSituationArgs = {
   guestToken: Scalars['String']['input'];
 };
+
 
 export type QueryGetGuideArgs = {
   id: Scalars['ID']['input'];
 };
 
+
 export type QueryGetGuideBySituationArgs = {
   situation: Scalars['ID']['input'];
 };
+
 
 export type QueryGetGuidesByUserArgs = {
   userId: Scalars['ID']['input'];
 };
 
+
+export type QueryGetMatchingResourcesArgs = {
+  filters?: InputMaybe<Scalars['JSON']['input']>;
+  guideType: GuideType;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
 export type QueryGetResourceArgs = {
   id: Scalars['ID']['input'];
 };
+
 
 export type QueryGetResourcesArgs = {
   guideType?: InputMaybe<GuideType>;
@@ -332,26 +362,32 @@ export type QueryGetResourcesArgs = {
   resourceType?: InputMaybe<Scalars['String']['input']>;
 };
 
+
 export type QueryGetSituationArgs = {
   id: Scalars['ID']['input'];
 };
+
 
 export type QueryGetSituationsByUserArgs = {
   userId: Scalars['ID']['input'];
 };
 
+
 export type QueryGetUserArgs = {
   id: Scalars['ID']['input'];
 };
+
 
 export type QueryGetUserByUsernameArgs = {
   username: Scalars['String']['input'];
 };
 
+
 export type QueryGetUsersArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
 };
+
 
 export type QueryValidateResetTokenArgs = {
   token: Scalars['String']['input'];
@@ -363,7 +399,11 @@ export type Resource = {
   createdAt?: Maybe<Scalars['DateTime']['output']>;
   guideType?: Maybe<GuideType>;
   id: Scalars['ID']['output'];
+  lastChecked?: Maybe<Scalars['DateTime']['output']>;
   resourceType?: Maybe<Scalars['String']['output']>;
+  sectionGates?: Maybe<Scalars['JSON']['output']>;
+  sourceUrl?: Maybe<Scalars['String']['output']>;
+  tags?: Maybe<Scalars['JSON']['output']>;
   title?: Maybe<Scalars['String']['output']>;
   updatedAt?: Maybe<Scalars['DateTime']['output']>;
 };
@@ -371,13 +411,16 @@ export type Resource = {
 export type Situation = {
   __typename?: 'Situation';
   createdAt?: Maybe<Scalars['DateTime']['output']>;
-  disasters?: Maybe<Scalars['String']['output']>;
-  displayName?: Maybe<Scalars['String']['output']>;
-  helpTypes?: Maybe<HelpTypes>;
+  disaster?: Maybe<Scalars['String']['output']>;
+  femaApplied?: Maybe<Scalars['Boolean']['output']>;
+  helpDetails: Array<Scalars['String']['output']>;
+  helpTypes: Array<Scalars['String']['output']>;
   homeStatus?: Maybe<Scalars['String']['output']>;
   household?: Maybe<Array<Scalars['String']['output']>>;
   id: Scalars['ID']['output'];
+  insurance: Array<Scalars['String']['output']>;
   location?: Maybe<Location>;
+  primaryResidence?: Maybe<Scalars['Boolean']['output']>;
   timeline?: Maybe<Scalars['String']['output']>;
   updatedAt?: Maybe<Scalars['DateTime']['output']>;
   user?: Maybe<User>;
@@ -385,6 +428,7 @@ export type Situation = {
 };
 
 export type UpdateGuideInput = {
+  femaStatus?: InputMaybe<Scalars['JSON']['input']>;
   filters?: InputMaybe<Scalars['JSON']['input']>;
   resources?: InputMaybe<Array<GuideResourceInput>>;
 };
@@ -392,17 +436,24 @@ export type UpdateGuideInput = {
 export type UpdateResourceInput = {
   content?: InputMaybe<Scalars['JSON']['input']>;
   guideType?: InputMaybe<GuideType>;
+  lastChecked?: InputMaybe<Scalars['DateTime']['input']>;
   resourceType?: InputMaybe<Scalars['String']['input']>;
+  sectionGates?: InputMaybe<Scalars['JSON']['input']>;
+  sourceUrl?: InputMaybe<Scalars['String']['input']>;
+  tags?: InputMaybe<Scalars['JSON']['input']>;
   title?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type UpdateSituationInput = {
-  disasters?: InputMaybe<Scalars['String']['input']>;
-  displayName?: InputMaybe<Scalars['String']['input']>;
-  helpTypes?: InputMaybe<HelpTypesInput>;
+  disaster?: InputMaybe<Scalars['String']['input']>;
+  femaApplied?: InputMaybe<Scalars['Boolean']['input']>;
+  helpDetails?: InputMaybe<Array<Scalars['String']['input']>>;
+  helpTypes?: InputMaybe<Array<Scalars['String']['input']>>;
   homeStatus?: InputMaybe<Scalars['String']['input']>;
   household?: InputMaybe<Array<Scalars['String']['input']>>;
+  insurance?: InputMaybe<Array<Scalars['String']['input']>>;
   location?: InputMaybe<LocationInput>;
+  primaryResidence?: InputMaybe<Scalars['Boolean']['input']>;
   timeline?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -424,309 +475,108 @@ export type User = {
   username: Scalars['String']['output'];
 };
 
-export type UserRole = 'admin' | 'user';
+export type UserRole =
+  | 'admin'
+  | 'user';
 
-export type SituationLocationFieldsFragment = {
-  __typename?: 'Location';
-  zip?: string | null;
-  city?: string | null;
-  state?: string | null;
-  stateCode?: string | null;
-  countryCode?: string | null;
-  stateFips?: string | null;
-  countyFips?: string | null;
-  countyName?: string | null;
-  latitude?: number | null;
-  longitude?: number | null;
-  precision?: LocationPrecision | null;
-};
+export type SituationLocationFieldsFragment = { __typename?: 'Location', zip?: string | null, city?: string | null, state?: string | null, stateCode?: string | null, countryCode?: string | null, stateFips?: string | null, countyFips?: string | null, countyName?: string | null, latitude?: number | null, longitude?: number | null, precision?: LocationPrecision | null };
 
 export type GetUserQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
-export type GetUserQuery = {
-  __typename?: 'Query';
-  getUser?: {
-    __typename?: 'User';
-    id: string;
-    username: string;
-    email?: string | null;
-    firstName?: string | null;
-    role: UserRole;
-    createdAt?: any | null;
-    updatedAt?: any | null;
-  } | null;
-};
+
+export type GetUserQuery = { __typename?: 'Query', getUser?: { __typename?: 'User', id: string, username: string, email?: string | null, firstName?: string | null, role: UserRole, createdAt?: any | null, updatedAt?: any | null } | null };
 
 export type GetUserByUsernameQueryVariables = Exact<{
   username: Scalars['String']['input'];
 }>;
 
-export type GetUserByUsernameQuery = {
-  __typename?: 'Query';
-  getUserByUsername?: {
-    __typename?: 'User';
-    id: string;
-    username: string;
-    email?: string | null;
-    firstName?: string | null;
-    role: UserRole;
-    createdAt?: any | null;
-    updatedAt?: any | null;
-  } | null;
-};
+
+export type GetUserByUsernameQuery = { __typename?: 'Query', getUserByUsername?: { __typename?: 'User', id: string, username: string, email?: string | null, firstName?: string | null, role: UserRole, createdAt?: any | null, updatedAt?: any | null } | null };
 
 export type GetUsersQueryVariables = Exact<{
   limit?: InputMaybe<Scalars['Int']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
 }>;
 
-export type GetUsersQuery = {
-  __typename?: 'Query';
-  getUsers: Array<{
-    __typename?: 'User';
-    id: string;
-    username: string;
-    email?: string | null;
-    firstName?: string | null;
-    role: UserRole;
-    createdAt?: any | null;
-    updatedAt?: any | null;
-  }>;
-};
+
+export type GetUsersQuery = { __typename?: 'Query', getUsers: Array<{ __typename?: 'User', id: string, username: string, email?: string | null, firstName?: string | null, role: UserRole, createdAt?: any | null, updatedAt?: any | null }> };
 
 export type LoginMutationVariables = Exact<{
   username: Scalars['String']['input'];
   password: Scalars['String']['input'];
 }>;
 
-export type LoginMutation = {
-  __typename?: 'Mutation';
-  login: {
-    __typename?: 'AuthPayload';
-    success: boolean;
-    token?: string | null;
-    error?: string | null;
-    user?: {
-      __typename?: 'User';
-      id: string;
-      username: string;
-      email?: string | null;
-      firstName?: string | null;
-      role: UserRole;
-      createdAt?: any | null;
-      updatedAt?: any | null;
-    } | null;
-  };
-};
+
+export type LoginMutation = { __typename?: 'Mutation', login: { __typename?: 'AuthPayload', success: boolean, token?: string | null, error?: string | null, user?: { __typename?: 'User', id: string, username: string, email?: string | null, firstName?: string | null, role: UserRole, createdAt?: any | null, updatedAt?: any | null } | null } };
 
 export type CreateUserMutationVariables = Exact<{
   input: CreateUserInput;
 }>;
 
-export type CreateUserMutation = {
-  __typename?: 'Mutation';
-  createUser: {
-    __typename?: 'AuthPayload';
-    success: boolean;
-    token?: string | null;
-    error?: string | null;
-    user?: {
-      __typename?: 'User';
-      id: string;
-      username: string;
-      email?: string | null;
-      firstName?: string | null;
-      role: UserRole;
-      createdAt?: any | null;
-      updatedAt?: any | null;
-    } | null;
-  };
-};
+
+export type CreateUserMutation = { __typename?: 'Mutation', createUser: { __typename?: 'AuthPayload', success: boolean, token?: string | null, error?: string | null, user?: { __typename?: 'User', id: string, username: string, email?: string | null, firstName?: string | null, role: UserRole, createdAt?: any | null, updatedAt?: any | null } | null } };
 
 export type ForgotPasswordMutationVariables = Exact<{
   email: Scalars['String']['input'];
 }>;
 
-export type ForgotPasswordMutation = { __typename?: 'Mutation'; forgotPassword: boolean };
+
+export type ForgotPasswordMutation = { __typename?: 'Mutation', forgotPassword: boolean };
 
 export type ValidateResetTokenQueryVariables = Exact<{
   token: Scalars['String']['input'];
 }>;
 
-export type ValidateResetTokenQuery = { __typename?: 'Query'; validateResetToken: boolean };
+
+export type ValidateResetTokenQuery = { __typename?: 'Query', validateResetToken: boolean };
 
 export type ResetPasswordWithTokenMutationVariables = Exact<{
   token: Scalars['String']['input'];
   newPassword: Scalars['String']['input'];
 }>;
 
-export type ResetPasswordWithTokenMutation = {
-  __typename?: 'Mutation';
-  resetPasswordWithToken: boolean;
-};
+
+export type ResetPasswordWithTokenMutation = { __typename?: 'Mutation', resetPasswordWithToken: boolean };
 
 export type CreateSituationMutationVariables = Exact<{
   input: CreateSituationInput;
 }>;
 
-export type CreateSituationMutation = {
-  __typename?: 'Mutation';
-  createSituation: {
-    __typename?: 'Situation';
-    id: string;
-    userId?: string | null;
-    timeline?: string | null;
-    disasters?: string | null;
-    displayName?: string | null;
-    homeStatus?: string | null;
-    household?: Array<string> | null;
-    createdAt?: any | null;
-    updatedAt?: any | null;
-    location?: {
-      __typename?: 'Location';
-      zip?: string | null;
-      city?: string | null;
-      state?: string | null;
-      stateCode?: string | null;
-      countryCode?: string | null;
-      stateFips?: string | null;
-      countyFips?: string | null;
-      countyName?: string | null;
-      latitude?: number | null;
-      longitude?: number | null;
-      precision?: LocationPrecision | null;
-    } | null;
-    helpTypes?: {
-      __typename?: 'HelpTypes';
-      housing?: boolean | null;
-      financial?: boolean | null;
-      damage?: boolean | null;
-    } | null;
-  };
-};
+
+export type CreateSituationMutation = { __typename?: 'Mutation', createSituation: { __typename?: 'Situation', id: string, userId?: string | null, timeline?: string | null, disaster?: string | null, helpTypes: Array<string>, helpDetails: Array<string>, insurance: Array<string>, homeStatus?: string | null, primaryResidence?: boolean | null, household?: Array<string> | null, femaApplied?: boolean | null, createdAt?: any | null, updatedAt?: any | null, location?: { __typename?: 'Location', zip?: string | null, city?: string | null, state?: string | null, stateCode?: string | null, countryCode?: string | null, stateFips?: string | null, countyFips?: string | null, countyName?: string | null, latitude?: number | null, longitude?: number | null, precision?: LocationPrecision | null } | null } };
 
 export type GetSituationsByUserQueryVariables = Exact<{
   userId: Scalars['ID']['input'];
 }>;
 
-export type GetSituationsByUserQuery = {
-  __typename?: 'Query';
-  getSituationsByUser: Array<{
-    __typename?: 'Situation';
-    id: string;
-    userId?: string | null;
-    timeline?: string | null;
-    disasters?: string | null;
-    displayName?: string | null;
-    homeStatus?: string | null;
-    household?: Array<string> | null;
-    createdAt?: any | null;
-    updatedAt?: any | null;
-    location?: {
-      __typename?: 'Location';
-      zip?: string | null;
-      city?: string | null;
-      state?: string | null;
-      stateCode?: string | null;
-      countryCode?: string | null;
-      stateFips?: string | null;
-      countyFips?: string | null;
-      countyName?: string | null;
-      latitude?: number | null;
-      longitude?: number | null;
-      precision?: LocationPrecision | null;
-    } | null;
-    helpTypes?: {
-      __typename?: 'HelpTypes';
-      housing?: boolean | null;
-      financial?: boolean | null;
-      damage?: boolean | null;
-    } | null;
-  }>;
-};
+
+export type GetSituationsByUserQuery = { __typename?: 'Query', getSituationsByUser: Array<{ __typename?: 'Situation', id: string, userId?: string | null, timeline?: string | null, disaster?: string | null, helpTypes: Array<string>, helpDetails: Array<string>, insurance: Array<string>, homeStatus?: string | null, primaryResidence?: boolean | null, household?: Array<string> | null, femaApplied?: boolean | null, createdAt?: any | null, updatedAt?: any | null, location?: { __typename?: 'Location', zip?: string | null, city?: string | null, state?: string | null, stateCode?: string | null, countryCode?: string | null, stateFips?: string | null, countyFips?: string | null, countyName?: string | null, latitude?: number | null, longitude?: number | null, precision?: LocationPrecision | null } | null }> };
 
 export type UpdateSituationMutationVariables = Exact<{
   id: Scalars['ID']['input'];
   input: UpdateSituationInput;
 }>;
 
-export type UpdateSituationMutation = {
-  __typename?: 'Mutation';
-  updateSituation: {
-    __typename?: 'Situation';
-    id: string;
-    timeline?: string | null;
-    disasters?: string | null;
-    displayName?: string | null;
-    homeStatus?: string | null;
-    household?: Array<string> | null;
-    updatedAt?: any | null;
-    helpTypes?: {
-      __typename?: 'HelpTypes';
-      housing?: boolean | null;
-      financial?: boolean | null;
-      damage?: boolean | null;
-    } | null;
-  };
-};
 
-export type GeocodeFieldsFragment = {
-  __typename?: 'GeocodeResult';
-  matchedAddress?: string | null;
-  zip?: string | null;
-  city?: string | null;
-  stateCode?: string | null;
-  stateFips?: string | null;
-  countyFips?: string | null;
-  countyName?: string | null;
-  latitude: number;
-  longitude: number;
-  precision: LocationPrecision;
-};
+export type UpdateSituationMutation = { __typename?: 'Mutation', updateSituation: { __typename?: 'Situation', id: string, timeline?: string | null, disaster?: string | null, helpTypes: Array<string>, helpDetails: Array<string>, insurance: Array<string>, homeStatus?: string | null, primaryResidence?: boolean | null, household?: Array<string> | null, femaApplied?: boolean | null, updatedAt?: any | null } };
+
+export type GeocodeFieldsFragment = { __typename?: 'GeocodeResult', matchedAddress?: string | null, zip?: string | null, city?: string | null, stateCode?: string | null, stateFips?: string | null, countyFips?: string | null, countyName?: string | null, latitude: number, longitude: number, precision: LocationPrecision };
 
 export type GeocodeAddressQueryVariables = Exact<{
   address: Scalars['String']['input'];
 }>;
 
-export type GeocodeAddressQuery = {
-  __typename?: 'Query';
-  geocodeAddress?: {
-    __typename?: 'GeocodeResult';
-    matchedAddress?: string | null;
-    zip?: string | null;
-    city?: string | null;
-    stateCode?: string | null;
-    stateFips?: string | null;
-    countyFips?: string | null;
-    countyName?: string | null;
-    latitude: number;
-    longitude: number;
-    precision: LocationPrecision;
-  } | null;
-};
+
+export type GeocodeAddressQuery = { __typename?: 'Query', geocodeAddress?: { __typename?: 'GeocodeResult', matchedAddress?: string | null, zip?: string | null, city?: string | null, stateCode?: string | null, stateFips?: string | null, countyFips?: string | null, countyName?: string | null, latitude: number, longitude: number, precision: LocationPrecision } | null };
 
 export type GeocodeZipQueryVariables = Exact<{
   zip: Scalars['String']['input'];
 }>;
 
-export type GeocodeZipQuery = {
-  __typename?: 'Query';
-  geocodeZip?: {
-    __typename?: 'GeocodeResult';
-    matchedAddress?: string | null;
-    zip?: string | null;
-    city?: string | null;
-    stateCode?: string | null;
-    stateFips?: string | null;
-    countyFips?: string | null;
-    countyName?: string | null;
-    latitude: number;
-    longitude: number;
-    precision: LocationPrecision;
-  } | null;
-};
+
+export type GeocodeZipQuery = { __typename?: 'Query', geocodeZip?: { __typename?: 'GeocodeResult', matchedAddress?: string | null, zip?: string | null, city?: string | null, stateCode?: string | null, stateFips?: string | null, countyFips?: string | null, countyName?: string | null, latitude: number, longitude: number, precision: LocationPrecision } | null };
 
 export type GetDisastersForLocationQueryVariables = Exact<{
   stateFips: Scalars['String']['input'];
@@ -734,147 +584,41 @@ export type GetDisastersForLocationQueryVariables = Exact<{
   timeline?: InputMaybe<Scalars['String']['input']>;
 }>;
 
-export type GetDisastersForLocationQuery = {
-  __typename?: 'Query';
-  getDisastersForLocation: Array<{
-    __typename?: 'DisasterOption';
-    id: string;
-    disasterNumber: number;
-    title: string;
-    incidentType?: string | null;
-    declarationType?: string | null;
-    incidentBeginDate?: any | null;
-    declarationDate?: any | null;
-    individualAssistance: boolean;
-  }>;
-};
 
-export type GuestSituationFieldsFragment = {
-  __typename?: 'Situation';
-  id: string;
-  userId?: string | null;
-  timeline?: string | null;
-  disasters?: string | null;
-  displayName?: string | null;
-  homeStatus?: string | null;
-  household?: Array<string> | null;
-  createdAt?: any | null;
-  updatedAt?: any | null;
-  location?: {
-    __typename?: 'Location';
-    zip?: string | null;
-    city?: string | null;
-    state?: string | null;
-    stateCode?: string | null;
-    countryCode?: string | null;
-    stateFips?: string | null;
-    countyFips?: string | null;
-    countyName?: string | null;
-    latitude?: number | null;
-    longitude?: number | null;
-    precision?: LocationPrecision | null;
-  } | null;
-  helpTypes?: {
-    __typename?: 'HelpTypes';
-    housing?: boolean | null;
-    financial?: boolean | null;
-    damage?: boolean | null;
-  } | null;
-};
+export type GetDisastersForLocationQuery = { __typename?: 'Query', getDisastersForLocation: Array<{ __typename?: 'DisasterOption', id: string, disasterNumber: number, title: string, incidentType?: string | null, declarationType?: string | null, incidentBeginDate?: any | null, declarationDate?: any | null, individualAssistance: boolean }> };
+
+export type GetMatchingResourcesQueryVariables = Exact<{
+  guideType: GuideType;
+  filters?: InputMaybe<Scalars['JSON']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type GetMatchingResourcesQuery = { __typename?: 'Query', getMatchingResources: Array<{ __typename?: 'Resource', id: string, resourceType?: string | null, title?: string | null, content?: any | null, tags?: any | null, sourceUrl?: string | null, lastChecked?: any | null, sectionGates?: any | null, guideType?: GuideType | null }> };
+
+export type GuestSituationFieldsFragment = { __typename?: 'Situation', id: string, userId?: string | null, timeline?: string | null, disaster?: string | null, helpTypes: Array<string>, helpDetails: Array<string>, insurance: Array<string>, homeStatus?: string | null, primaryResidence?: boolean | null, household?: Array<string> | null, femaApplied?: boolean | null, createdAt?: any | null, updatedAt?: any | null, location?: { __typename?: 'Location', zip?: string | null, city?: string | null, state?: string | null, stateCode?: string | null, countryCode?: string | null, stateFips?: string | null, countyFips?: string | null, countyName?: string | null, latitude?: number | null, longitude?: number | null, precision?: LocationPrecision | null } | null };
 
 export type SaveGuestSituationMutationVariables = Exact<{
   input: CreateSituationInput;
   guestToken?: InputMaybe<Scalars['String']['input']>;
 }>;
 
-export type SaveGuestSituationMutation = {
-  __typename?: 'Mutation';
-  saveGuestSituation: {
-    __typename?: 'GuestSituationPayload';
-    guestToken: string;
-    situation: {
-      __typename?: 'Situation';
-      id: string;
-      userId?: string | null;
-      timeline?: string | null;
-      disasters?: string | null;
-      displayName?: string | null;
-      homeStatus?: string | null;
-      household?: Array<string> | null;
-      createdAt?: any | null;
-      updatedAt?: any | null;
-      location?: {
-        __typename?: 'Location';
-        zip?: string | null;
-        city?: string | null;
-        state?: string | null;
-        stateCode?: string | null;
-        countryCode?: string | null;
-        stateFips?: string | null;
-        countyFips?: string | null;
-        countyName?: string | null;
-        latitude?: number | null;
-        longitude?: number | null;
-        precision?: LocationPrecision | null;
-      } | null;
-      helpTypes?: {
-        __typename?: 'HelpTypes';
-        housing?: boolean | null;
-        financial?: boolean | null;
-        damage?: boolean | null;
-      } | null;
-    };
-  };
-};
+
+export type SaveGuestSituationMutation = { __typename?: 'Mutation', saveGuestSituation: { __typename?: 'GuestSituationPayload', guestToken: string, situation: { __typename?: 'Situation', id: string, userId?: string | null, timeline?: string | null, disaster?: string | null, helpTypes: Array<string>, helpDetails: Array<string>, insurance: Array<string>, homeStatus?: string | null, primaryResidence?: boolean | null, household?: Array<string> | null, femaApplied?: boolean | null, createdAt?: any | null, updatedAt?: any | null, location?: { __typename?: 'Location', zip?: string | null, city?: string | null, state?: string | null, stateCode?: string | null, countryCode?: string | null, stateFips?: string | null, countyFips?: string | null, countyName?: string | null, latitude?: number | null, longitude?: number | null, precision?: LocationPrecision | null } | null } } };
 
 export type GetGuestSituationQueryVariables = Exact<{
   guestToken: Scalars['String']['input'];
 }>;
 
-export type GetGuestSituationQuery = {
-  __typename?: 'Query';
-  getGuestSituation?: {
-    __typename?: 'Situation';
-    id: string;
-    userId?: string | null;
-    timeline?: string | null;
-    disasters?: string | null;
-    displayName?: string | null;
-    homeStatus?: string | null;
-    household?: Array<string> | null;
-    createdAt?: any | null;
-    updatedAt?: any | null;
-    location?: {
-      __typename?: 'Location';
-      zip?: string | null;
-      city?: string | null;
-      state?: string | null;
-      stateCode?: string | null;
-      countryCode?: string | null;
-      stateFips?: string | null;
-      countyFips?: string | null;
-      countyName?: string | null;
-      latitude?: number | null;
-      longitude?: number | null;
-      precision?: LocationPrecision | null;
-    } | null;
-    helpTypes?: {
-      __typename?: 'HelpTypes';
-      housing?: boolean | null;
-      financial?: boolean | null;
-      damage?: boolean | null;
-    } | null;
-  } | null;
-};
+
+export type GetGuestSituationQuery = { __typename?: 'Query', getGuestSituation?: { __typename?: 'Situation', id: string, userId?: string | null, timeline?: string | null, disaster?: string | null, helpTypes: Array<string>, helpDetails: Array<string>, insurance: Array<string>, homeStatus?: string | null, primaryResidence?: boolean | null, household?: Array<string> | null, femaApplied?: boolean | null, createdAt?: any | null, updatedAt?: any | null, location?: { __typename?: 'Location', zip?: string | null, city?: string | null, state?: string | null, stateCode?: string | null, countryCode?: string | null, stateFips?: string | null, countyFips?: string | null, countyName?: string | null, latitude?: number | null, longitude?: number | null, precision?: LocationPrecision | null } | null } | null };
 
 export type ClaimGuestSituationMutationVariables = Exact<{
   guestToken: Scalars['String']['input'];
 }>;
 
-export type ClaimGuestSituationMutation = {
-  __typename?: 'Mutation';
-  claimGuestSituation?: { __typename?: 'Situation'; id: string } | null;
-};
+
+export type ClaimGuestSituationMutation = { __typename?: 'Mutation', claimGuestSituation?: { __typename?: 'Situation', id: string } | null };
 
 export const GeocodeFieldsFragmentDoc = gql`
     fragment GeocodeFields on GeocodeResult {
@@ -913,15 +657,14 @@ export const GuestSituationFieldsFragmentDoc = gql`
     ...SituationLocationFields
   }
   timeline
-  disasters
-  displayName
-  helpTypes {
-    housing
-    financial
-    damage
-  }
+  disaster
+  helpTypes
+  helpDetails
+  insurance
   homeStatus
+  primaryResidence
   household
+  femaApplied
   createdAt
   updatedAt
 }
@@ -956,45 +699,21 @@ export const GetUserDocument = gql`
  *   },
  * });
  */
-export function useGetUserQuery(
-  baseOptions: ApolloReactHooks.QueryHookOptions<GetUserQuery, GetUserQueryVariables> &
-    ({ variables: GetUserQueryVariables; skip?: boolean } | { skip: boolean })
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useQuery<GetUserQuery, GetUserQueryVariables>(GetUserDocument, options);
-}
-export function useGetUserLazyQuery(
-  baseOptions?: ApolloReactHooks.LazyQueryHookOptions<GetUserQuery, GetUserQueryVariables>
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useLazyQuery<GetUserQuery, GetUserQueryVariables>(
-    GetUserDocument,
-    options
-  );
-}
+export function useGetUserQuery(baseOptions: ApolloReactHooks.QueryHookOptions<GetUserQuery, GetUserQueryVariables> & ({ variables: GetUserQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<GetUserQuery, GetUserQueryVariables>(GetUserDocument, options);
+      }
+export function useGetUserLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<GetUserQuery, GetUserQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<GetUserQuery, GetUserQueryVariables>(GetUserDocument, options);
+        }
 // @ts-ignore
-export function useGetUserSuspenseQuery(
-  baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<GetUserQuery, GetUserQueryVariables>
-): ApolloReactHooks.UseSuspenseQueryResult<GetUserQuery, GetUserQueryVariables>;
-export function useGetUserSuspenseQuery(
-  baseOptions?:
-    | ApolloReactHooks.SkipToken
-    | ApolloReactHooks.SuspenseQueryHookOptions<GetUserQuery, GetUserQueryVariables>
-): ApolloReactHooks.UseSuspenseQueryResult<GetUserQuery | undefined, GetUserQueryVariables>;
-export function useGetUserSuspenseQuery(
-  baseOptions?:
-    | ApolloReactHooks.SkipToken
-    | ApolloReactHooks.SuspenseQueryHookOptions<GetUserQuery, GetUserQueryVariables>
-) {
-  const options =
-    baseOptions === ApolloReactHooks.skipToken
-      ? baseOptions
-      : { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useSuspenseQuery<GetUserQuery, GetUserQueryVariables>(
-    GetUserDocument,
-    options
-  );
-}
+export function useGetUserSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<GetUserQuery, GetUserQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetUserQuery, GetUserQueryVariables>;
+export function useGetUserSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetUserQuery, GetUserQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetUserQuery | undefined, GetUserQueryVariables>;
+export function useGetUserSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetUserQuery, GetUserQueryVariables>) {
+          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useSuspenseQuery<GetUserQuery, GetUserQueryVariables>(GetUserDocument, options);
+        }
 export type GetUserQueryHookResult = ReturnType<typeof useGetUserQuery>;
 export type GetUserLazyQueryHookResult = ReturnType<typeof useGetUserLazyQuery>;
 export type GetUserSuspenseQueryHookResult = ReturnType<typeof useGetUserSuspenseQuery>;
@@ -1029,75 +748,25 @@ export const GetUserByUsernameDocument = gql`
  *   },
  * });
  */
-export function useGetUserByUsernameQuery(
-  baseOptions: ApolloReactHooks.QueryHookOptions<
-    GetUserByUsernameQuery,
-    GetUserByUsernameQueryVariables
-  > &
-    ({ variables: GetUserByUsernameQueryVariables; skip?: boolean } | { skip: boolean })
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useQuery<GetUserByUsernameQuery, GetUserByUsernameQueryVariables>(
-    GetUserByUsernameDocument,
-    options
-  );
-}
-export function useGetUserByUsernameLazyQuery(
-  baseOptions?: ApolloReactHooks.LazyQueryHookOptions<
-    GetUserByUsernameQuery,
-    GetUserByUsernameQueryVariables
-  >
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useLazyQuery<GetUserByUsernameQuery, GetUserByUsernameQueryVariables>(
-    GetUserByUsernameDocument,
-    options
-  );
-}
+export function useGetUserByUsernameQuery(baseOptions: ApolloReactHooks.QueryHookOptions<GetUserByUsernameQuery, GetUserByUsernameQueryVariables> & ({ variables: GetUserByUsernameQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<GetUserByUsernameQuery, GetUserByUsernameQueryVariables>(GetUserByUsernameDocument, options);
+      }
+export function useGetUserByUsernameLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<GetUserByUsernameQuery, GetUserByUsernameQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<GetUserByUsernameQuery, GetUserByUsernameQueryVariables>(GetUserByUsernameDocument, options);
+        }
 // @ts-ignore
-export function useGetUserByUsernameSuspenseQuery(
-  baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<
-    GetUserByUsernameQuery,
-    GetUserByUsernameQueryVariables
-  >
-): ApolloReactHooks.UseSuspenseQueryResult<GetUserByUsernameQuery, GetUserByUsernameQueryVariables>;
-export function useGetUserByUsernameSuspenseQuery(
-  baseOptions?:
-    | ApolloReactHooks.SkipToken
-    | ApolloReactHooks.SuspenseQueryHookOptions<
-        GetUserByUsernameQuery,
-        GetUserByUsernameQueryVariables
-      >
-): ApolloReactHooks.UseSuspenseQueryResult<
-  GetUserByUsernameQuery | undefined,
-  GetUserByUsernameQueryVariables
->;
-export function useGetUserByUsernameSuspenseQuery(
-  baseOptions?:
-    | ApolloReactHooks.SkipToken
-    | ApolloReactHooks.SuspenseQueryHookOptions<
-        GetUserByUsernameQuery,
-        GetUserByUsernameQueryVariables
-      >
-) {
-  const options =
-    baseOptions === ApolloReactHooks.skipToken
-      ? baseOptions
-      : { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useSuspenseQuery<GetUserByUsernameQuery, GetUserByUsernameQueryVariables>(
-    GetUserByUsernameDocument,
-    options
-  );
-}
+export function useGetUserByUsernameSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<GetUserByUsernameQuery, GetUserByUsernameQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetUserByUsernameQuery, GetUserByUsernameQueryVariables>;
+export function useGetUserByUsernameSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetUserByUsernameQuery, GetUserByUsernameQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetUserByUsernameQuery | undefined, GetUserByUsernameQueryVariables>;
+export function useGetUserByUsernameSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetUserByUsernameQuery, GetUserByUsernameQueryVariables>) {
+          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useSuspenseQuery<GetUserByUsernameQuery, GetUserByUsernameQueryVariables>(GetUserByUsernameDocument, options);
+        }
 export type GetUserByUsernameQueryHookResult = ReturnType<typeof useGetUserByUsernameQuery>;
 export type GetUserByUsernameLazyQueryHookResult = ReturnType<typeof useGetUserByUsernameLazyQuery>;
-export type GetUserByUsernameSuspenseQueryHookResult = ReturnType<
-  typeof useGetUserByUsernameSuspenseQuery
->;
-export type GetUserByUsernameQueryResult = ApolloReactCommon.QueryResult<
-  GetUserByUsernameQuery,
-  GetUserByUsernameQueryVariables
->;
+export type GetUserByUsernameSuspenseQueryHookResult = ReturnType<typeof useGetUserByUsernameSuspenseQuery>;
+export type GetUserByUsernameQueryResult = ApolloReactCommon.QueryResult<GetUserByUsernameQuery, GetUserByUsernameQueryVariables>;
 export const GetUsersDocument = gql`
     query GetUsers($limit: Int = 25, $offset: Int = 0) {
   getUsers(limit: $limit, offset: $offset) {
@@ -1129,54 +798,25 @@ export const GetUsersDocument = gql`
  *   },
  * });
  */
-export function useGetUsersQuery(
-  baseOptions?: ApolloReactHooks.QueryHookOptions<GetUsersQuery, GetUsersQueryVariables>
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useQuery<GetUsersQuery, GetUsersQueryVariables>(
-    GetUsersDocument,
-    options
-  );
-}
-export function useGetUsersLazyQuery(
-  baseOptions?: ApolloReactHooks.LazyQueryHookOptions<GetUsersQuery, GetUsersQueryVariables>
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useLazyQuery<GetUsersQuery, GetUsersQueryVariables>(
-    GetUsersDocument,
-    options
-  );
-}
+export function useGetUsersQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<GetUsersQuery, GetUsersQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<GetUsersQuery, GetUsersQueryVariables>(GetUsersDocument, options);
+      }
+export function useGetUsersLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<GetUsersQuery, GetUsersQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<GetUsersQuery, GetUsersQueryVariables>(GetUsersDocument, options);
+        }
 // @ts-ignore
-export function useGetUsersSuspenseQuery(
-  baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<GetUsersQuery, GetUsersQueryVariables>
-): ApolloReactHooks.UseSuspenseQueryResult<GetUsersQuery, GetUsersQueryVariables>;
-export function useGetUsersSuspenseQuery(
-  baseOptions?:
-    | ApolloReactHooks.SkipToken
-    | ApolloReactHooks.SuspenseQueryHookOptions<GetUsersQuery, GetUsersQueryVariables>
-): ApolloReactHooks.UseSuspenseQueryResult<GetUsersQuery | undefined, GetUsersQueryVariables>;
-export function useGetUsersSuspenseQuery(
-  baseOptions?:
-    | ApolloReactHooks.SkipToken
-    | ApolloReactHooks.SuspenseQueryHookOptions<GetUsersQuery, GetUsersQueryVariables>
-) {
-  const options =
-    baseOptions === ApolloReactHooks.skipToken
-      ? baseOptions
-      : { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useSuspenseQuery<GetUsersQuery, GetUsersQueryVariables>(
-    GetUsersDocument,
-    options
-  );
-}
+export function useGetUsersSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<GetUsersQuery, GetUsersQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetUsersQuery, GetUsersQueryVariables>;
+export function useGetUsersSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetUsersQuery, GetUsersQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetUsersQuery | undefined, GetUsersQueryVariables>;
+export function useGetUsersSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetUsersQuery, GetUsersQueryVariables>) {
+          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useSuspenseQuery<GetUsersQuery, GetUsersQueryVariables>(GetUsersDocument, options);
+        }
 export type GetUsersQueryHookResult = ReturnType<typeof useGetUsersQuery>;
 export type GetUsersLazyQueryHookResult = ReturnType<typeof useGetUsersLazyQuery>;
 export type GetUsersSuspenseQueryHookResult = ReturnType<typeof useGetUsersSuspenseQuery>;
-export type GetUsersQueryResult = ApolloReactCommon.QueryResult<
-  GetUsersQuery,
-  GetUsersQueryVariables
->;
+export type GetUsersQueryResult = ApolloReactCommon.QueryResult<GetUsersQuery, GetUsersQueryVariables>;
 export const LoginDocument = gql`
     mutation Login($username: String!, $password: String!) {
   login(username: $username, password: $password) {
@@ -1195,10 +835,7 @@ export const LoginDocument = gql`
   }
 }
     `;
-export type LoginMutationFn = ApolloReactCommon.MutationFunction<
-  LoginMutation,
-  LoginMutationVariables
->;
+export type LoginMutationFn = ApolloReactCommon.MutationFunction<LoginMutation, LoginMutationVariables>;
 
 /**
  * __useLoginMutation__
@@ -1218,21 +855,13 @@ export type LoginMutationFn = ApolloReactCommon.MutationFunction<
  *   },
  * });
  */
-export function useLoginMutation(
-  baseOptions?: ApolloReactHooks.MutationHookOptions<LoginMutation, LoginMutationVariables>
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useMutation<LoginMutation, LoginMutationVariables>(
-    LoginDocument,
-    options
-  );
-}
+export function useLoginMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<LoginMutation, LoginMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<LoginMutation, LoginMutationVariables>(LoginDocument, options);
+      }
 export type LoginMutationHookResult = ReturnType<typeof useLoginMutation>;
 export type LoginMutationResult = ApolloReactCommon.MutationResult<LoginMutation>;
-export type LoginMutationOptions = ApolloReactCommon.BaseMutationOptions<
-  LoginMutation,
-  LoginMutationVariables
->;
+export type LoginMutationOptions = ApolloReactCommon.BaseMutationOptions<LoginMutation, LoginMutationVariables>;
 export const CreateUserDocument = gql`
     mutation CreateUser($input: CreateUserInput!) {
   createUser(input: $input) {
@@ -1251,10 +880,7 @@ export const CreateUserDocument = gql`
   }
 }
     `;
-export type CreateUserMutationFn = ApolloReactCommon.MutationFunction<
-  CreateUserMutation,
-  CreateUserMutationVariables
->;
+export type CreateUserMutationFn = ApolloReactCommon.MutationFunction<CreateUserMutation, CreateUserMutationVariables>;
 
 /**
  * __useCreateUserMutation__
@@ -1273,33 +899,19 @@ export type CreateUserMutationFn = ApolloReactCommon.MutationFunction<
  *   },
  * });
  */
-export function useCreateUserMutation(
-  baseOptions?: ApolloReactHooks.MutationHookOptions<
-    CreateUserMutation,
-    CreateUserMutationVariables
-  >
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useMutation<CreateUserMutation, CreateUserMutationVariables>(
-    CreateUserDocument,
-    options
-  );
-}
+export function useCreateUserMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<CreateUserMutation, CreateUserMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<CreateUserMutation, CreateUserMutationVariables>(CreateUserDocument, options);
+      }
 export type CreateUserMutationHookResult = ReturnType<typeof useCreateUserMutation>;
 export type CreateUserMutationResult = ApolloReactCommon.MutationResult<CreateUserMutation>;
-export type CreateUserMutationOptions = ApolloReactCommon.BaseMutationOptions<
-  CreateUserMutation,
-  CreateUserMutationVariables
->;
+export type CreateUserMutationOptions = ApolloReactCommon.BaseMutationOptions<CreateUserMutation, CreateUserMutationVariables>;
 export const ForgotPasswordDocument = gql`
     mutation ForgotPassword($email: String!) {
   forgotPassword(email: $email)
 }
     `;
-export type ForgotPasswordMutationFn = ApolloReactCommon.MutationFunction<
-  ForgotPasswordMutation,
-  ForgotPasswordMutationVariables
->;
+export type ForgotPasswordMutationFn = ApolloReactCommon.MutationFunction<ForgotPasswordMutation, ForgotPasswordMutationVariables>;
 
 /**
  * __useForgotPasswordMutation__
@@ -1318,24 +930,13 @@ export type ForgotPasswordMutationFn = ApolloReactCommon.MutationFunction<
  *   },
  * });
  */
-export function useForgotPasswordMutation(
-  baseOptions?: ApolloReactHooks.MutationHookOptions<
-    ForgotPasswordMutation,
-    ForgotPasswordMutationVariables
-  >
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useMutation<ForgotPasswordMutation, ForgotPasswordMutationVariables>(
-    ForgotPasswordDocument,
-    options
-  );
-}
+export function useForgotPasswordMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<ForgotPasswordMutation, ForgotPasswordMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<ForgotPasswordMutation, ForgotPasswordMutationVariables>(ForgotPasswordDocument, options);
+      }
 export type ForgotPasswordMutationHookResult = ReturnType<typeof useForgotPasswordMutation>;
 export type ForgotPasswordMutationResult = ApolloReactCommon.MutationResult<ForgotPasswordMutation>;
-export type ForgotPasswordMutationOptions = ApolloReactCommon.BaseMutationOptions<
-  ForgotPasswordMutation,
-  ForgotPasswordMutationVariables
->;
+export type ForgotPasswordMutationOptions = ApolloReactCommon.BaseMutationOptions<ForgotPasswordMutation, ForgotPasswordMutationVariables>;
 export const ValidateResetTokenDocument = gql`
     query ValidateResetToken($token: String!) {
   validateResetToken(token: $token)
@@ -1358,89 +959,31 @@ export const ValidateResetTokenDocument = gql`
  *   },
  * });
  */
-export function useValidateResetTokenQuery(
-  baseOptions: ApolloReactHooks.QueryHookOptions<
-    ValidateResetTokenQuery,
-    ValidateResetTokenQueryVariables
-  > &
-    ({ variables: ValidateResetTokenQueryVariables; skip?: boolean } | { skip: boolean })
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useQuery<ValidateResetTokenQuery, ValidateResetTokenQueryVariables>(
-    ValidateResetTokenDocument,
-    options
-  );
-}
-export function useValidateResetTokenLazyQuery(
-  baseOptions?: ApolloReactHooks.LazyQueryHookOptions<
-    ValidateResetTokenQuery,
-    ValidateResetTokenQueryVariables
-  >
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useLazyQuery<ValidateResetTokenQuery, ValidateResetTokenQueryVariables>(
-    ValidateResetTokenDocument,
-    options
-  );
-}
+export function useValidateResetTokenQuery(baseOptions: ApolloReactHooks.QueryHookOptions<ValidateResetTokenQuery, ValidateResetTokenQueryVariables> & ({ variables: ValidateResetTokenQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<ValidateResetTokenQuery, ValidateResetTokenQueryVariables>(ValidateResetTokenDocument, options);
+      }
+export function useValidateResetTokenLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<ValidateResetTokenQuery, ValidateResetTokenQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<ValidateResetTokenQuery, ValidateResetTokenQueryVariables>(ValidateResetTokenDocument, options);
+        }
 // @ts-ignore
-export function useValidateResetTokenSuspenseQuery(
-  baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<
-    ValidateResetTokenQuery,
-    ValidateResetTokenQueryVariables
-  >
-): ApolloReactHooks.UseSuspenseQueryResult<
-  ValidateResetTokenQuery,
-  ValidateResetTokenQueryVariables
->;
-export function useValidateResetTokenSuspenseQuery(
-  baseOptions?:
-    | ApolloReactHooks.SkipToken
-    | ApolloReactHooks.SuspenseQueryHookOptions<
-        ValidateResetTokenQuery,
-        ValidateResetTokenQueryVariables
-      >
-): ApolloReactHooks.UseSuspenseQueryResult<
-  ValidateResetTokenQuery | undefined,
-  ValidateResetTokenQueryVariables
->;
-export function useValidateResetTokenSuspenseQuery(
-  baseOptions?:
-    | ApolloReactHooks.SkipToken
-    | ApolloReactHooks.SuspenseQueryHookOptions<
-        ValidateResetTokenQuery,
-        ValidateResetTokenQueryVariables
-      >
-) {
-  const options =
-    baseOptions === ApolloReactHooks.skipToken
-      ? baseOptions
-      : { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useSuspenseQuery<
-    ValidateResetTokenQuery,
-    ValidateResetTokenQueryVariables
-  >(ValidateResetTokenDocument, options);
-}
+export function useValidateResetTokenSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<ValidateResetTokenQuery, ValidateResetTokenQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<ValidateResetTokenQuery, ValidateResetTokenQueryVariables>;
+export function useValidateResetTokenSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<ValidateResetTokenQuery, ValidateResetTokenQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<ValidateResetTokenQuery | undefined, ValidateResetTokenQueryVariables>;
+export function useValidateResetTokenSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<ValidateResetTokenQuery, ValidateResetTokenQueryVariables>) {
+          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useSuspenseQuery<ValidateResetTokenQuery, ValidateResetTokenQueryVariables>(ValidateResetTokenDocument, options);
+        }
 export type ValidateResetTokenQueryHookResult = ReturnType<typeof useValidateResetTokenQuery>;
-export type ValidateResetTokenLazyQueryHookResult = ReturnType<
-  typeof useValidateResetTokenLazyQuery
->;
-export type ValidateResetTokenSuspenseQueryHookResult = ReturnType<
-  typeof useValidateResetTokenSuspenseQuery
->;
-export type ValidateResetTokenQueryResult = ApolloReactCommon.QueryResult<
-  ValidateResetTokenQuery,
-  ValidateResetTokenQueryVariables
->;
+export type ValidateResetTokenLazyQueryHookResult = ReturnType<typeof useValidateResetTokenLazyQuery>;
+export type ValidateResetTokenSuspenseQueryHookResult = ReturnType<typeof useValidateResetTokenSuspenseQuery>;
+export type ValidateResetTokenQueryResult = ApolloReactCommon.QueryResult<ValidateResetTokenQuery, ValidateResetTokenQueryVariables>;
 export const ResetPasswordWithTokenDocument = gql`
     mutation ResetPasswordWithToken($token: String!, $newPassword: String!) {
   resetPasswordWithToken(token: $token, newPassword: $newPassword)
 }
     `;
-export type ResetPasswordWithTokenMutationFn = ApolloReactCommon.MutationFunction<
-  ResetPasswordWithTokenMutation,
-  ResetPasswordWithTokenMutationVariables
->;
+export type ResetPasswordWithTokenMutationFn = ApolloReactCommon.MutationFunction<ResetPasswordWithTokenMutation, ResetPasswordWithTokenMutationVariables>;
 
 /**
  * __useResetPasswordWithTokenMutation__
@@ -1460,27 +1003,13 @@ export type ResetPasswordWithTokenMutationFn = ApolloReactCommon.MutationFunctio
  *   },
  * });
  */
-export function useResetPasswordWithTokenMutation(
-  baseOptions?: ApolloReactHooks.MutationHookOptions<
-    ResetPasswordWithTokenMutation,
-    ResetPasswordWithTokenMutationVariables
-  >
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useMutation<
-    ResetPasswordWithTokenMutation,
-    ResetPasswordWithTokenMutationVariables
-  >(ResetPasswordWithTokenDocument, options);
-}
-export type ResetPasswordWithTokenMutationHookResult = ReturnType<
-  typeof useResetPasswordWithTokenMutation
->;
-export type ResetPasswordWithTokenMutationResult =
-  ApolloReactCommon.MutationResult<ResetPasswordWithTokenMutation>;
-export type ResetPasswordWithTokenMutationOptions = ApolloReactCommon.BaseMutationOptions<
-  ResetPasswordWithTokenMutation,
-  ResetPasswordWithTokenMutationVariables
->;
+export function useResetPasswordWithTokenMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<ResetPasswordWithTokenMutation, ResetPasswordWithTokenMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<ResetPasswordWithTokenMutation, ResetPasswordWithTokenMutationVariables>(ResetPasswordWithTokenDocument, options);
+      }
+export type ResetPasswordWithTokenMutationHookResult = ReturnType<typeof useResetPasswordWithTokenMutation>;
+export type ResetPasswordWithTokenMutationResult = ApolloReactCommon.MutationResult<ResetPasswordWithTokenMutation>;
+export type ResetPasswordWithTokenMutationOptions = ApolloReactCommon.BaseMutationOptions<ResetPasswordWithTokenMutation, ResetPasswordWithTokenMutationVariables>;
 export const CreateSituationDocument = gql`
     mutation CreateSituation($input: CreateSituationInput!) {
   createSituation(input: $input) {
@@ -1490,24 +1019,20 @@ export const CreateSituationDocument = gql`
       ...SituationLocationFields
     }
     timeline
-    disasters
-    displayName
-    helpTypes {
-      housing
-      financial
-      damage
-    }
+    disaster
+    helpTypes
+    helpDetails
+    insurance
     homeStatus
+    primaryResidence
     household
+    femaApplied
     createdAt
     updatedAt
   }
 }
     ${SituationLocationFieldsFragmentDoc}`;
-export type CreateSituationMutationFn = ApolloReactCommon.MutationFunction<
-  CreateSituationMutation,
-  CreateSituationMutationVariables
->;
+export type CreateSituationMutationFn = ApolloReactCommon.MutationFunction<CreateSituationMutation, CreateSituationMutationVariables>;
 
 /**
  * __useCreateSituationMutation__
@@ -1526,25 +1051,13 @@ export type CreateSituationMutationFn = ApolloReactCommon.MutationFunction<
  *   },
  * });
  */
-export function useCreateSituationMutation(
-  baseOptions?: ApolloReactHooks.MutationHookOptions<
-    CreateSituationMutation,
-    CreateSituationMutationVariables
-  >
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useMutation<CreateSituationMutation, CreateSituationMutationVariables>(
-    CreateSituationDocument,
-    options
-  );
-}
+export function useCreateSituationMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<CreateSituationMutation, CreateSituationMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<CreateSituationMutation, CreateSituationMutationVariables>(CreateSituationDocument, options);
+      }
 export type CreateSituationMutationHookResult = ReturnType<typeof useCreateSituationMutation>;
-export type CreateSituationMutationResult =
-  ApolloReactCommon.MutationResult<CreateSituationMutation>;
-export type CreateSituationMutationOptions = ApolloReactCommon.BaseMutationOptions<
-  CreateSituationMutation,
-  CreateSituationMutationVariables
->;
+export type CreateSituationMutationResult = ApolloReactCommon.MutationResult<CreateSituationMutation>;
+export type CreateSituationMutationOptions = ApolloReactCommon.BaseMutationOptions<CreateSituationMutation, CreateSituationMutationVariables>;
 export const GetSituationsByUserDocument = gql`
     query GetSituationsByUser($userId: ID!) {
   getSituationsByUser(userId: $userId) {
@@ -1554,15 +1067,14 @@ export const GetSituationsByUserDocument = gql`
       ...SituationLocationFields
     }
     timeline
-    disasters
-    displayName
-    helpTypes {
-      housing
-      financial
-      damage
-    }
+    disaster
+    helpTypes
+    helpDetails
+    insurance
     homeStatus
+    primaryResidence
     household
+    femaApplied
     createdAt
     updatedAt
   }
@@ -1585,102 +1097,43 @@ export const GetSituationsByUserDocument = gql`
  *   },
  * });
  */
-export function useGetSituationsByUserQuery(
-  baseOptions: ApolloReactHooks.QueryHookOptions<
-    GetSituationsByUserQuery,
-    GetSituationsByUserQueryVariables
-  > &
-    ({ variables: GetSituationsByUserQueryVariables; skip?: boolean } | { skip: boolean })
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useQuery<GetSituationsByUserQuery, GetSituationsByUserQueryVariables>(
-    GetSituationsByUserDocument,
-    options
-  );
-}
-export function useGetSituationsByUserLazyQuery(
-  baseOptions?: ApolloReactHooks.LazyQueryHookOptions<
-    GetSituationsByUserQuery,
-    GetSituationsByUserQueryVariables
-  >
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useLazyQuery<GetSituationsByUserQuery, GetSituationsByUserQueryVariables>(
-    GetSituationsByUserDocument,
-    options
-  );
-}
+export function useGetSituationsByUserQuery(baseOptions: ApolloReactHooks.QueryHookOptions<GetSituationsByUserQuery, GetSituationsByUserQueryVariables> & ({ variables: GetSituationsByUserQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<GetSituationsByUserQuery, GetSituationsByUserQueryVariables>(GetSituationsByUserDocument, options);
+      }
+export function useGetSituationsByUserLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<GetSituationsByUserQuery, GetSituationsByUserQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<GetSituationsByUserQuery, GetSituationsByUserQueryVariables>(GetSituationsByUserDocument, options);
+        }
 // @ts-ignore
-export function useGetSituationsByUserSuspenseQuery(
-  baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<
-    GetSituationsByUserQuery,
-    GetSituationsByUserQueryVariables
-  >
-): ApolloReactHooks.UseSuspenseQueryResult<
-  GetSituationsByUserQuery,
-  GetSituationsByUserQueryVariables
->;
-export function useGetSituationsByUserSuspenseQuery(
-  baseOptions?:
-    | ApolloReactHooks.SkipToken
-    | ApolloReactHooks.SuspenseQueryHookOptions<
-        GetSituationsByUserQuery,
-        GetSituationsByUserQueryVariables
-      >
-): ApolloReactHooks.UseSuspenseQueryResult<
-  GetSituationsByUserQuery | undefined,
-  GetSituationsByUserQueryVariables
->;
-export function useGetSituationsByUserSuspenseQuery(
-  baseOptions?:
-    | ApolloReactHooks.SkipToken
-    | ApolloReactHooks.SuspenseQueryHookOptions<
-        GetSituationsByUserQuery,
-        GetSituationsByUserQueryVariables
-      >
-) {
-  const options =
-    baseOptions === ApolloReactHooks.skipToken
-      ? baseOptions
-      : { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useSuspenseQuery<
-    GetSituationsByUserQuery,
-    GetSituationsByUserQueryVariables
-  >(GetSituationsByUserDocument, options);
-}
+export function useGetSituationsByUserSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<GetSituationsByUserQuery, GetSituationsByUserQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetSituationsByUserQuery, GetSituationsByUserQueryVariables>;
+export function useGetSituationsByUserSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetSituationsByUserQuery, GetSituationsByUserQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetSituationsByUserQuery | undefined, GetSituationsByUserQueryVariables>;
+export function useGetSituationsByUserSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetSituationsByUserQuery, GetSituationsByUserQueryVariables>) {
+          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useSuspenseQuery<GetSituationsByUserQuery, GetSituationsByUserQueryVariables>(GetSituationsByUserDocument, options);
+        }
 export type GetSituationsByUserQueryHookResult = ReturnType<typeof useGetSituationsByUserQuery>;
-export type GetSituationsByUserLazyQueryHookResult = ReturnType<
-  typeof useGetSituationsByUserLazyQuery
->;
-export type GetSituationsByUserSuspenseQueryHookResult = ReturnType<
-  typeof useGetSituationsByUserSuspenseQuery
->;
-export type GetSituationsByUserQueryResult = ApolloReactCommon.QueryResult<
-  GetSituationsByUserQuery,
-  GetSituationsByUserQueryVariables
->;
+export type GetSituationsByUserLazyQueryHookResult = ReturnType<typeof useGetSituationsByUserLazyQuery>;
+export type GetSituationsByUserSuspenseQueryHookResult = ReturnType<typeof useGetSituationsByUserSuspenseQuery>;
+export type GetSituationsByUserQueryResult = ApolloReactCommon.QueryResult<GetSituationsByUserQuery, GetSituationsByUserQueryVariables>;
 export const UpdateSituationDocument = gql`
     mutation UpdateSituation($id: ID!, $input: UpdateSituationInput!) {
   updateSituation(id: $id, input: $input) {
     id
     timeline
-    disasters
-    displayName
-    helpTypes {
-      housing
-      financial
-      damage
-    }
+    disaster
+    helpTypes
+    helpDetails
+    insurance
     homeStatus
+    primaryResidence
     household
+    femaApplied
     updatedAt
   }
 }
     `;
-export type UpdateSituationMutationFn = ApolloReactCommon.MutationFunction<
-  UpdateSituationMutation,
-  UpdateSituationMutationVariables
->;
+export type UpdateSituationMutationFn = ApolloReactCommon.MutationFunction<UpdateSituationMutation, UpdateSituationMutationVariables>;
 
 /**
  * __useUpdateSituationMutation__
@@ -1700,25 +1153,13 @@ export type UpdateSituationMutationFn = ApolloReactCommon.MutationFunction<
  *   },
  * });
  */
-export function useUpdateSituationMutation(
-  baseOptions?: ApolloReactHooks.MutationHookOptions<
-    UpdateSituationMutation,
-    UpdateSituationMutationVariables
-  >
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useMutation<UpdateSituationMutation, UpdateSituationMutationVariables>(
-    UpdateSituationDocument,
-    options
-  );
-}
+export function useUpdateSituationMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<UpdateSituationMutation, UpdateSituationMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<UpdateSituationMutation, UpdateSituationMutationVariables>(UpdateSituationDocument, options);
+      }
 export type UpdateSituationMutationHookResult = ReturnType<typeof useUpdateSituationMutation>;
-export type UpdateSituationMutationResult =
-  ApolloReactCommon.MutationResult<UpdateSituationMutation>;
-export type UpdateSituationMutationOptions = ApolloReactCommon.BaseMutationOptions<
-  UpdateSituationMutation,
-  UpdateSituationMutationVariables
->;
+export type UpdateSituationMutationResult = ApolloReactCommon.MutationResult<UpdateSituationMutation>;
+export type UpdateSituationMutationOptions = ApolloReactCommon.BaseMutationOptions<UpdateSituationMutation, UpdateSituationMutationVariables>;
 export const GeocodeAddressDocument = gql`
     query GeocodeAddress($address: String!) {
   geocodeAddress(address: $address) {
@@ -1743,69 +1184,25 @@ export const GeocodeAddressDocument = gql`
  *   },
  * });
  */
-export function useGeocodeAddressQuery(
-  baseOptions: ApolloReactHooks.QueryHookOptions<
-    GeocodeAddressQuery,
-    GeocodeAddressQueryVariables
-  > &
-    ({ variables: GeocodeAddressQueryVariables; skip?: boolean } | { skip: boolean })
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useQuery<GeocodeAddressQuery, GeocodeAddressQueryVariables>(
-    GeocodeAddressDocument,
-    options
-  );
-}
-export function useGeocodeAddressLazyQuery(
-  baseOptions?: ApolloReactHooks.LazyQueryHookOptions<
-    GeocodeAddressQuery,
-    GeocodeAddressQueryVariables
-  >
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useLazyQuery<GeocodeAddressQuery, GeocodeAddressQueryVariables>(
-    GeocodeAddressDocument,
-    options
-  );
-}
+export function useGeocodeAddressQuery(baseOptions: ApolloReactHooks.QueryHookOptions<GeocodeAddressQuery, GeocodeAddressQueryVariables> & ({ variables: GeocodeAddressQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<GeocodeAddressQuery, GeocodeAddressQueryVariables>(GeocodeAddressDocument, options);
+      }
+export function useGeocodeAddressLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<GeocodeAddressQuery, GeocodeAddressQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<GeocodeAddressQuery, GeocodeAddressQueryVariables>(GeocodeAddressDocument, options);
+        }
 // @ts-ignore
-export function useGeocodeAddressSuspenseQuery(
-  baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<
-    GeocodeAddressQuery,
-    GeocodeAddressQueryVariables
-  >
-): ApolloReactHooks.UseSuspenseQueryResult<GeocodeAddressQuery, GeocodeAddressQueryVariables>;
-export function useGeocodeAddressSuspenseQuery(
-  baseOptions?:
-    | ApolloReactHooks.SkipToken
-    | ApolloReactHooks.SuspenseQueryHookOptions<GeocodeAddressQuery, GeocodeAddressQueryVariables>
-): ApolloReactHooks.UseSuspenseQueryResult<
-  GeocodeAddressQuery | undefined,
-  GeocodeAddressQueryVariables
->;
-export function useGeocodeAddressSuspenseQuery(
-  baseOptions?:
-    | ApolloReactHooks.SkipToken
-    | ApolloReactHooks.SuspenseQueryHookOptions<GeocodeAddressQuery, GeocodeAddressQueryVariables>
-) {
-  const options =
-    baseOptions === ApolloReactHooks.skipToken
-      ? baseOptions
-      : { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useSuspenseQuery<GeocodeAddressQuery, GeocodeAddressQueryVariables>(
-    GeocodeAddressDocument,
-    options
-  );
-}
+export function useGeocodeAddressSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<GeocodeAddressQuery, GeocodeAddressQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GeocodeAddressQuery, GeocodeAddressQueryVariables>;
+export function useGeocodeAddressSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GeocodeAddressQuery, GeocodeAddressQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GeocodeAddressQuery | undefined, GeocodeAddressQueryVariables>;
+export function useGeocodeAddressSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GeocodeAddressQuery, GeocodeAddressQueryVariables>) {
+          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useSuspenseQuery<GeocodeAddressQuery, GeocodeAddressQueryVariables>(GeocodeAddressDocument, options);
+        }
 export type GeocodeAddressQueryHookResult = ReturnType<typeof useGeocodeAddressQuery>;
 export type GeocodeAddressLazyQueryHookResult = ReturnType<typeof useGeocodeAddressLazyQuery>;
-export type GeocodeAddressSuspenseQueryHookResult = ReturnType<
-  typeof useGeocodeAddressSuspenseQuery
->;
-export type GeocodeAddressQueryResult = ApolloReactCommon.QueryResult<
-  GeocodeAddressQuery,
-  GeocodeAddressQueryVariables
->;
+export type GeocodeAddressSuspenseQueryHookResult = ReturnType<typeof useGeocodeAddressSuspenseQuery>;
+export type GeocodeAddressQueryResult = ApolloReactCommon.QueryResult<GeocodeAddressQuery, GeocodeAddressQueryVariables>;
 export const GeocodeZipDocument = gql`
     query GeocodeZip($zip: String!) {
   geocodeZip(zip: $zip) {
@@ -1830,55 +1227,25 @@ export const GeocodeZipDocument = gql`
  *   },
  * });
  */
-export function useGeocodeZipQuery(
-  baseOptions: ApolloReactHooks.QueryHookOptions<GeocodeZipQuery, GeocodeZipQueryVariables> &
-    ({ variables: GeocodeZipQueryVariables; skip?: boolean } | { skip: boolean })
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useQuery<GeocodeZipQuery, GeocodeZipQueryVariables>(
-    GeocodeZipDocument,
-    options
-  );
-}
-export function useGeocodeZipLazyQuery(
-  baseOptions?: ApolloReactHooks.LazyQueryHookOptions<GeocodeZipQuery, GeocodeZipQueryVariables>
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useLazyQuery<GeocodeZipQuery, GeocodeZipQueryVariables>(
-    GeocodeZipDocument,
-    options
-  );
-}
+export function useGeocodeZipQuery(baseOptions: ApolloReactHooks.QueryHookOptions<GeocodeZipQuery, GeocodeZipQueryVariables> & ({ variables: GeocodeZipQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<GeocodeZipQuery, GeocodeZipQueryVariables>(GeocodeZipDocument, options);
+      }
+export function useGeocodeZipLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<GeocodeZipQuery, GeocodeZipQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<GeocodeZipQuery, GeocodeZipQueryVariables>(GeocodeZipDocument, options);
+        }
 // @ts-ignore
-export function useGeocodeZipSuspenseQuery(
-  baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<GeocodeZipQuery, GeocodeZipQueryVariables>
-): ApolloReactHooks.UseSuspenseQueryResult<GeocodeZipQuery, GeocodeZipQueryVariables>;
-export function useGeocodeZipSuspenseQuery(
-  baseOptions?:
-    | ApolloReactHooks.SkipToken
-    | ApolloReactHooks.SuspenseQueryHookOptions<GeocodeZipQuery, GeocodeZipQueryVariables>
-): ApolloReactHooks.UseSuspenseQueryResult<GeocodeZipQuery | undefined, GeocodeZipQueryVariables>;
-export function useGeocodeZipSuspenseQuery(
-  baseOptions?:
-    | ApolloReactHooks.SkipToken
-    | ApolloReactHooks.SuspenseQueryHookOptions<GeocodeZipQuery, GeocodeZipQueryVariables>
-) {
-  const options =
-    baseOptions === ApolloReactHooks.skipToken
-      ? baseOptions
-      : { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useSuspenseQuery<GeocodeZipQuery, GeocodeZipQueryVariables>(
-    GeocodeZipDocument,
-    options
-  );
-}
+export function useGeocodeZipSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<GeocodeZipQuery, GeocodeZipQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GeocodeZipQuery, GeocodeZipQueryVariables>;
+export function useGeocodeZipSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GeocodeZipQuery, GeocodeZipQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GeocodeZipQuery | undefined, GeocodeZipQueryVariables>;
+export function useGeocodeZipSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GeocodeZipQuery, GeocodeZipQueryVariables>) {
+          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useSuspenseQuery<GeocodeZipQuery, GeocodeZipQueryVariables>(GeocodeZipDocument, options);
+        }
 export type GeocodeZipQueryHookResult = ReturnType<typeof useGeocodeZipQuery>;
 export type GeocodeZipLazyQueryHookResult = ReturnType<typeof useGeocodeZipLazyQuery>;
 export type GeocodeZipSuspenseQueryHookResult = ReturnType<typeof useGeocodeZipSuspenseQuery>;
-export type GeocodeZipQueryResult = ApolloReactCommon.QueryResult<
-  GeocodeZipQuery,
-  GeocodeZipQueryVariables
->;
+export type GeocodeZipQueryResult = ApolloReactCommon.QueryResult<GeocodeZipQuery, GeocodeZipQueryVariables>;
 export const GetDisastersForLocationDocument = gql`
     query GetDisastersForLocation($stateFips: String!, $countyFips: String!, $timeline: String) {
   getDisastersForLocation(
@@ -1916,82 +1283,78 @@ export const GetDisastersForLocationDocument = gql`
  *   },
  * });
  */
-export function useGetDisastersForLocationQuery(
-  baseOptions: ApolloReactHooks.QueryHookOptions<
-    GetDisastersForLocationQuery,
-    GetDisastersForLocationQueryVariables
-  > &
-    ({ variables: GetDisastersForLocationQueryVariables; skip?: boolean } | { skip: boolean })
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useQuery<
-    GetDisastersForLocationQuery,
-    GetDisastersForLocationQueryVariables
-  >(GetDisastersForLocationDocument, options);
-}
-export function useGetDisastersForLocationLazyQuery(
-  baseOptions?: ApolloReactHooks.LazyQueryHookOptions<
-    GetDisastersForLocationQuery,
-    GetDisastersForLocationQueryVariables
-  >
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useLazyQuery<
-    GetDisastersForLocationQuery,
-    GetDisastersForLocationQueryVariables
-  >(GetDisastersForLocationDocument, options);
-}
+export function useGetDisastersForLocationQuery(baseOptions: ApolloReactHooks.QueryHookOptions<GetDisastersForLocationQuery, GetDisastersForLocationQueryVariables> & ({ variables: GetDisastersForLocationQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<GetDisastersForLocationQuery, GetDisastersForLocationQueryVariables>(GetDisastersForLocationDocument, options);
+      }
+export function useGetDisastersForLocationLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<GetDisastersForLocationQuery, GetDisastersForLocationQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<GetDisastersForLocationQuery, GetDisastersForLocationQueryVariables>(GetDisastersForLocationDocument, options);
+        }
 // @ts-ignore
-export function useGetDisastersForLocationSuspenseQuery(
-  baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<
-    GetDisastersForLocationQuery,
-    GetDisastersForLocationQueryVariables
-  >
-): ApolloReactHooks.UseSuspenseQueryResult<
-  GetDisastersForLocationQuery,
-  GetDisastersForLocationQueryVariables
->;
-export function useGetDisastersForLocationSuspenseQuery(
-  baseOptions?:
-    | ApolloReactHooks.SkipToken
-    | ApolloReactHooks.SuspenseQueryHookOptions<
-        GetDisastersForLocationQuery,
-        GetDisastersForLocationQueryVariables
-      >
-): ApolloReactHooks.UseSuspenseQueryResult<
-  GetDisastersForLocationQuery | undefined,
-  GetDisastersForLocationQueryVariables
->;
-export function useGetDisastersForLocationSuspenseQuery(
-  baseOptions?:
-    | ApolloReactHooks.SkipToken
-    | ApolloReactHooks.SuspenseQueryHookOptions<
-        GetDisastersForLocationQuery,
-        GetDisastersForLocationQueryVariables
-      >
-) {
-  const options =
-    baseOptions === ApolloReactHooks.skipToken
-      ? baseOptions
-      : { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useSuspenseQuery<
-    GetDisastersForLocationQuery,
-    GetDisastersForLocationQueryVariables
-  >(GetDisastersForLocationDocument, options);
+export function useGetDisastersForLocationSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<GetDisastersForLocationQuery, GetDisastersForLocationQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetDisastersForLocationQuery, GetDisastersForLocationQueryVariables>;
+export function useGetDisastersForLocationSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetDisastersForLocationQuery, GetDisastersForLocationQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetDisastersForLocationQuery | undefined, GetDisastersForLocationQueryVariables>;
+export function useGetDisastersForLocationSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetDisastersForLocationQuery, GetDisastersForLocationQueryVariables>) {
+          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useSuspenseQuery<GetDisastersForLocationQuery, GetDisastersForLocationQueryVariables>(GetDisastersForLocationDocument, options);
+        }
+export type GetDisastersForLocationQueryHookResult = ReturnType<typeof useGetDisastersForLocationQuery>;
+export type GetDisastersForLocationLazyQueryHookResult = ReturnType<typeof useGetDisastersForLocationLazyQuery>;
+export type GetDisastersForLocationSuspenseQueryHookResult = ReturnType<typeof useGetDisastersForLocationSuspenseQuery>;
+export type GetDisastersForLocationQueryResult = ApolloReactCommon.QueryResult<GetDisastersForLocationQuery, GetDisastersForLocationQueryVariables>;
+export const GetMatchingResourcesDocument = gql`
+    query GetMatchingResources($guideType: GuideType!, $filters: JSON, $limit: Int = 100) {
+  getMatchingResources(guideType: $guideType, filters: $filters, limit: $limit) {
+    id
+    resourceType
+    title
+    content
+    tags
+    sourceUrl
+    lastChecked
+    sectionGates
+    guideType
+  }
 }
-export type GetDisastersForLocationQueryHookResult = ReturnType<
-  typeof useGetDisastersForLocationQuery
->;
-export type GetDisastersForLocationLazyQueryHookResult = ReturnType<
-  typeof useGetDisastersForLocationLazyQuery
->;
-export type GetDisastersForLocationSuspenseQueryHookResult = ReturnType<
-  typeof useGetDisastersForLocationSuspenseQuery
->;
-export type GetDisastersForLocationQueryResult = ApolloReactCommon.QueryResult<
-  GetDisastersForLocationQuery,
-  GetDisastersForLocationQueryVariables
->;
+    `;
+
+/**
+ * __useGetMatchingResourcesQuery__
+ *
+ * To run a query within a React component, call `useGetMatchingResourcesQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetMatchingResourcesQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetMatchingResourcesQuery({
+ *   variables: {
+ *      guideType: // value for 'guideType'
+ *      filters: // value for 'filters'
+ *      limit: // value for 'limit'
+ *   },
+ * });
+ */
+export function useGetMatchingResourcesQuery(baseOptions: ApolloReactHooks.QueryHookOptions<GetMatchingResourcesQuery, GetMatchingResourcesQueryVariables> & ({ variables: GetMatchingResourcesQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<GetMatchingResourcesQuery, GetMatchingResourcesQueryVariables>(GetMatchingResourcesDocument, options);
+      }
+export function useGetMatchingResourcesLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<GetMatchingResourcesQuery, GetMatchingResourcesQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<GetMatchingResourcesQuery, GetMatchingResourcesQueryVariables>(GetMatchingResourcesDocument, options);
+        }
+// @ts-ignore
+export function useGetMatchingResourcesSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<GetMatchingResourcesQuery, GetMatchingResourcesQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetMatchingResourcesQuery, GetMatchingResourcesQueryVariables>;
+export function useGetMatchingResourcesSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetMatchingResourcesQuery, GetMatchingResourcesQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetMatchingResourcesQuery | undefined, GetMatchingResourcesQueryVariables>;
+export function useGetMatchingResourcesSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetMatchingResourcesQuery, GetMatchingResourcesQueryVariables>) {
+          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useSuspenseQuery<GetMatchingResourcesQuery, GetMatchingResourcesQueryVariables>(GetMatchingResourcesDocument, options);
+        }
+export type GetMatchingResourcesQueryHookResult = ReturnType<typeof useGetMatchingResourcesQuery>;
+export type GetMatchingResourcesLazyQueryHookResult = ReturnType<typeof useGetMatchingResourcesLazyQuery>;
+export type GetMatchingResourcesSuspenseQueryHookResult = ReturnType<typeof useGetMatchingResourcesSuspenseQuery>;
+export type GetMatchingResourcesQueryResult = ApolloReactCommon.QueryResult<GetMatchingResourcesQuery, GetMatchingResourcesQueryVariables>;
 export const SaveGuestSituationDocument = gql`
     mutation SaveGuestSituation($input: CreateSituationInput!, $guestToken: String) {
   saveGuestSituation(input: $input, guestToken: $guestToken) {
@@ -2002,10 +1365,7 @@ export const SaveGuestSituationDocument = gql`
   }
 }
     ${GuestSituationFieldsFragmentDoc}`;
-export type SaveGuestSituationMutationFn = ApolloReactCommon.MutationFunction<
-  SaveGuestSituationMutation,
-  SaveGuestSituationMutationVariables
->;
+export type SaveGuestSituationMutationFn = ApolloReactCommon.MutationFunction<SaveGuestSituationMutation, SaveGuestSituationMutationVariables>;
 
 /**
  * __useSaveGuestSituationMutation__
@@ -2025,25 +1385,13 @@ export type SaveGuestSituationMutationFn = ApolloReactCommon.MutationFunction<
  *   },
  * });
  */
-export function useSaveGuestSituationMutation(
-  baseOptions?: ApolloReactHooks.MutationHookOptions<
-    SaveGuestSituationMutation,
-    SaveGuestSituationMutationVariables
-  >
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useMutation<
-    SaveGuestSituationMutation,
-    SaveGuestSituationMutationVariables
-  >(SaveGuestSituationDocument, options);
-}
+export function useSaveGuestSituationMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<SaveGuestSituationMutation, SaveGuestSituationMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<SaveGuestSituationMutation, SaveGuestSituationMutationVariables>(SaveGuestSituationDocument, options);
+      }
 export type SaveGuestSituationMutationHookResult = ReturnType<typeof useSaveGuestSituationMutation>;
-export type SaveGuestSituationMutationResult =
-  ApolloReactCommon.MutationResult<SaveGuestSituationMutation>;
-export type SaveGuestSituationMutationOptions = ApolloReactCommon.BaseMutationOptions<
-  SaveGuestSituationMutation,
-  SaveGuestSituationMutationVariables
->;
+export type SaveGuestSituationMutationResult = ApolloReactCommon.MutationResult<SaveGuestSituationMutation>;
+export type SaveGuestSituationMutationOptions = ApolloReactCommon.BaseMutationOptions<SaveGuestSituationMutation, SaveGuestSituationMutationVariables>;
 export const GetGuestSituationDocument = gql`
     query GetGuestSituation($guestToken: String!) {
   getGuestSituation(guestToken: $guestToken) {
@@ -2068,75 +1416,25 @@ export const GetGuestSituationDocument = gql`
  *   },
  * });
  */
-export function useGetGuestSituationQuery(
-  baseOptions: ApolloReactHooks.QueryHookOptions<
-    GetGuestSituationQuery,
-    GetGuestSituationQueryVariables
-  > &
-    ({ variables: GetGuestSituationQueryVariables; skip?: boolean } | { skip: boolean })
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useQuery<GetGuestSituationQuery, GetGuestSituationQueryVariables>(
-    GetGuestSituationDocument,
-    options
-  );
-}
-export function useGetGuestSituationLazyQuery(
-  baseOptions?: ApolloReactHooks.LazyQueryHookOptions<
-    GetGuestSituationQuery,
-    GetGuestSituationQueryVariables
-  >
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useLazyQuery<GetGuestSituationQuery, GetGuestSituationQueryVariables>(
-    GetGuestSituationDocument,
-    options
-  );
-}
+export function useGetGuestSituationQuery(baseOptions: ApolloReactHooks.QueryHookOptions<GetGuestSituationQuery, GetGuestSituationQueryVariables> & ({ variables: GetGuestSituationQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<GetGuestSituationQuery, GetGuestSituationQueryVariables>(GetGuestSituationDocument, options);
+      }
+export function useGetGuestSituationLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<GetGuestSituationQuery, GetGuestSituationQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<GetGuestSituationQuery, GetGuestSituationQueryVariables>(GetGuestSituationDocument, options);
+        }
 // @ts-ignore
-export function useGetGuestSituationSuspenseQuery(
-  baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<
-    GetGuestSituationQuery,
-    GetGuestSituationQueryVariables
-  >
-): ApolloReactHooks.UseSuspenseQueryResult<GetGuestSituationQuery, GetGuestSituationQueryVariables>;
-export function useGetGuestSituationSuspenseQuery(
-  baseOptions?:
-    | ApolloReactHooks.SkipToken
-    | ApolloReactHooks.SuspenseQueryHookOptions<
-        GetGuestSituationQuery,
-        GetGuestSituationQueryVariables
-      >
-): ApolloReactHooks.UseSuspenseQueryResult<
-  GetGuestSituationQuery | undefined,
-  GetGuestSituationQueryVariables
->;
-export function useGetGuestSituationSuspenseQuery(
-  baseOptions?:
-    | ApolloReactHooks.SkipToken
-    | ApolloReactHooks.SuspenseQueryHookOptions<
-        GetGuestSituationQuery,
-        GetGuestSituationQueryVariables
-      >
-) {
-  const options =
-    baseOptions === ApolloReactHooks.skipToken
-      ? baseOptions
-      : { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useSuspenseQuery<GetGuestSituationQuery, GetGuestSituationQueryVariables>(
-    GetGuestSituationDocument,
-    options
-  );
-}
+export function useGetGuestSituationSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<GetGuestSituationQuery, GetGuestSituationQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetGuestSituationQuery, GetGuestSituationQueryVariables>;
+export function useGetGuestSituationSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetGuestSituationQuery, GetGuestSituationQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetGuestSituationQuery | undefined, GetGuestSituationQueryVariables>;
+export function useGetGuestSituationSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetGuestSituationQuery, GetGuestSituationQueryVariables>) {
+          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useSuspenseQuery<GetGuestSituationQuery, GetGuestSituationQueryVariables>(GetGuestSituationDocument, options);
+        }
 export type GetGuestSituationQueryHookResult = ReturnType<typeof useGetGuestSituationQuery>;
 export type GetGuestSituationLazyQueryHookResult = ReturnType<typeof useGetGuestSituationLazyQuery>;
-export type GetGuestSituationSuspenseQueryHookResult = ReturnType<
-  typeof useGetGuestSituationSuspenseQuery
->;
-export type GetGuestSituationQueryResult = ApolloReactCommon.QueryResult<
-  GetGuestSituationQuery,
-  GetGuestSituationQueryVariables
->;
+export type GetGuestSituationSuspenseQueryHookResult = ReturnType<typeof useGetGuestSituationSuspenseQuery>;
+export type GetGuestSituationQueryResult = ApolloReactCommon.QueryResult<GetGuestSituationQuery, GetGuestSituationQueryVariables>;
 export const ClaimGuestSituationDocument = gql`
     mutation ClaimGuestSituation($guestToken: String!) {
   claimGuestSituation(guestToken: $guestToken) {
@@ -2144,10 +1442,7 @@ export const ClaimGuestSituationDocument = gql`
   }
 }
     `;
-export type ClaimGuestSituationMutationFn = ApolloReactCommon.MutationFunction<
-  ClaimGuestSituationMutation,
-  ClaimGuestSituationMutationVariables
->;
+export type ClaimGuestSituationMutationFn = ApolloReactCommon.MutationFunction<ClaimGuestSituationMutation, ClaimGuestSituationMutationVariables>;
 
 /**
  * __useClaimGuestSituationMutation__
@@ -2166,24 +1461,10 @@ export type ClaimGuestSituationMutationFn = ApolloReactCommon.MutationFunction<
  *   },
  * });
  */
-export function useClaimGuestSituationMutation(
-  baseOptions?: ApolloReactHooks.MutationHookOptions<
-    ClaimGuestSituationMutation,
-    ClaimGuestSituationMutationVariables
-  >
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useMutation<
-    ClaimGuestSituationMutation,
-    ClaimGuestSituationMutationVariables
-  >(ClaimGuestSituationDocument, options);
-}
-export type ClaimGuestSituationMutationHookResult = ReturnType<
-  typeof useClaimGuestSituationMutation
->;
-export type ClaimGuestSituationMutationResult =
-  ApolloReactCommon.MutationResult<ClaimGuestSituationMutation>;
-export type ClaimGuestSituationMutationOptions = ApolloReactCommon.BaseMutationOptions<
-  ClaimGuestSituationMutation,
-  ClaimGuestSituationMutationVariables
->;
+export function useClaimGuestSituationMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<ClaimGuestSituationMutation, ClaimGuestSituationMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<ClaimGuestSituationMutation, ClaimGuestSituationMutationVariables>(ClaimGuestSituationDocument, options);
+      }
+export type ClaimGuestSituationMutationHookResult = ReturnType<typeof useClaimGuestSituationMutation>;
+export type ClaimGuestSituationMutationResult = ApolloReactCommon.MutationResult<ClaimGuestSituationMutation>;
+export type ClaimGuestSituationMutationOptions = ApolloReactCommon.BaseMutationOptions<ClaimGuestSituationMutation, ClaimGuestSituationMutationVariables>;

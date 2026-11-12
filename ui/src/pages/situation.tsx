@@ -3,23 +3,22 @@ import { Box, Button, Chip, CircularProgress, Paper, Typography } from '@mui/mat
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/useAuth';
+import { PageContainer } from '../components/molecules/page-container';
 import {
   GetSituationsByUserDocument,
   type GetSituationsByUserQuery,
   type GetSituationsByUserQueryVariables,
 } from '../generated';
 import { apolloClient } from '../lib/apollo-client';
-import { PageContainer } from '../components/molecules/page-container';
 import type { RecoveryQuizAnswers } from './recovery/quiz';
 
 interface SituationDisplay {
   zipCode: string;
   timeline: string;
-  disasters: string[];
+  disaster: string;
   helpTypes: string[];
   homeStatus: string;
   household: string[];
-  name: string;
 }
 
 function fromLocalStorage(): SituationDisplay | null {
@@ -30,11 +29,10 @@ function fromLocalStorage(): SituationDisplay | null {
     return {
       zipCode: answers.zipCode,
       timeline: answers.timeline,
-      disasters: answers.disasters,
+      disaster: answers.disaster,
       helpTypes: answers.helpTypes,
       homeStatus: answers.homeStatus,
       household: answers.household,
-      name: answers.name,
     };
   } catch {
     return null;
@@ -42,10 +40,6 @@ function fromLocalStorage(): SituationDisplay | null {
 }
 
 function fromDbRecord(record: any): SituationDisplay {
-  const helpTypes: string[] = [];
-  if (record.helpTypes?.housing) helpTypes.push('Housing');
-  if (record.helpTypes?.financial) helpTypes.push('Financial');
-  if (record.helpTypes?.damage) helpTypes.push('Property Damage');
   const toArray = (val: unknown): string[] =>
     Array.isArray(val)
       ? val
@@ -59,11 +53,10 @@ function fromDbRecord(record: any): SituationDisplay {
   return {
     zipCode: record.location?.zip ?? '',
     timeline: record.timeline ?? '',
-    disasters: toArray(record.disasters),
-    helpTypes,
+    disaster: record.disaster ?? '',
+    helpTypes: toArray(record.helpTypes),
     homeStatus: record.homeStatus ?? '',
     household: toArray(record.household),
-    name: record.displayName ?? '',
   };
 }
 
@@ -155,18 +148,7 @@ export default function SituationPage() {
             <InfoRow label='Timeline' value={situation.timeline} />
             <InfoRow label='Home status' value={situation.homeStatus} />
 
-            {situation.disasters.length > 0 && (
-              <Box sx={{ mb: 1.5 }}>
-                <Typography variant='caption' color='text.secondary'>
-                  Disasters
-                </Typography>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.5 }}>
-                  {situation.disasters.map((d) => (
-                    <Chip key={d} label={d} size='small' />
-                  ))}
-                </Box>
-              </Box>
-            )}
+            <InfoRow label='Disaster' value={situation.disaster} />
 
             {situation.helpTypes.length > 0 && (
               <Box sx={{ mb: 1.5 }}>

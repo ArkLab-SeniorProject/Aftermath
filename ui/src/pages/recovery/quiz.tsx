@@ -61,19 +61,35 @@ type DisasterChoice = Pick<DisasterOption, 'id' | 'title' | 'incidentBeginDate'>
 
 const HELP_OPTIONS = [
   {
-    value: 'damage_recovery',
-    label: 'Damage recovery',
-    description: 'Temporary housing, shelter, or help staying in your home',
+    value: 'home_repair',
+    label: 'Fixing my home',
+    description: 'Repairing, rebuilding or cleaning up your home.',
   },
   {
-    value: 'financial_assistance',
-    label: 'Financial assistance',
-    description: 'Temporary housing, shelter, or help staying in your home',
+    value: 'temporary_housing',
+    label: 'Finding a place to stay',
+    description: 'Finding and paying for a safe place to stay.',
   },
   {
-    value: 'housing_shelter',
-    label: 'Housing and shelter',
-    description: 'Temporary housing, shelter, or help staying in your home',
+    value: 'belongings_vehicles',
+    label: 'Replacing my things',
+    description: 'Replacing what was damaged or lost, like furniture, tools or your car.',
+  },
+  {
+    value: 'money_work',
+    label: 'Covering bills and lost income',
+    description:
+      'Getting by when a disaster affects your income, like covering bills or getting food.',
+  },
+  {
+    value: 'utilities',
+    label: 'Getting power, water or heat back on',
+    description: 'Staying safe while services are out, and getting them back on.',
+  },
+  {
+    value: 'health_support',
+    label: 'Paying for health care and finding support',
+    description: 'Guidance on medical needs and costs, and someone to talk to.',
   },
   {
     value: 'unsure',
@@ -83,23 +99,91 @@ const HELP_OPTIONS = [
 
 const HOME_OPTIONS = [
   { value: 'own', label: 'I own my home' },
+  { value: 'own_not_land', label: "I own my home but not the land it's on" },
   { value: 'rent', label: 'I rent my home' },
   {
-    value: 'unstable',
+    value: 'unstable_housing',
     label: "I don't have stable housing right now",
     description: 'For example, staying with family or friends, in a shelter, or in a car',
   },
-  { value: 'prefer_not_to_say', label: 'Prefer not to say' },
+  { value: 'prefer_not', label: 'Prefer not to say' },
 ];
 
 const HOUSEHOLD_OPTIONS = [
   { value: 'just_me', label: 'Just me' },
   { value: 'partner', label: 'Partner or spouse' },
-  { value: 'children', label: 'Children' },
-  { value: 'other_family', label: 'Other family members' },
+  { value: 'kids', label: 'Children' },
+  { value: 'older', label: 'Someone 65 or older, including me' },
+  { value: 'medical_needs', label: 'Someone with medical needs, including me' },
+  { value: 'access_needs', label: 'Someone with a disability, including me' },
+  { value: 'family', label: 'Other family or friends' },
   { value: 'roommates', label: 'Roommates' },
   { value: 'pets', label: 'Pets' },
-  { value: 'prefer_not_to_say', label: 'Prefer not to say' },
+  { value: 'prefer_not', label: 'Prefer not to say' },
+];
+
+const DETAIL_GROUPS = [
+  {
+    category: 'home_repair',
+    label: 'Repairs',
+    options: [
+      ['needs_repairs', 'My home needs repairs, but I can still live there'],
+      ['uninhabitable', "I can't safely live there right now"],
+      ['destroyed', 'My home was destroyed'],
+      ['mold', "There's water damage or mold"],
+      ['debris', 'Trees or debris need to be cleared'],
+    ],
+  },
+  {
+    category: 'temporary_housing',
+    label: 'Housing',
+    options: [
+      ['displaced', 'I am staying with family, in a hotel, or in a shelter'],
+      ['shelter', 'I am in a shelter or have nowhere to stay'],
+      ['vehicle', 'I am staying in my car'],
+      ['moving', 'I also need to move or store my things'],
+    ],
+  },
+  {
+    category: 'belongings_vehicles',
+    label: 'Belongings',
+    options: [
+      ['belongings', 'Furniture, clothing or appliances'],
+      ['work_tools', 'Tools or equipment I need for work'],
+      ['car', 'My car'],
+      ['documents', 'Important papers or IDs'],
+    ],
+  },
+  {
+    category: 'money_work',
+    label: 'Money and work',
+    options: [
+      ['lost_work', 'I lost work or income'],
+      ['self_employed', "I work for myself and can't work right now"],
+      ['bills', "I'm having trouble paying rent, a mortgage or bills"],
+      ['food_now', "I can't afford enough food right now"],
+    ],
+  },
+  {
+    category: 'utilities',
+    label: 'Utilities',
+    options: [
+      ['no_power', 'Power'],
+      ['no_water', 'Running water, or water that is safe to drink'],
+      ['no_heat', 'Heat or gas'],
+      ['generator', "I'm using a generator or plan to use one"],
+    ],
+  },
+  {
+    category: 'health_support',
+    label: 'Health',
+    options: [
+      ['medical', 'Someone close to me was hurt'],
+      ['funeral', 'I need help paying for a funeral'],
+      ['meds', 'I need to replace medicine or medical equipment'],
+      ['talk', "I'd like someone to talk to"],
+    ],
+  },
 ];
 
 export interface QuizLocation {
@@ -118,8 +202,11 @@ export interface RecoveryQuizAnswers {
   zipCode: string;
   location: QuizLocation | null;
   timeline: string;
-  disasters: string[];
+  disaster: string;
   helpTypes: string[];
+  helpDetails: string[];
+  insurance: string[];
+  primaryResidence: boolean;
   homeStatus: string;
   household: string[];
   name: string;
@@ -129,8 +216,11 @@ const EMPTY_ANSWERS: RecoveryQuizAnswers = {
   zipCode: '',
   location: null,
   timeline: '',
-  disasters: [],
+  disaster: '',
   helpTypes: [],
+  helpDetails: [],
+  insurance: [],
+  primaryResidence: true,
   homeStatus: '',
   household: [],
   name: '',
@@ -456,7 +546,7 @@ export default function RecoveryQuiz() {
       setAnswers((prev) => ({
         ...prev,
         location,
-        disasters: prev.location?.countyFips === location.countyFips ? prev.disasters : [],
+        disaster: prev.location?.countyFips === location.countyFips ? prev.disaster : '',
       }));
       setResolvedFor(key);
       return true;
@@ -516,11 +606,14 @@ export default function RecoveryQuiz() {
     }
   };
 
-  const toggleMulti = (field: 'disasters' | 'helpTypes' | 'household', value: string) => {
+  const toggleMulti = (
+    field: 'helpTypes' | 'helpDetails' | 'insurance' | 'household',
+    value: string
+  ) => {
     setAnswers((prev) => ({
       ...prev,
       [field]: prev[field].includes(value)
-        ? prev[field].filter((v) => v !== value)
+        ? prev[field].filter((v: string) => v !== value)
         : [...prev[field], value],
     }));
   };
@@ -532,7 +625,7 @@ export default function RecoveryQuiz() {
       case 1:
         return !!answers.timeline;
       case 2:
-        return answers.disasters.length > 0;
+        return !!answers.disaster;
       case 3:
         return answers.helpTypes.length > 0;
       case 4:
@@ -720,7 +813,7 @@ export default function RecoveryQuiz() {
                 setAnswers((prev) => ({
                   ...prev,
                   timeline: e.target.value,
-                  disasters: prev.timeline === e.target.value ? prev.disasters : [],
+                  disaster: prev.timeline === e.target.value ? prev.disaster : '',
                 }))
               }
             >
@@ -739,40 +832,38 @@ export default function RecoveryQuiz() {
 
         {step === 2 && (
           <StepWrapper
-            question='Which disaster affected you?'
+            question='Which disaster affected you most?'
             hint={disasterHint(answers, disasterOptions, disastersLoading, disastersFailed)}
           >
-            <FormGroup>
-              {disastersLoading && (
-                <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
-                  <CircularProgress size={28} aria-label='Loading disasters' />
-                </Box>
-              )}
-              {!disastersLoading &&
-                disasterOptions.map((d) => (
+            {disastersLoading && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+                <CircularProgress size={28} aria-label='Loading disasters' />
+              </Box>
+            )}
+            {!disastersLoading && (
+              <RadioGroup
+                value={answers.disaster}
+                onChange={(e) =>
+                  setAnswers((prev) => ({ ...prev, disaster: e.target.value }))
+                }
+              >
+                {disasterOptions.map((d) => (
                   <FormControlLabel
                     key={d.id}
-                    control={
-                      <Checkbox
-                        checked={answers.disasters.includes(d.id)}
-                        onChange={() => toggleMulti('disasters', d.id)}
-                      />
-                    }
+                    value={d.id}
+                    control={<Radio />}
                     label={formatDisasterLabel(d)}
                     sx={{ mb: 0.5 }}
                   />
                 ))}
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={answers.disasters.includes('not_listed')}
-                    onChange={() => toggleMulti('disasters', 'not_listed')}
-                  />
-                }
-                label="I don't see my event"
-                sx={{ mb: 0.5 }}
-              />
-            </FormGroup>
+                <FormControlLabel
+                  value='not_listed'
+                  control={<Radio />}
+                  label="I don't see my event"
+                  sx={{ mb: 0.5 }}
+                />
+              </RadioGroup>
+            )}
           </StepWrapper>
         )}
 
@@ -821,21 +912,58 @@ export default function RecoveryQuiz() {
                 ? `You indicated that you needed help with ${formatList(selectedHelpLabels)}.`
                 : "You indicated you're not sure what help you need yet."
             }
-            hint='Customizable filters based on your selections will appear here.'
+            hint='Choose everything that is true for you right now. You can change these answers later.'
           >
-            <Box
-              sx={{
-                p: 3,
-                border: '1px dashed',
-                borderColor: 'divider',
-                borderRadius: 2,
-                textAlign: 'center',
-              }}
-            >
-              <Typography variant='body2' color='text.secondary'>
-                Filter options coming soon
+            <FormGroup>
+              {answers.helpTypes.includes('unsure') ? (
+                <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
+                  We&apos;ll start with general recovery guidance.
+                </Typography>
+              ) : (
+                DETAIL_GROUPS.filter(({ category }) => answers.helpTypes.includes(category)).map(
+                  (group) => (
+                    <Box key={group.category} sx={{ mb: 2 }}>
+                      <Typography variant='subtitle1' fontWeight={600}>
+                        {group.label}
+                      </Typography>
+                      {group.options.map(([value, label]) => (
+                        <FormControlLabel
+                          key={value}
+                          control={
+                            <Checkbox
+                              checked={answers.helpDetails.includes(value)}
+                              onChange={() => toggleMulti('helpDetails', value)}
+                            />
+                          }
+                          label={label}
+                        />
+                      ))}
+                    </Box>
+                  )
+                )
+              )}
+              <Typography variant='subtitle1' fontWeight={600}>
+                Insurance
               </Typography>
-            </Box>
+              {[
+                ['ins_home', 'Home or renters insurance'],
+                ['ins_flood', 'Flood insurance'],
+                ['ins_car', 'Car insurance'],
+                ['ins_none', 'None of these'],
+                ['ins_unsure', "I'm not sure"],
+              ].map(([value, label]) => (
+                <FormControlLabel
+                  key={value}
+                  control={
+                    <Checkbox
+                      checked={answers.insurance.includes(value)}
+                      onChange={() => toggleMulti('insurance', value)}
+                    />
+                  }
+                  label={label}
+                />
+              ))}
+            </FormGroup>
           </StepWrapper>
         )}
 
@@ -880,6 +1008,18 @@ export default function RecoveryQuiz() {
                 />
               ))}
             </RadioGroup>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={answers.primaryResidence}
+                  onChange={(event) =>
+                    setAnswers((prev) => ({ ...prev, primaryResidence: event.target.checked }))
+                  }
+                />
+              }
+              label='This is where I live most of the year'
+              sx={{ mt: 1 }}
+            />
           </StepWrapper>
         )}
 
@@ -1005,7 +1145,7 @@ function disasterHint(
   if (options.length === 0) {
     return `We didn't find federally declared disasters in ${place} during that time. Choose "I don't see my event" to keep going.`;
   }
-  return `These federally declared disasters cover ${place} around that time. Select all that apply.`;
+  return `These federally declared disasters cover ${place} around that time. Pick the one that affected you most.`;
 }
 
 function toTitleCase(text: string): string {

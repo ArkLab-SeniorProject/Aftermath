@@ -112,29 +112,20 @@ export const schema = gql`
   }
 
   # ── Situation ───────────────────────────
-  type HelpTypes {
-    housing: Boolean
-    financial: Boolean
-    damage: Boolean
-  }
-
-  input HelpTypesInput {
-    housing: Boolean
-    financial: Boolean
-    damage: Boolean
-  }
-
   type Situation {
     id: ID!
     # CHANGED: was ID! (guest situations have no user)
     userId: ID # null for guest situations
     location: Location
     timeline: String
-    disasters: String
-    displayName: String
-    helpTypes: HelpTypes
+    disaster: String
+    helpTypes: [String!]!
+    helpDetails: [String!]!
+    insurance: [String!]!
     homeStatus: String
+    primaryResidence: Boolean
     household: [String!]
+    femaApplied: Boolean
     createdAt: DateTime
     updatedAt: DateTime
     user: User
@@ -143,21 +134,27 @@ export const schema = gql`
   input CreateSituationInput {
     location: LocationInput
     timeline: String
-    disasters: String
-    displayName: String
-    helpTypes: HelpTypesInput
+    disaster: String
+    helpTypes: [String!]
+    helpDetails: [String!]
+    insurance: [String!]
     homeStatus: String
+    primaryResidence: Boolean
     household: [String!]
+    femaApplied: Boolean
   }
 
   input UpdateSituationInput {
     location: LocationInput
     timeline: String
-    disasters: String
-    displayName: String
-    helpTypes: HelpTypesInput
+    disaster: String
+    helpTypes: [String!]
+    helpDetails: [String!]
+    insurance: [String!]
     homeStatus: String
+    primaryResidence: Boolean
     household: [String!]
+    femaApplied: Boolean
   }
 
   # NEW
@@ -173,6 +170,10 @@ export const schema = gql`
     resourceType: String
     title: String
     content: JSON
+    tags: JSON
+    sourceUrl: String
+    lastChecked: DateTime
+    sectionGates: JSON
     guideType: GuideType
     createdAt: DateTime
     updatedAt: DateTime
@@ -182,6 +183,10 @@ export const schema = gql`
     resourceType: String!
     title: String!
     content: JSON
+    tags: JSON
+    sourceUrl: String
+    lastChecked: DateTime
+    sectionGates: JSON
     guideType: GuideType!
   }
 
@@ -189,6 +194,10 @@ export const schema = gql`
     resourceType: String
     title: String
     content: JSON
+    tags: JSON
+    sourceUrl: String
+    lastChecked: DateTime
+    sectionGates: JSON
     guideType: GuideType
   }
 
@@ -213,6 +222,7 @@ export const schema = gql`
     guideType: GuideType!
     resources: [GuideResource!]
     filters: JSON
+    femaStatus: JSON
     createdAt: DateTime
     updatedAt: DateTime
     user: User
@@ -224,11 +234,13 @@ export const schema = gql`
     guideType: GuideType!
     resources: [GuideResourceInput!]
     filters: JSON
+    femaStatus: JSON
   }
 
   input UpdateGuideInput {
     resources: [GuideResourceInput!]
     filters: JSON
+    femaStatus: JSON
   }
 
   # ── Queries & Mutations ──────────────────
@@ -253,6 +265,7 @@ export const schema = gql`
     # Resources
     getResource(id: ID!): Resource
     getResources(resourceType: String, guideType: GuideType, limit: Int = 25, offset: Int = 0): [Resource!]!
+    getMatchingResources(guideType: GuideType!, filters: JSON, limit: Int = 100): [Resource!]!
 
     # Guides
     getGuide(id: ID!): Guide
