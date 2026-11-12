@@ -1,22 +1,28 @@
-import nodemailer from 'nodemailer';
+import nodemailer, { type Transporter } from 'nodemailer';
 
-const smtpPort = Number(process.env.SMTP_PORT ?? 587);
+let transporter: Transporter | null = null;
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST ?? 'smtp.gmail.com',
-  port: smtpPort,
-  secure: smtpPort === 465,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
+function getTransporter(): Transporter {
+  if (!transporter) {
+    const smtpPort = Number(process.env.SMTP_PORT ?? 587);
+    transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST ?? 'smtp.gmail.com',
+      port: smtpPort,
+      secure: smtpPort === 465,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+  }
+  return transporter;
+}
 
 export async function sendPasswordResetEmail(to: string, resetToken: string): Promise<void> {
   const baseUrl = process.env.FRONTEND_URL ?? 'http://localhost:5173';
   const resetUrl = `${baseUrl}/reset-password/${resetToken}`;
 
-  await transporter.sendMail({
+  await getTransporter().sendMail({
     from: process.env.SMTP_FROM ?? '"Aftermath" <noreply@aftermath.app>',
     to,
     subject: 'Password Reset Request',

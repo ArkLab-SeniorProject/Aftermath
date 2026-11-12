@@ -209,7 +209,7 @@ export const schema = gql`
   type Guide {
     id: ID!
     userId: ID!
-    disaster: ID!
+    situation: ID!
     guideType: GuideType!
     resources: [GuideResource!]
     filters: JSON
@@ -220,7 +220,7 @@ export const schema = gql`
 
   input CreateGuideInput {
     userId: ID!
-    disaster: ID!
+    situation: ID!
     guideType: GuideType!
     resources: [GuideResourceInput!]
     filters: JSON
@@ -257,7 +257,7 @@ export const schema = gql`
     # Guides
     getGuide(id: ID!): Guide
     getGuidesByUser(userId: ID!): [Guide!]!
-    getGuideByDisaster(disaster: ID!): Guide
+    getGuideBySituation(situation: ID!): Guide
   }
 
   type Mutation {

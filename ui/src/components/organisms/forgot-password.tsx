@@ -1,16 +1,5 @@
 import { useState } from 'react';
-import {
-  Alert,
-  Box,
-  Button,
-  Container,
-  InputAdornment,
-  Link,
-  Paper,
-  TextField,
-  Typography,
-} from '@mui/material';
-import { EmailOutlined } from '@mui/icons-material';
+import { Alert, Box, Button, Link, TextField, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { apolloClient } from '../../lib/apollo-client';
 import {
@@ -18,6 +7,7 @@ import {
   type ForgotPasswordMutation,
   type ForgotPasswordMutationVariables,
 } from '../../generated';
+import { AuthCard } from './auth-card';
 
 type Step = 'email' | 'sent';
 
@@ -46,97 +36,92 @@ export function ForgotPasswordContent() {
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        bgcolor: 'background.default',
-        p: 2,
-      }}
-    >
-      <Container maxWidth='sm'>
-        <Paper elevation={2} sx={{ p: 4, borderRadius: 3 }}>
-          {step === 'email' && (
-            <>
-              <Typography variant='h4' component='h1' gutterBottom fontWeight={600}>
-                Forgot password
-              </Typography>
-              <Typography variant='body1' color='text.secondary' gutterBottom>
-                Enter the email address you used to create your account and we&rsquo;ll send you a
-                link to reset your password.
-              </Typography>
+    <AuthCard onBack={() => navigate('/login')}>
+      {step === 'email' && (
+        <>
+          <Typography variant='h4' component='h1' sx={{ fontWeight: 700, mb: 1 }}>
+            Forgot password?
+          </Typography>
+          <Typography variant='body2' color='text.secondary' sx={{ mb: 3 }}>
+            Enter the email address you used to create your account and we&rsquo;ll send you a link
+            to reset your password.
+          </Typography>
 
-              {error && (
-                <Alert severity='error' sx={{ mb: 2 }}>
-                  {error}
-                </Alert>
-              )}
-
-              <Box
-                component='form'
-                onSubmit={handleSubmit}
-                sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
-              >
-                <TextField
-                  label='Email'
-                  type='email'
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  fullWidth
-                  slotProps={{
-                    input: {
-                      startAdornment: (
-                        <InputAdornment position='start'>
-                          <EmailOutlined color='disabled' />
-                        </InputAdornment>
-                      ),
-                    },
-                  }}
-                  disabled={loading}
-                />
-                <Button type='submit' variant='contained' size='large' fullWidth disabled={loading}>
-                  {loading ? 'Sending...' : 'Send reset link'}
-                </Button>
-              </Box>
-            </>
+          {error && (
+            <Alert severity='error' sx={{ mb: 2 }}>
+              {error}
+            </Alert>
           )}
 
-          {step === 'sent' && (
-            <>
-              <Typography variant='h4' component='h1' gutterBottom fontWeight={600}>
-                Check your email
-              </Typography>
-              <Alert severity='success' sx={{ mb: 2 }}>
-                If an account exists for {email}, a password reset link has been sent. The link
-                expires in 15 minutes.
-              </Alert>
-              <Button variant='contained' size='large' fullWidth onClick={() => navigate('/login')}>
-                Back to sign in
-              </Button>
-            </>
-          )}
+          <Box
+            component='form'
+            onSubmit={handleSubmit}
+            sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}
+          >
+            <Typography variant='body2' sx={{ fontWeight: 500 }}>
+              Email address:
+            </Typography>
+            <TextField
+              placeholder='jane@gmail.com'
+              type='email'
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              fullWidth
+              disabled={loading}
+              sx={{ mb: 3 }}
+            />
 
-          {step !== 'sent' && (
-            <Box sx={{ mt: 2 }}>
-              <Typography variant='body2'>
-                Remember your password?{' '}
-                <Link
-                  component='button'
-                  variant='body2'
-                  underline='hover'
-                  onClick={() => navigate('/login')}
-                >
-                  Sign in
-                </Link>
-              </Typography>
-            </Box>
-          )}
-        </Paper>
-      </Container>
-    </Box>
+            <Button
+              type='submit'
+              variant='contained'
+              size='large'
+              fullWidth
+              disabled={loading}
+              sx={{ py: 1.75 }}
+            >
+              {loading ? 'Sending...' : 'Send reset link'}
+            </Button>
+          </Box>
+
+          <Box sx={{ flex: 1 }} />
+
+          <Typography variant='body2' sx={{ textAlign: 'center', mt: 4 }}>
+            Remember your password?{' '}
+            <Link
+              component='button'
+              variant='body2'
+              underline='always'
+              onClick={() => navigate('/login')}
+              sx={{ color: 'text.primary', fontWeight: 600 }}
+            >
+              Sign in
+            </Link>
+          </Typography>
+        </>
+      )}
+
+      {step === 'sent' && (
+        <>
+          <Typography variant='h4' component='h1' sx={{ fontWeight: 700, mb: 1 }}>
+            Check your email.
+          </Typography>
+          <Alert severity='success' sx={{ mb: 3 }}>
+            If an account exists for {email}, a password reset link has been sent. The link expires
+            in 15 minutes.
+          </Alert>
+          <Button
+            variant='contained'
+            size='large'
+            fullWidth
+            sx={{ py: 1.75 }}
+            onClick={() => navigate('/login')}
+          >
+            Back to sign in
+          </Button>
+        </>
+      )}
+    </AuthCard>
   );
 }
 

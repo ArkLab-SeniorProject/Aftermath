@@ -12,9 +12,16 @@ import CreateAccount from './pages/create-account';
 import ForgotPassword from './pages/forgot-password';
 import NotFound from './pages/not-found';
 import ResetPassword from './pages/reset-password';
+import RecoveryHub from './pages/recovery/index';
 import RecoveryQuiz from './pages/recovery/quiz';
+import RecoveryResources from './pages/recovery/resources';
+import PreparednessHub from './pages/preparedness/index';
 import PreparednessQuiz from './pages/preparedness/quiz';
+import PreparednessChecklist from './pages/preparedness/checklist';
+import PreparednessResources from './pages/preparedness/resources';
 import Dashboard from './pages/dashboard';
+import Situation from './pages/situation';
+import Profile from './pages/profile';
 import StyleGuide from './pages/style-guide';
 
 export default function App() {
@@ -25,9 +32,16 @@ export default function App() {
         <Routes>
           <Route path='/' element={<RootLayout />}>
             <Route index element={<Landing />} />
+            <Route path='recovery' element={<RecoveryHub />} />
             <Route path='recovery/quiz' element={<RecoveryQuiz />} />
+            <Route path='recovery/resources' element={<RecoveryResources />} />
+            <Route path='preparedness' element={<PreparednessHub />} />
             <Route path='preparedness/quiz' element={<PreparednessQuiz />} />
+            <Route path='preparedness/checklist' element={<PreparednessChecklist />} />
+            <Route path='preparedness/resources' element={<PreparednessResources />} />
             <Route path='dashboard' element={<Dashboard />} />
+            <Route path='situation' element={<Situation />} />
+            <Route path='profile' element={<Profile />} />
             <Route path='style-guide' element={<StyleGuide />} />
             <Route path='login' element={<Login />} />
             <Route path='create-account' element={<CreateAccount />} />
