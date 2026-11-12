@@ -43,7 +43,8 @@ function mapUser(doc: any) {
   };
 }
 
-function mapLocation(loc: any) {
+// changed exported, and returns the geocoded fields too
+export function mapLocation(loc: any) {
   if (!loc) return null;
   return {
     zip: loc.zip ?? null,
@@ -51,14 +52,23 @@ function mapLocation(loc: any) {
     state: loc.state ?? null,
     stateCode: loc.state_code ?? null,
     countryCode: loc.country_code ?? null,
+    //geocoded fields
+    stateFips: loc.state_fips ?? null,
+    countyFips: loc.county_fips ?? null,
+    countyName: loc.county_name ?? null,
+    latitude: loc.latitude ?? null,
+    longitude: loc.longitude ?? null,
+    precision: loc.precision ?? null,
   };
 }
 
-function mapSituation(doc: any) {
+// exported (mutation and recovery-quiz resolvers reuse it)
+export function mapSituation(doc: any) {
   if (!doc) return null;
   return {
     id: String(doc._id),
-    userId: String(doc.user_id),
+    // guest situations have no user
+    userId: doc.user_id ? String(doc.user_id) : null,
     location: mapLocation(doc.location),
     timeline: doc.timeline ?? null,
     disasters: doc.disasters ?? null,
@@ -107,7 +117,7 @@ function mapGuide(doc: any) {
 }
 
 export const queryResolvers = {
-  // ── Users ──
+  // users
   getUser: async (_: unknown, args: { id: string }, ctx: Context) => {
     requireSelfOrAdmin(ctx, args.id);
     const doc = await ctx.mongoDb.collection('users').findOne({ _id: new ObjectId(args.id) });
@@ -140,7 +150,7 @@ export const queryResolvers = {
     return docs.map(mapUser);
   },
 
-  // ── Recovery Situations ──
+  // recovery situations
   getSituation: async (_: unknown, args: { id: string }, ctx: Context) => {
     requireAuth(ctx);
     const doc = await ctx.mongoDb.collection('situation').findOne({ _id: new ObjectId(args.id) });
@@ -158,7 +168,7 @@ export const queryResolvers = {
     return docs.map(mapSituation);
   },
 
-  // ── Resources ──
+  // resources
   getResource: async (_: unknown, args: { id: string }, ctx: Context) => {
     const doc = await ctx.mongoDb.collection('resources').findOne({ _id: new ObjectId(args.id) });
     return mapResource(doc);
@@ -182,7 +192,7 @@ export const queryResolvers = {
     return docs.map(mapResource);
   },
 
-  // ── Guides ──
+  // guides
   getGuide: async (_: unknown, args: { id: string }, ctx: Context) => {
     requireAuth(ctx);
     const doc = await ctx.mongoDb.collection('guide').findOne({ _id: new ObjectId(args.id) });
@@ -214,6 +224,7 @@ export const queryResolvers = {
 export const typeResolvers = {
   Situation: {
     user: async (parent: any, _: unknown, ctx: Context) => {
+      if (!parent.userId) return null; // guest situation
       requireSelfOrAdmin(ctx, String(parent.userId));
       const doc = await ctx.mongoDb
         .collection('users')

@@ -4,12 +4,17 @@ import type { Db } from 'mongodb';
 import { ObjectId } from 'mongodb';
 import { createAuthToken } from '../../auth.js';
 import { sendPasswordResetEmail } from '../../lib/email.js';
+// NEW: mapSituation now comes from query.resolvers (the duplicate copy in this file was
+// removed), plus the input cleaner that rounds coordinates
+import { mapSituation } from './query.resolvers.js';
+import { sanitizeSituationInput } from './situation-input.js';
 
 const BCRYPT_ROUNDS = 10;
 
 type Context = { mongoDb: Db; userId?: string; role?: string };
 
-function toSnakeCaseDoc(input: any, idFields: string[] = []) {
+// exported (used by recovery-quiz.resolvers.ts)
+export function toSnakeCaseDoc(input: any, idFields: string[] = []) {
   const fieldMap: Record<string, string> = {
     firstName: 'first_name',
     email: 'email',
@@ -23,6 +28,10 @@ function toSnakeCaseDoc(input: any, idFields: string[] = []) {
     guideType: 'guide_type',
     stateCode: 'state_code',
     countryCode: 'country_code',
+    // geocoded location fields
+    stateFips: 'state_fips',
+    countyFips: 'county_fips',
+    countyName: 'county_name',
   };
 
   const doc: any = {};
@@ -48,14 +57,16 @@ function toSnakeCaseDoc(input: any, idFields: string[] = []) {
   return doc;
 }
 
-async function insertAndReturn(db: Db, collectionName: string, doc: any) {
+// CHANGED: exported
+export async function insertAndReturn(db: Db, collectionName: string, doc: any) {
   const now = new Date();
   const fullDoc = { ...doc, created_at: now, updated_at: now };
   const result = await db.collection(collectionName).insertOne(fullDoc);
   return db.collection(collectionName).findOne({ _id: result.insertedId });
 }
 
-async function updateAndReturn(db: Db, collectionName: string, id: string, fields: any) {
+// CHANGED: exported
+export async function updateAndReturn(db: Db, collectionName: string, id: string, fields: any) {
   const setFields = { ...fields, updated_at: new Date() };
   await db.collection(collectionName).updateOne({ _id: new ObjectId(id) }, { $set: setFields });
   return db.collection(collectionName).findOne({ _id: new ObjectId(id) });
@@ -68,30 +79,6 @@ function mapUser(doc: any) {
     email: doc.email ?? null,
     firstName: doc.first_name ?? null,
     role: doc.role === 'admin' ? 'admin' : 'user',
-    createdAt: doc.created_at ?? null,
-    updatedAt: doc.updated_at ?? null,
-  };
-}
-
-function mapSituation(doc: any) {
-  return {
-    id: String(doc._id),
-    userId: String(doc.user_id),
-    location: doc.location
-      ? {
-          zip: doc.location.zip ?? null,
-          city: doc.location.city ?? null,
-          state: doc.location.state ?? null,
-          stateCode: doc.location.state_code ?? null,
-          countryCode: doc.location.country_code ?? null,
-        }
-      : null,
-    timeline: doc.timeline ?? null,
-    disasters: doc.disasters ?? null,
-    displayName: doc.display_name ?? null,
-    helpTypes: doc.help_types ?? null,
-    homeStatus: doc.home_status ?? null,
-    household: doc.household ?? [],
     createdAt: doc.created_at ?? null,
     updatedAt: doc.updated_at ?? null,
   };
@@ -146,7 +133,7 @@ async function requireOwnership(db: Db, collection: string, recordId: string, us
 }
 
 export const mutationResolvers = {
-  // ── Users ──
+  // Users
   createUser: async (_: unknown, args: any, ctx: Context) => {
     const input = args.input;
     const existing = await ctx.mongoDb.collection('users').findOne({ username: input.username });
@@ -294,14 +281,15 @@ export const mutationResolvers = {
     return true;
   },
 
-  // ── Situations ──
+  // situations
   createSituation: async (_: unknown, args: any, ctx: Context) => {
     const authedUserId = requireAuth(ctx);
     const existing = await ctx.mongoDb.collection('situation').findOne({
       user_id: new ObjectId(authedUserId),
     });
     if (existing) throw new Error('A user can only have one situation');
-    const input = { ...args.input, userId: authedUserId };
+    // clean the location (round coordinates, drop any street address)
+    const input = { ...sanitizeSituationInput(args.input), userId: authedUserId };
     const doc = toSnakeCaseDoc(input, ['userId']);
     const result = await insertAndReturn(ctx.mongoDb, 'situation', doc);
     return mapSituation(result);
@@ -310,7 +298,8 @@ export const mutationResolvers = {
   updateSituation: async (_: unknown, args: any, ctx: Context) => {
     const authedUserId = requireAuth(ctx);
     await requireOwnership(ctx.mongoDb, 'situation', args.id, authedUserId);
-    const fields = toSnakeCaseDoc(args.input);
+    // same cleaning on update
+    const fields = toSnakeCaseDoc(sanitizeSituationInput(args.input));
     const result = await updateAndReturn(ctx.mongoDb, 'situation', args.id, fields);
     return mapSituation(result);
   },
@@ -324,7 +313,7 @@ export const mutationResolvers = {
     return result.deletedCount > 0;
   },
 
-  // ── Resources ──
+  // resources
   createResource: async (_: unknown, args: any, ctx: Context) => {
     requireAdmin(ctx);
     const doc = toSnakeCaseDoc(args.input);
@@ -347,7 +336,7 @@ export const mutationResolvers = {
     return result.deletedCount > 0;
   },
 
-  // ── Guides ──
+  // guides
   createGuide: async (_: unknown, args: any, ctx: Context) => {
     const authedUserId = requireAuth(ctx);
     await requireOwnership(ctx.mongoDb, 'situation', args.input.disaster, authedUserId);

@@ -45,6 +45,11 @@ export async function getDb(): Promise<Db> {
 
   await db.collection('users').createIndex({ username: 1 }, { unique: true });
 
+  // guest situations are looked up by the hash of their guest token
+  await db
+    .collection('situation')
+    .createIndex({ guest_token_hash: 1 }, { unique: true, sparse: true });
+
   return db;
 }
 

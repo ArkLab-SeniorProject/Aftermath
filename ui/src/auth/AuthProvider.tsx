@@ -192,6 +192,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem('recovery_quiz_answers');
       localStorage.removeItem('recovery_quiz_complete');
       localStorage.removeItem('recovery_quiz_synced');
+      // forget the guest record on logout
+      localStorage.removeItem('recovery_guest_token');
     } catch {}
   };
 

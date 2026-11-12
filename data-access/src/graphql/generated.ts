@@ -71,6 +71,38 @@ export type CreateUserInput = {
   username: Scalars['String']['input'];
 };
 
+export type DisasterOption = {
+  __typename?: 'DisasterOption';
+  declarationDate?: Maybe<Scalars['DateTime']['output']>;
+  declarationType?: Maybe<Scalars['String']['output']>;
+  disasterNumber: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  incidentBeginDate?: Maybe<Scalars['DateTime']['output']>;
+  incidentType?: Maybe<Scalars['String']['output']>;
+  individualAssistance: Scalars['Boolean']['output'];
+  title: Scalars['String']['output'];
+};
+
+export type GeocodeResult = {
+  __typename?: 'GeocodeResult';
+  city?: Maybe<Scalars['String']['output']>;
+  countyFips?: Maybe<Scalars['String']['output']>;
+  countyName?: Maybe<Scalars['String']['output']>;
+  latitude: Scalars['Float']['output'];
+  longitude: Scalars['Float']['output'];
+  matchedAddress?: Maybe<Scalars['String']['output']>;
+  precision: LocationPrecision;
+  stateCode?: Maybe<Scalars['String']['output']>;
+  stateFips?: Maybe<Scalars['String']['output']>;
+  zip?: Maybe<Scalars['String']['output']>;
+};
+
+export type GuestSituationPayload = {
+  __typename?: 'GuestSituationPayload';
+  guestToken: Scalars['String']['output'];
+  situation: Situation;
+};
+
 export type Guide = {
   __typename?: 'Guide';
   createdAt?: Maybe<Scalars['DateTime']['output']>;
@@ -117,21 +149,36 @@ export type Location = {
   __typename?: 'Location';
   city?: Maybe<Scalars['String']['output']>;
   countryCode?: Maybe<Scalars['String']['output']>;
+  countyFips?: Maybe<Scalars['String']['output']>;
+  countyName?: Maybe<Scalars['String']['output']>;
+  latitude?: Maybe<Scalars['Float']['output']>;
+  longitude?: Maybe<Scalars['Float']['output']>;
+  precision?: Maybe<LocationPrecision>;
   state?: Maybe<Scalars['String']['output']>;
   stateCode?: Maybe<Scalars['String']['output']>;
+  stateFips?: Maybe<Scalars['String']['output']>;
   zip?: Maybe<Scalars['String']['output']>;
 };
 
 export type LocationInput = {
   city?: InputMaybe<Scalars['String']['input']>;
   countryCode?: InputMaybe<Scalars['String']['input']>;
+  countyFips?: InputMaybe<Scalars['String']['input']>;
+  countyName?: InputMaybe<Scalars['String']['input']>;
+  latitude?: InputMaybe<Scalars['Float']['input']>;
+  longitude?: InputMaybe<Scalars['Float']['input']>;
+  precision?: InputMaybe<LocationPrecision>;
   state?: InputMaybe<Scalars['String']['input']>;
   stateCode?: InputMaybe<Scalars['String']['input']>;
+  stateFips?: InputMaybe<Scalars['String']['input']>;
   zip?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type LocationPrecision = 'address' | 'zip';
+
 export type Mutation = {
   __typename?: 'Mutation';
+  claimGuestSituation?: Maybe<Situation>;
   createGuide: Guide;
   createResource: Resource;
   createSituation: Situation;
@@ -143,10 +190,15 @@ export type Mutation = {
   forgotPassword: Scalars['Boolean']['output'];
   login: AuthPayload;
   resetPasswordWithToken: Scalars['Boolean']['output'];
+  saveGuestSituation: GuestSituationPayload;
   updateGuide: Guide;
   updateResource: Resource;
   updateSituation: Situation;
   updateUser: User;
+};
+
+export type MutationClaimGuestSituationArgs = {
+  guestToken: Scalars['String']['input'];
 };
 
 export type MutationCreateGuideArgs = {
@@ -195,6 +247,11 @@ export type MutationResetPasswordWithTokenArgs = {
   token: Scalars['String']['input'];
 };
 
+export type MutationSaveGuestSituationArgs = {
+  guestToken?: InputMaybe<Scalars['String']['input']>;
+  input: CreateSituationInput;
+};
+
 export type MutationUpdateGuideArgs = {
   id: Scalars['ID']['input'];
   input: UpdateGuideInput;
@@ -217,6 +274,10 @@ export type MutationUpdateUserArgs = {
 
 export type Query = {
   __typename?: 'Query';
+  geocodeAddress?: Maybe<GeocodeResult>;
+  geocodeZip?: Maybe<GeocodeResult>;
+  getDisastersForLocation: Array<DisasterOption>;
+  getGuestSituation?: Maybe<Situation>;
   getGuide?: Maybe<Guide>;
   getGuideByDisaster?: Maybe<Guide>;
   getGuidesByUser: Array<Guide>;
@@ -228,6 +289,24 @@ export type Query = {
   getUserByUsername?: Maybe<User>;
   getUsers: Array<User>;
   validateResetToken: Scalars['Boolean']['output'];
+};
+
+export type QueryGeocodeAddressArgs = {
+  address: Scalars['String']['input'];
+};
+
+export type QueryGeocodeZipArgs = {
+  zip: Scalars['String']['input'];
+};
+
+export type QueryGetDisastersForLocationArgs = {
+  countyFips: Scalars['String']['input'];
+  stateFips: Scalars['String']['input'];
+  timeline?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type QueryGetGuestSituationArgs = {
+  guestToken: Scalars['String']['input'];
 };
 
 export type QueryGetGuideArgs = {
@@ -302,7 +381,7 @@ export type Situation = {
   timeline?: Maybe<Scalars['String']['output']>;
   updatedAt?: Maybe<Scalars['DateTime']['output']>;
   user?: Maybe<User>;
-  userId: Scalars['ID']['output'];
+  userId?: Maybe<Scalars['ID']['output']>;
 };
 
 export type UpdateGuideInput = {
@@ -346,6 +425,21 @@ export type User = {
 };
 
 export type UserRole = 'admin' | 'user';
+
+export type SituationLocationFieldsFragment = {
+  __typename?: 'Location';
+  zip?: string | null;
+  city?: string | null;
+  state?: string | null;
+  stateCode?: string | null;
+  countryCode?: string | null;
+  stateFips?: string | null;
+  countyFips?: string | null;
+  countyName?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  precision?: LocationPrecision | null;
+};
 
 export type GetUserQueryVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -482,7 +576,7 @@ export type CreateSituationMutation = {
   createSituation: {
     __typename?: 'Situation';
     id: string;
-    userId: string;
+    userId?: string | null;
     timeline?: string | null;
     disasters?: string | null;
     displayName?: string | null;
@@ -497,6 +591,12 @@ export type CreateSituationMutation = {
       state?: string | null;
       stateCode?: string | null;
       countryCode?: string | null;
+      stateFips?: string | null;
+      countyFips?: string | null;
+      countyName?: string | null;
+      latitude?: number | null;
+      longitude?: number | null;
+      precision?: LocationPrecision | null;
     } | null;
     helpTypes?: {
       __typename?: 'HelpTypes';
@@ -516,7 +616,7 @@ export type GetSituationsByUserQuery = {
   getSituationsByUser: Array<{
     __typename?: 'Situation';
     id: string;
-    userId: string;
+    userId?: string | null;
     timeline?: string | null;
     disasters?: string | null;
     displayName?: string | null;
@@ -531,6 +631,12 @@ export type GetSituationsByUserQuery = {
       state?: string | null;
       stateCode?: string | null;
       countryCode?: string | null;
+      stateFips?: string | null;
+      countyFips?: string | null;
+      countyName?: string | null;
+      latitude?: number | null;
+      longitude?: number | null;
+      precision?: LocationPrecision | null;
     } | null;
     helpTypes?: {
       __typename?: 'HelpTypes';
@@ -566,6 +672,260 @@ export type UpdateSituationMutation = {
   };
 };
 
+export type GeocodeFieldsFragment = {
+  __typename?: 'GeocodeResult';
+  matchedAddress?: string | null;
+  zip?: string | null;
+  city?: string | null;
+  stateCode?: string | null;
+  stateFips?: string | null;
+  countyFips?: string | null;
+  countyName?: string | null;
+  latitude: number;
+  longitude: number;
+  precision: LocationPrecision;
+};
+
+export type GeocodeAddressQueryVariables = Exact<{
+  address: Scalars['String']['input'];
+}>;
+
+export type GeocodeAddressQuery = {
+  __typename?: 'Query';
+  geocodeAddress?: {
+    __typename?: 'GeocodeResult';
+    matchedAddress?: string | null;
+    zip?: string | null;
+    city?: string | null;
+    stateCode?: string | null;
+    stateFips?: string | null;
+    countyFips?: string | null;
+    countyName?: string | null;
+    latitude: number;
+    longitude: number;
+    precision: LocationPrecision;
+  } | null;
+};
+
+export type GeocodeZipQueryVariables = Exact<{
+  zip: Scalars['String']['input'];
+}>;
+
+export type GeocodeZipQuery = {
+  __typename?: 'Query';
+  geocodeZip?: {
+    __typename?: 'GeocodeResult';
+    matchedAddress?: string | null;
+    zip?: string | null;
+    city?: string | null;
+    stateCode?: string | null;
+    stateFips?: string | null;
+    countyFips?: string | null;
+    countyName?: string | null;
+    latitude: number;
+    longitude: number;
+    precision: LocationPrecision;
+  } | null;
+};
+
+export type GetDisastersForLocationQueryVariables = Exact<{
+  stateFips: Scalars['String']['input'];
+  countyFips: Scalars['String']['input'];
+  timeline?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+export type GetDisastersForLocationQuery = {
+  __typename?: 'Query';
+  getDisastersForLocation: Array<{
+    __typename?: 'DisasterOption';
+    id: string;
+    disasterNumber: number;
+    title: string;
+    incidentType?: string | null;
+    declarationType?: string | null;
+    incidentBeginDate?: any | null;
+    declarationDate?: any | null;
+    individualAssistance: boolean;
+  }>;
+};
+
+export type GuestSituationFieldsFragment = {
+  __typename?: 'Situation';
+  id: string;
+  userId?: string | null;
+  timeline?: string | null;
+  disasters?: string | null;
+  displayName?: string | null;
+  homeStatus?: string | null;
+  household?: Array<string> | null;
+  createdAt?: any | null;
+  updatedAt?: any | null;
+  location?: {
+    __typename?: 'Location';
+    zip?: string | null;
+    city?: string | null;
+    state?: string | null;
+    stateCode?: string | null;
+    countryCode?: string | null;
+    stateFips?: string | null;
+    countyFips?: string | null;
+    countyName?: string | null;
+    latitude?: number | null;
+    longitude?: number | null;
+    precision?: LocationPrecision | null;
+  } | null;
+  helpTypes?: {
+    __typename?: 'HelpTypes';
+    housing?: boolean | null;
+    financial?: boolean | null;
+    damage?: boolean | null;
+  } | null;
+};
+
+export type SaveGuestSituationMutationVariables = Exact<{
+  input: CreateSituationInput;
+  guestToken?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+export type SaveGuestSituationMutation = {
+  __typename?: 'Mutation';
+  saveGuestSituation: {
+    __typename?: 'GuestSituationPayload';
+    guestToken: string;
+    situation: {
+      __typename?: 'Situation';
+      id: string;
+      userId?: string | null;
+      timeline?: string | null;
+      disasters?: string | null;
+      displayName?: string | null;
+      homeStatus?: string | null;
+      household?: Array<string> | null;
+      createdAt?: any | null;
+      updatedAt?: any | null;
+      location?: {
+        __typename?: 'Location';
+        zip?: string | null;
+        city?: string | null;
+        state?: string | null;
+        stateCode?: string | null;
+        countryCode?: string | null;
+        stateFips?: string | null;
+        countyFips?: string | null;
+        countyName?: string | null;
+        latitude?: number | null;
+        longitude?: number | null;
+        precision?: LocationPrecision | null;
+      } | null;
+      helpTypes?: {
+        __typename?: 'HelpTypes';
+        housing?: boolean | null;
+        financial?: boolean | null;
+        damage?: boolean | null;
+      } | null;
+    };
+  };
+};
+
+export type GetGuestSituationQueryVariables = Exact<{
+  guestToken: Scalars['String']['input'];
+}>;
+
+export type GetGuestSituationQuery = {
+  __typename?: 'Query';
+  getGuestSituation?: {
+    __typename?: 'Situation';
+    id: string;
+    userId?: string | null;
+    timeline?: string | null;
+    disasters?: string | null;
+    displayName?: string | null;
+    homeStatus?: string | null;
+    household?: Array<string> | null;
+    createdAt?: any | null;
+    updatedAt?: any | null;
+    location?: {
+      __typename?: 'Location';
+      zip?: string | null;
+      city?: string | null;
+      state?: string | null;
+      stateCode?: string | null;
+      countryCode?: string | null;
+      stateFips?: string | null;
+      countyFips?: string | null;
+      countyName?: string | null;
+      latitude?: number | null;
+      longitude?: number | null;
+      precision?: LocationPrecision | null;
+    } | null;
+    helpTypes?: {
+      __typename?: 'HelpTypes';
+      housing?: boolean | null;
+      financial?: boolean | null;
+      damage?: boolean | null;
+    } | null;
+  } | null;
+};
+
+export type ClaimGuestSituationMutationVariables = Exact<{
+  guestToken: Scalars['String']['input'];
+}>;
+
+export type ClaimGuestSituationMutation = {
+  __typename?: 'Mutation';
+  claimGuestSituation?: { __typename?: 'Situation'; id: string } | null;
+};
+
+export const GeocodeFieldsFragmentDoc = gql`
+    fragment GeocodeFields on GeocodeResult {
+  matchedAddress
+  zip
+  city
+  stateCode
+  stateFips
+  countyFips
+  countyName
+  latitude
+  longitude
+  precision
+}
+    `;
+export const SituationLocationFieldsFragmentDoc = gql`
+    fragment SituationLocationFields on Location {
+  zip
+  city
+  state
+  stateCode
+  countryCode
+  stateFips
+  countyFips
+  countyName
+  latitude
+  longitude
+  precision
+}
+    `;
+export const GuestSituationFieldsFragmentDoc = gql`
+    fragment GuestSituationFields on Situation {
+  id
+  userId
+  location {
+    ...SituationLocationFields
+  }
+  timeline
+  disasters
+  displayName
+  helpTypes {
+    housing
+    financial
+    damage
+  }
+  homeStatus
+  household
+  createdAt
+  updatedAt
+}
+    ${SituationLocationFieldsFragmentDoc}`;
 export const GetUserDocument = gql`
     query GetUser($id: ID!) {
   getUser(id: $id) {
@@ -1127,11 +1487,7 @@ export const CreateSituationDocument = gql`
     id
     userId
     location {
-      zip
-      city
-      state
-      stateCode
-      countryCode
+      ...SituationLocationFields
     }
     timeline
     disasters
@@ -1147,7 +1503,7 @@ export const CreateSituationDocument = gql`
     updatedAt
   }
 }
-    `;
+    ${SituationLocationFieldsFragmentDoc}`;
 export type CreateSituationMutationFn = ApolloReactCommon.MutationFunction<
   CreateSituationMutation,
   CreateSituationMutationVariables
@@ -1195,11 +1551,7 @@ export const GetSituationsByUserDocument = gql`
     id
     userId
     location {
-      zip
-      city
-      state
-      stateCode
-      countryCode
+      ...SituationLocationFields
     }
     timeline
     disasters
@@ -1215,7 +1567,7 @@ export const GetSituationsByUserDocument = gql`
     updatedAt
   }
 }
-    `;
+    ${SituationLocationFieldsFragmentDoc}`;
 
 /**
  * __useGetSituationsByUserQuery__
@@ -1366,4 +1718,472 @@ export type UpdateSituationMutationResult =
 export type UpdateSituationMutationOptions = ApolloReactCommon.BaseMutationOptions<
   UpdateSituationMutation,
   UpdateSituationMutationVariables
+>;
+export const GeocodeAddressDocument = gql`
+    query GeocodeAddress($address: String!) {
+  geocodeAddress(address: $address) {
+    ...GeocodeFields
+  }
+}
+    ${GeocodeFieldsFragmentDoc}`;
+
+/**
+ * __useGeocodeAddressQuery__
+ *
+ * To run a query within a React component, call `useGeocodeAddressQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGeocodeAddressQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGeocodeAddressQuery({
+ *   variables: {
+ *      address: // value for 'address'
+ *   },
+ * });
+ */
+export function useGeocodeAddressQuery(
+  baseOptions: ApolloReactHooks.QueryHookOptions<
+    GeocodeAddressQuery,
+    GeocodeAddressQueryVariables
+  > &
+    ({ variables: GeocodeAddressQueryVariables; skip?: boolean } | { skip: boolean })
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return ApolloReactHooks.useQuery<GeocodeAddressQuery, GeocodeAddressQueryVariables>(
+    GeocodeAddressDocument,
+    options
+  );
+}
+export function useGeocodeAddressLazyQuery(
+  baseOptions?: ApolloReactHooks.LazyQueryHookOptions<
+    GeocodeAddressQuery,
+    GeocodeAddressQueryVariables
+  >
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return ApolloReactHooks.useLazyQuery<GeocodeAddressQuery, GeocodeAddressQueryVariables>(
+    GeocodeAddressDocument,
+    options
+  );
+}
+// @ts-ignore
+export function useGeocodeAddressSuspenseQuery(
+  baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<
+    GeocodeAddressQuery,
+    GeocodeAddressQueryVariables
+  >
+): ApolloReactHooks.UseSuspenseQueryResult<GeocodeAddressQuery, GeocodeAddressQueryVariables>;
+export function useGeocodeAddressSuspenseQuery(
+  baseOptions?:
+    | ApolloReactHooks.SkipToken
+    | ApolloReactHooks.SuspenseQueryHookOptions<GeocodeAddressQuery, GeocodeAddressQueryVariables>
+): ApolloReactHooks.UseSuspenseQueryResult<
+  GeocodeAddressQuery | undefined,
+  GeocodeAddressQueryVariables
+>;
+export function useGeocodeAddressSuspenseQuery(
+  baseOptions?:
+    | ApolloReactHooks.SkipToken
+    | ApolloReactHooks.SuspenseQueryHookOptions<GeocodeAddressQuery, GeocodeAddressQueryVariables>
+) {
+  const options =
+    baseOptions === ApolloReactHooks.skipToken
+      ? baseOptions
+      : { ...defaultOptions, ...baseOptions };
+  return ApolloReactHooks.useSuspenseQuery<GeocodeAddressQuery, GeocodeAddressQueryVariables>(
+    GeocodeAddressDocument,
+    options
+  );
+}
+export type GeocodeAddressQueryHookResult = ReturnType<typeof useGeocodeAddressQuery>;
+export type GeocodeAddressLazyQueryHookResult = ReturnType<typeof useGeocodeAddressLazyQuery>;
+export type GeocodeAddressSuspenseQueryHookResult = ReturnType<
+  typeof useGeocodeAddressSuspenseQuery
+>;
+export type GeocodeAddressQueryResult = ApolloReactCommon.QueryResult<
+  GeocodeAddressQuery,
+  GeocodeAddressQueryVariables
+>;
+export const GeocodeZipDocument = gql`
+    query GeocodeZip($zip: String!) {
+  geocodeZip(zip: $zip) {
+    ...GeocodeFields
+  }
+}
+    ${GeocodeFieldsFragmentDoc}`;
+
+/**
+ * __useGeocodeZipQuery__
+ *
+ * To run a query within a React component, call `useGeocodeZipQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGeocodeZipQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGeocodeZipQuery({
+ *   variables: {
+ *      zip: // value for 'zip'
+ *   },
+ * });
+ */
+export function useGeocodeZipQuery(
+  baseOptions: ApolloReactHooks.QueryHookOptions<GeocodeZipQuery, GeocodeZipQueryVariables> &
+    ({ variables: GeocodeZipQueryVariables; skip?: boolean } | { skip: boolean })
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return ApolloReactHooks.useQuery<GeocodeZipQuery, GeocodeZipQueryVariables>(
+    GeocodeZipDocument,
+    options
+  );
+}
+export function useGeocodeZipLazyQuery(
+  baseOptions?: ApolloReactHooks.LazyQueryHookOptions<GeocodeZipQuery, GeocodeZipQueryVariables>
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return ApolloReactHooks.useLazyQuery<GeocodeZipQuery, GeocodeZipQueryVariables>(
+    GeocodeZipDocument,
+    options
+  );
+}
+// @ts-ignore
+export function useGeocodeZipSuspenseQuery(
+  baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<GeocodeZipQuery, GeocodeZipQueryVariables>
+): ApolloReactHooks.UseSuspenseQueryResult<GeocodeZipQuery, GeocodeZipQueryVariables>;
+export function useGeocodeZipSuspenseQuery(
+  baseOptions?:
+    | ApolloReactHooks.SkipToken
+    | ApolloReactHooks.SuspenseQueryHookOptions<GeocodeZipQuery, GeocodeZipQueryVariables>
+): ApolloReactHooks.UseSuspenseQueryResult<GeocodeZipQuery | undefined, GeocodeZipQueryVariables>;
+export function useGeocodeZipSuspenseQuery(
+  baseOptions?:
+    | ApolloReactHooks.SkipToken
+    | ApolloReactHooks.SuspenseQueryHookOptions<GeocodeZipQuery, GeocodeZipQueryVariables>
+) {
+  const options =
+    baseOptions === ApolloReactHooks.skipToken
+      ? baseOptions
+      : { ...defaultOptions, ...baseOptions };
+  return ApolloReactHooks.useSuspenseQuery<GeocodeZipQuery, GeocodeZipQueryVariables>(
+    GeocodeZipDocument,
+    options
+  );
+}
+export type GeocodeZipQueryHookResult = ReturnType<typeof useGeocodeZipQuery>;
+export type GeocodeZipLazyQueryHookResult = ReturnType<typeof useGeocodeZipLazyQuery>;
+export type GeocodeZipSuspenseQueryHookResult = ReturnType<typeof useGeocodeZipSuspenseQuery>;
+export type GeocodeZipQueryResult = ApolloReactCommon.QueryResult<
+  GeocodeZipQuery,
+  GeocodeZipQueryVariables
+>;
+export const GetDisastersForLocationDocument = gql`
+    query GetDisastersForLocation($stateFips: String!, $countyFips: String!, $timeline: String) {
+  getDisastersForLocation(
+    stateFips: $stateFips
+    countyFips: $countyFips
+    timeline: $timeline
+  ) {
+    id
+    disasterNumber
+    title
+    incidentType
+    declarationType
+    incidentBeginDate
+    declarationDate
+    individualAssistance
+  }
+}
+    `;
+
+/**
+ * __useGetDisastersForLocationQuery__
+ *
+ * To run a query within a React component, call `useGetDisastersForLocationQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetDisastersForLocationQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetDisastersForLocationQuery({
+ *   variables: {
+ *      stateFips: // value for 'stateFips'
+ *      countyFips: // value for 'countyFips'
+ *      timeline: // value for 'timeline'
+ *   },
+ * });
+ */
+export function useGetDisastersForLocationQuery(
+  baseOptions: ApolloReactHooks.QueryHookOptions<
+    GetDisastersForLocationQuery,
+    GetDisastersForLocationQueryVariables
+  > &
+    ({ variables: GetDisastersForLocationQueryVariables; skip?: boolean } | { skip: boolean })
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return ApolloReactHooks.useQuery<
+    GetDisastersForLocationQuery,
+    GetDisastersForLocationQueryVariables
+  >(GetDisastersForLocationDocument, options);
+}
+export function useGetDisastersForLocationLazyQuery(
+  baseOptions?: ApolloReactHooks.LazyQueryHookOptions<
+    GetDisastersForLocationQuery,
+    GetDisastersForLocationQueryVariables
+  >
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return ApolloReactHooks.useLazyQuery<
+    GetDisastersForLocationQuery,
+    GetDisastersForLocationQueryVariables
+  >(GetDisastersForLocationDocument, options);
+}
+// @ts-ignore
+export function useGetDisastersForLocationSuspenseQuery(
+  baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<
+    GetDisastersForLocationQuery,
+    GetDisastersForLocationQueryVariables
+  >
+): ApolloReactHooks.UseSuspenseQueryResult<
+  GetDisastersForLocationQuery,
+  GetDisastersForLocationQueryVariables
+>;
+export function useGetDisastersForLocationSuspenseQuery(
+  baseOptions?:
+    | ApolloReactHooks.SkipToken
+    | ApolloReactHooks.SuspenseQueryHookOptions<
+        GetDisastersForLocationQuery,
+        GetDisastersForLocationQueryVariables
+      >
+): ApolloReactHooks.UseSuspenseQueryResult<
+  GetDisastersForLocationQuery | undefined,
+  GetDisastersForLocationQueryVariables
+>;
+export function useGetDisastersForLocationSuspenseQuery(
+  baseOptions?:
+    | ApolloReactHooks.SkipToken
+    | ApolloReactHooks.SuspenseQueryHookOptions<
+        GetDisastersForLocationQuery,
+        GetDisastersForLocationQueryVariables
+      >
+) {
+  const options =
+    baseOptions === ApolloReactHooks.skipToken
+      ? baseOptions
+      : { ...defaultOptions, ...baseOptions };
+  return ApolloReactHooks.useSuspenseQuery<
+    GetDisastersForLocationQuery,
+    GetDisastersForLocationQueryVariables
+  >(GetDisastersForLocationDocument, options);
+}
+export type GetDisastersForLocationQueryHookResult = ReturnType<
+  typeof useGetDisastersForLocationQuery
+>;
+export type GetDisastersForLocationLazyQueryHookResult = ReturnType<
+  typeof useGetDisastersForLocationLazyQuery
+>;
+export type GetDisastersForLocationSuspenseQueryHookResult = ReturnType<
+  typeof useGetDisastersForLocationSuspenseQuery
+>;
+export type GetDisastersForLocationQueryResult = ApolloReactCommon.QueryResult<
+  GetDisastersForLocationQuery,
+  GetDisastersForLocationQueryVariables
+>;
+export const SaveGuestSituationDocument = gql`
+    mutation SaveGuestSituation($input: CreateSituationInput!, $guestToken: String) {
+  saveGuestSituation(input: $input, guestToken: $guestToken) {
+    guestToken
+    situation {
+      ...GuestSituationFields
+    }
+  }
+}
+    ${GuestSituationFieldsFragmentDoc}`;
+export type SaveGuestSituationMutationFn = ApolloReactCommon.MutationFunction<
+  SaveGuestSituationMutation,
+  SaveGuestSituationMutationVariables
+>;
+
+/**
+ * __useSaveGuestSituationMutation__
+ *
+ * To run a mutation, you first call `useSaveGuestSituationMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useSaveGuestSituationMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [saveGuestSituationMutation, { data, loading, error }] = useSaveGuestSituationMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *      guestToken: // value for 'guestToken'
+ *   },
+ * });
+ */
+export function useSaveGuestSituationMutation(
+  baseOptions?: ApolloReactHooks.MutationHookOptions<
+    SaveGuestSituationMutation,
+    SaveGuestSituationMutationVariables
+  >
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return ApolloReactHooks.useMutation<
+    SaveGuestSituationMutation,
+    SaveGuestSituationMutationVariables
+  >(SaveGuestSituationDocument, options);
+}
+export type SaveGuestSituationMutationHookResult = ReturnType<typeof useSaveGuestSituationMutation>;
+export type SaveGuestSituationMutationResult =
+  ApolloReactCommon.MutationResult<SaveGuestSituationMutation>;
+export type SaveGuestSituationMutationOptions = ApolloReactCommon.BaseMutationOptions<
+  SaveGuestSituationMutation,
+  SaveGuestSituationMutationVariables
+>;
+export const GetGuestSituationDocument = gql`
+    query GetGuestSituation($guestToken: String!) {
+  getGuestSituation(guestToken: $guestToken) {
+    ...GuestSituationFields
+  }
+}
+    ${GuestSituationFieldsFragmentDoc}`;
+
+/**
+ * __useGetGuestSituationQuery__
+ *
+ * To run a query within a React component, call `useGetGuestSituationQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetGuestSituationQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetGuestSituationQuery({
+ *   variables: {
+ *      guestToken: // value for 'guestToken'
+ *   },
+ * });
+ */
+export function useGetGuestSituationQuery(
+  baseOptions: ApolloReactHooks.QueryHookOptions<
+    GetGuestSituationQuery,
+    GetGuestSituationQueryVariables
+  > &
+    ({ variables: GetGuestSituationQueryVariables; skip?: boolean } | { skip: boolean })
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return ApolloReactHooks.useQuery<GetGuestSituationQuery, GetGuestSituationQueryVariables>(
+    GetGuestSituationDocument,
+    options
+  );
+}
+export function useGetGuestSituationLazyQuery(
+  baseOptions?: ApolloReactHooks.LazyQueryHookOptions<
+    GetGuestSituationQuery,
+    GetGuestSituationQueryVariables
+  >
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return ApolloReactHooks.useLazyQuery<GetGuestSituationQuery, GetGuestSituationQueryVariables>(
+    GetGuestSituationDocument,
+    options
+  );
+}
+// @ts-ignore
+export function useGetGuestSituationSuspenseQuery(
+  baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<
+    GetGuestSituationQuery,
+    GetGuestSituationQueryVariables
+  >
+): ApolloReactHooks.UseSuspenseQueryResult<GetGuestSituationQuery, GetGuestSituationQueryVariables>;
+export function useGetGuestSituationSuspenseQuery(
+  baseOptions?:
+    | ApolloReactHooks.SkipToken
+    | ApolloReactHooks.SuspenseQueryHookOptions<
+        GetGuestSituationQuery,
+        GetGuestSituationQueryVariables
+      >
+): ApolloReactHooks.UseSuspenseQueryResult<
+  GetGuestSituationQuery | undefined,
+  GetGuestSituationQueryVariables
+>;
+export function useGetGuestSituationSuspenseQuery(
+  baseOptions?:
+    | ApolloReactHooks.SkipToken
+    | ApolloReactHooks.SuspenseQueryHookOptions<
+        GetGuestSituationQuery,
+        GetGuestSituationQueryVariables
+      >
+) {
+  const options =
+    baseOptions === ApolloReactHooks.skipToken
+      ? baseOptions
+      : { ...defaultOptions, ...baseOptions };
+  return ApolloReactHooks.useSuspenseQuery<GetGuestSituationQuery, GetGuestSituationQueryVariables>(
+    GetGuestSituationDocument,
+    options
+  );
+}
+export type GetGuestSituationQueryHookResult = ReturnType<typeof useGetGuestSituationQuery>;
+export type GetGuestSituationLazyQueryHookResult = ReturnType<typeof useGetGuestSituationLazyQuery>;
+export type GetGuestSituationSuspenseQueryHookResult = ReturnType<
+  typeof useGetGuestSituationSuspenseQuery
+>;
+export type GetGuestSituationQueryResult = ApolloReactCommon.QueryResult<
+  GetGuestSituationQuery,
+  GetGuestSituationQueryVariables
+>;
+export const ClaimGuestSituationDocument = gql`
+    mutation ClaimGuestSituation($guestToken: String!) {
+  claimGuestSituation(guestToken: $guestToken) {
+    id
+  }
+}
+    `;
+export type ClaimGuestSituationMutationFn = ApolloReactCommon.MutationFunction<
+  ClaimGuestSituationMutation,
+  ClaimGuestSituationMutationVariables
+>;
+
+/**
+ * __useClaimGuestSituationMutation__
+ *
+ * To run a mutation, you first call `useClaimGuestSituationMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useClaimGuestSituationMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [claimGuestSituationMutation, { data, loading, error }] = useClaimGuestSituationMutation({
+ *   variables: {
+ *      guestToken: // value for 'guestToken'
+ *   },
+ * });
+ */
+export function useClaimGuestSituationMutation(
+  baseOptions?: ApolloReactHooks.MutationHookOptions<
+    ClaimGuestSituationMutation,
+    ClaimGuestSituationMutationVariables
+  >
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return ApolloReactHooks.useMutation<
+    ClaimGuestSituationMutation,
+    ClaimGuestSituationMutationVariables
+  >(ClaimGuestSituationDocument, options);
+}
+export type ClaimGuestSituationMutationHookResult = ReturnType<
+  typeof useClaimGuestSituationMutation
+>;
+export type ClaimGuestSituationMutationResult =
+  ApolloReactCommon.MutationResult<ClaimGuestSituationMutation>;
+export type ClaimGuestSituationMutationOptions = ApolloReactCommon.BaseMutationOptions<
+  ClaimGuestSituationMutation,
+  ClaimGuestSituationMutationVariables
 >;
