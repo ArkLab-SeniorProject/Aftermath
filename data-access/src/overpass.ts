@@ -5,7 +5,7 @@
 // The public Overpass server is shared and rate limited per IP (HTTP 429), so:
 //  - requests are small (radius capped, short server timeout)
 //  - results are cached in memory (best effort; serverless instances each have their own)
-//  - never send requests in parallel
+//  - never send requests in parallel (identical searches share one request, and all requests go through a one-at-a-time queue)
 //  - if one server is busy or down, try the next one in ENDPOINTS (one at a time)
 
 // The UI must also show the attribution "© OpenStreetMap contributors" (ODbL license)
@@ -18,7 +18,7 @@ const ENDPOINTS = [
   'https://overpass.kumi.systems/api/interpreter',
 ];
 // busy or temporarily unavailable: worth trying the next server
-const RETRYABLE_STATUSES = new Set([429, 502, 503, 504]);
+const RETRYABLE_STATUSES = new Set([429, 500, 502, 503, 504]);
 const USER_AGENT =
   process.env.OVERPASS_USER_AGENT ?? 'AftermathSeniorProject/1.0 (replace with a team contact)';
 const SERVER_TIMEOUT_S = 25; // overpass aborts the query after this long
@@ -93,6 +93,18 @@ function cacheSet(key: string, data: Resource[]) {
   cache.set(key, { at: Date.now(), data });
 }
 
+// searches that are running right now, so identical requests share one Overpass call
+const inFlight = new Map<string, Promise<Resource[]>>();
+
+// all Overpass requests go through this queue so only one is ever running at a time
+let queue: Promise<unknown> = Promise.resolve();
+
+function runOneAtATime<T>(task: () => Promise<T>): Promise<T> {
+  const result = queue.then(task);
+  queue = result.catch(() => undefined); // a failed request must not block the ones behind it
+  return result;
+}
+
 // helper functions!
 
 // great-circle distance in meters (haversine formula)
@@ -153,11 +165,12 @@ async function runQuery(query: string): Promise<OverpassElement[]> {
       });
     } catch (err) {
       // network error or timeout: try the next server
-      lastError = err instanceof Error ? err : new Error(String(err));
+      const reason = err instanceof Error ? err.message : String(err);
+      lastError = new Error(`Overpass request to ${host} failed: ${reason}`);
       continue;
     }
 
-    // 429 = rate limited, 502/503 = server down, 504 = query too slow (try a smaller radius)
+    // 429 = rate limited, 500/502/503 = server trouble, 504 = query too slow (try a smaller radius)
     if (RETRYABLE_STATUSES.has(res.status)) {
       lastError = new Error(`Overpass busy or unavailable (${res.status} from ${host})`);
       continue;
@@ -167,7 +180,14 @@ async function runQuery(query: string): Promise<OverpassElement[]> {
       throw new Error(`Overpass request failed: ${res.status} from ${host}`);
     }
 
-    const json = (await res.json()) as OverpassResponse;
+    let json: OverpassResponse;
+    try {
+      json = (await res.json()) as OverpassResponse;
+    } catch {
+      // HTTP 200 but the body was cut off or not JSON: try the next server
+      lastError = new Error(`Overpass sent an unreadable response from ${host}`);
+      continue;
+    }
     // Overpass can answer 200 but report that the query was aborted partway through.
     if (json.remark?.includes('runtime error')) {
       lastError = new Error(`Overpass aborted the query on ${host}: ${json.remark}`);
@@ -179,41 +199,17 @@ async function runQuery(query: string): Promise<OverpassElement[]> {
   throw lastError;
 }
 
-// public API
-export async function findResources(options: FindResourcesOptions): Promise<Resource[]> {
-  const { latitude, longitude } = options;
-  if (
-    !Number.isFinite(latitude) ||
-    !Number.isFinite(longitude) ||
-    Math.abs(latitude) > 90 ||
-    Math.abs(longitude) > 180
-  ) {
-    throw new Error('latitude/longitude out of range');
-  }
-
-  const radiusMeters = Math.round(
-    Math.min(Math.max(options.radiusMeters ?? DEFAULT_RADIUS_M, 100), MAX_RADIUS_M)
+// asks Overpass, turns the elements into Resources (nearest first) and caches them
+async function fetchResources(
+  key: string,
+  lat: number,
+  lon: number,
+  radiusMeters: number,
+  requested: ResourceCategory[]
+): Promise<Resource[]> {
+  const elements = await runOneAtATime(() =>
+    runQuery(buildQuery(lat, lon, radiusMeters, requested))
   );
-  const limit = Math.min(Math.max(options.limit ?? DEFAULT_LIMIT, 1), MAX_LIMIT);
-
-  const requested = [
-    ...new Set(options.categories ?? (Object.keys(FILTERS) as ResourceCategory[])),
-  ];
-  if (requested.length === 0 || requested.some((category) => !Object.hasOwn(FILTERS, category))) {
-    throw new Error(`categories must be from: ${Object.keys(FILTERS).join(', ')}`);
-  }
-
-  // round the search center: better privacy, and nearby requests share a cache entry
-  const lat = Number(latitude.toFixed(COORD_DECIMALS));
-  const lon = Number(longitude.toFixed(COORD_DECIMALS));
-
-  const key = `${lat},${lon},${radiusMeters},${[...requested].sort().join('+')}`;
-  const cached = cache.get(key);
-  if (cached && Date.now() - cached.at < CACHE_TTL_MS) {
-    return cached.data.slice(0, limit);
-  }
-
-  const elements = await runQuery(buildQuery(lat, lon, radiusMeters, requested));
 
   const resources: Resource[] = [];
   for (const element of elements) {
@@ -243,5 +239,58 @@ export async function findResources(options: FindResourcesOptions): Promise<Reso
   resources.sort((a, b) => a.distanceMeters - b.distanceMeters);
 
   cacheSet(key, resources);
+  return resources;
+}
+
+// public API
+export async function findResources(options: FindResourcesOptions): Promise<Resource[]> {
+  const { latitude, longitude } = options;
+  if (
+    !Number.isFinite(latitude) ||
+    !Number.isFinite(longitude) ||
+    Math.abs(latitude) > 90 ||
+    Math.abs(longitude) > 180
+  ) {
+    throw new Error('latitude/longitude out of range');
+  }
+  if (options.radiusMeters !== undefined && !Number.isFinite(options.radiusMeters)) {
+    throw new Error('radiusMeters must be a number');
+  }
+  if (options.limit !== undefined && !Number.isFinite(options.limit)) {
+    throw new Error('limit must be a number');
+  }
+
+  const radiusMeters = Math.round(
+    Math.min(Math.max(options.radiusMeters ?? DEFAULT_RADIUS_M, 100), MAX_RADIUS_M)
+  );
+  const limit = Math.min(Math.max(options.limit ?? DEFAULT_LIMIT, 1), MAX_LIMIT);
+
+  const requested = [
+    ...new Set(options.categories ?? (Object.keys(FILTERS) as ResourceCategory[])),
+  ];
+  if (requested.length === 0 || requested.some((category) => !Object.hasOwn(FILTERS, category))) {
+    throw new Error(`categories must be from: ${Object.keys(FILTERS).join(', ')}`);
+  }
+
+  // round the search center: better privacy, and nearby requests share a cache entry
+  const lat = Number(latitude.toFixed(COORD_DECIMALS));
+  const lon = Number(longitude.toFixed(COORD_DECIMALS));
+
+  const key = `${lat},${lon},${radiusMeters},${[...requested].sort().join('+')}`;
+  const cached = cache.get(key);
+  if (cached && Date.now() - cached.at < CACHE_TTL_MS) {
+    return cached.data.slice(0, limit);
+  }
+
+  // if the same search is already running, wait for it instead of sending another request
+  let pending = inFlight.get(key);
+  if (!pending) {
+    pending = fetchResources(key, lat, lon, radiusMeters, requested).finally(() =>
+      inFlight.delete(key)
+    );
+    inFlight.set(key, pending);
+  }
+
+  const resources = await pending;
   return resources.slice(0, limit);
 }
