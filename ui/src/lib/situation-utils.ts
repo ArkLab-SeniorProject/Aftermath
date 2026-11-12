@@ -68,23 +68,23 @@ export function situationToQuizAnswers(record: {
   const loc = record.location;
   const lat = loc?.latitude;
   const lon = loc?.longitude;
-  const hasGeo = typeof lat === 'number' && typeof lon === 'number';
 
   return {
     zipCode: loc?.zip ?? '',
-    location: hasGeo
-      ? {
-          zip: loc.zip ?? null,
-          city: loc.city ?? null,
-          stateCode: loc.stateCode ?? null,
-          stateFips: loc.stateFips ?? null,
-          countyFips: loc.countyFips ?? null,
-          countyName: loc.countyName ?? null,
-          latitude: lat,
-          longitude: lon,
-          precision: (loc.precision as 'address' | 'zip') ?? 'zip',
-        }
-      : null,
+    location:
+      loc && typeof lat === 'number' && typeof lon === 'number'
+        ? {
+            zip: loc.zip ?? null,
+            city: loc.city ?? null,
+            stateCode: loc.stateCode ?? null,
+            stateFips: loc.stateFips ?? null,
+            countyFips: loc.countyFips ?? null,
+            countyName: loc.countyName ?? null,
+            latitude: lat,
+            longitude: lon,
+            precision: (loc.precision as 'address' | 'zip') ?? 'zip',
+          }
+        : null,
     timeline: record.timeline ?? '',
     disasters,
     helpTypes,
