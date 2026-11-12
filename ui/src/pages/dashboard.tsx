@@ -4,15 +4,22 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/useAuth';
 import {
+  // guest situation query
+  GetGuestSituationDocument,
+  type GetGuestSituationQuery,
+  type GetGuestSituationQueryVariables,
   GetSituationsByUserDocument,
   type GetSituationsByUserQuery,
   type GetSituationsByUserQueryVariables,
 } from '../generated';
 import { apolloClient } from '../lib/apollo-client';
+// NEW
+import { getGuestToken } from '../lib/sync-recovery-situation';
 import type { RecoveryQuizAnswers } from './recovery/quiz';
 
 interface SituationDisplay {
   zipCode: string;
+  place: string;
   timeline: string;
   disasters: string[];
   helpTypes: string[];
@@ -28,6 +35,8 @@ function fromLocalStorage(): SituationDisplay | null {
     const answers: RecoveryQuizAnswers = JSON.parse(stored);
     return {
       zipCode: answers.zipCode,
+      // new edits here
+      place: formatPlace(answers.location, answers.zipCode),
       timeline: answers.timeline,
       disasters: answers.disasters,
       helpTypes: answers.helpTypes,
@@ -57,6 +66,8 @@ function fromDbRecord(record: any): SituationDisplay {
 
   return {
     zipCode: record.location?.zip ?? '',
+    // new edits here
+    place: formatPlace(record.location, record.location?.zip ?? ''),
     timeline: record.timeline ?? '',
     disasters: toArray(record.disasters),
     helpTypes,
@@ -98,7 +109,27 @@ export default function Dashboard() {
           if (!cancelled) setSituation(fromLocalStorage());
         }
       } else {
-        setSituation(fromLocalStorage());
+        // CHANGED: was setSituation(fromLocalStorage()). Guests now load from the database first
+        // Guests: the database copy (via guest token) is the source of truth,
+        // localStorage is the fallback if it was cleared or the request fails
+        const guestToken = getGuestToken();
+        let fromDb: SituationDisplay | null = null;
+        if (guestToken) {
+          try {
+            const { data } = await apolloClient.query<
+              GetGuestSituationQuery,
+              GetGuestSituationQueryVariables
+            >({
+              query: GetGuestSituationDocument,
+              variables: { guestToken },
+              fetchPolicy: 'network-only',
+            });
+            if (data?.getGuestSituation) fromDb = fromDbRecord(data.getGuestSituation);
+          } catch {
+            // fall through to localStorage
+          }
+        }
+        if (!cancelled) setSituation(fromDb ?? fromLocalStorage());
       }
       if (!cancelled) setLoading(false);
     }
@@ -161,7 +192,8 @@ export default function Dashboard() {
         </Typography>
         <Divider sx={{ mb: 2 }} />
 
-        <InfoRow label='Location' value={situation.zipCode} />
+        {/* CHANGED: shows the county as well as the ZIP (was situation.zipCode) */}
+        <InfoRow label='Location' value={situation.place} />
         <InfoRow label='Timeline' value={situation.timeline} />
         <InfoRow label='Home status' value={situation.homeStatus} />
         <InfoRow label='Name' value={situation.name || '—'} />
@@ -248,4 +280,16 @@ function InfoRow({ label, value }: { label: string; value: string }) {
       <Typography variant='body2'>{value || '—'}</Typography>
     </Box>
   );
+}
+
+// new addition: "Philadelphia County, PA (19107)", or just the ZIP when no county was found
+function formatPlace(
+  location: { countyName?: string | null; stateCode?: string | null } | null | undefined,
+  zip: string
+): string {
+  if (!location?.countyName) return zip;
+  const county = location.stateCode
+    ? `${location.countyName}, ${location.stateCode}`
+    : location.countyName;
+  return zip ? `${county} (${zip})` : county;
 }

@@ -1,8 +1,15 @@
+// Census Geocoder + OpenFEMA integration
+// Every change from the original quiz is marked with a "NEW:" or "CHANGED:" comment
+// Search the file for "NEW:" / "CHANGED:" to find them
+// created an old_quiz.tsx with liv's original program just in case this one fails.
 import { ArrowBack } from '@mui/icons-material';
 import {
+  // NEW: Alert (address fallback note) and CircularProgress (loading spinners)
+  Alert,
   Box,
   Button,
   Checkbox,
+  CircularProgress,
   FormControlLabel,
   FormGroup,
   IconButton,
@@ -12,8 +19,27 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { useState } from 'react';
+// CHANGED: added useEffect (loads FEMA disasters on step 3)
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+// NEW: auth (to know if the user is logged in), generated GraphQL operations,
+// the Apollo client, and the save-to-database helper
+import { useAuth } from '../../auth/useAuth';
+import {
+  type DisasterOption,
+  GeocodeAddressDocument,
+  type GeocodeAddressQuery,
+  type GeocodeAddressQueryVariables,
+  type GeocodeResult,
+  GeocodeZipDocument,
+  type GeocodeZipQuery,
+  type GeocodeZipQueryVariables,
+  GetDisastersForLocationDocument,
+  type GetDisastersForLocationQuery,
+  type GetDisastersForLocationQueryVariables,
+} from '../../generated';
+import { apolloClient } from '../../lib/apollo-client';
+import { saveRecoveryQuiz } from '../../lib/sync-recovery-situation';
 
 const TOTAL_STEPS = 9;
 
@@ -25,12 +51,8 @@ const TIMELINE_OPTIONS = [
   { value: 'unsure', label: "I'm not sure" },
 ];
 
-const MOCK_DISASTERS = [
-  { id: 'DR-4883', title: 'Severe Storms and Flooding', date: 'March 2025' },
-  { id: 'DR-4862', title: 'Wildfires', date: 'January 2025' },
-  { id: 'DR-4824', title: 'Tropical Storm Hilary', date: 'August 2024' },
-  { id: 'DR-4699', title: 'Earthquake', date: 'December 2023' },
-];
+// CHANGED: MOCK_DISASTERS removed. Disasters now come from OpenFEMA for the user's county
+type DisasterChoice = Pick<DisasterOption, 'id' | 'title' | 'incidentBeginDate'>;
 
 const HELP_OPTIONS = [
   { value: 'damage_recovery', label: 'Damage recovery' },
@@ -56,8 +78,24 @@ const HOUSEHOLD_OPTIONS = [
   { value: 'prefer_not_to_say', label: 'Prefer not to say' },
 ];
 
+// NEW: geocoded location saved with the answers
+// What we keep from the Census Geocoder. The street address is never stored.
+export interface QuizLocation {
+  zip?: string | null;
+  city?: string | null;
+  stateCode?: string | null;
+  stateFips?: string | null;
+  countyFips?: string | null;
+  countyName?: string | null;
+  latitude: number;
+  longitude: number;
+  precision: 'address' | 'zip';
+}
+
 export interface RecoveryQuizAnswers {
   zipCode: string;
+  // NEW: county/state from the Census Geocoder (null if the lookup failed)
+  location: QuizLocation | null;
   timeline: string;
   disasters: string[];
   helpTypes: string[];
@@ -68,6 +106,8 @@ export interface RecoveryQuizAnswers {
 
 const EMPTY_ANSWERS: RecoveryQuizAnswers = {
   zipCode: '',
+  // NEW
+  location: null,
   timeline: '',
   disasters: [],
   helpTypes: [],
@@ -83,14 +123,141 @@ function saveAnswers(answers: RecoveryQuizAnswers) {
   localStorage.setItem('recovery_quiz_complete', 'true');
 }
 
+// NEW: converts a geocoder result into what we store
+function toQuizLocation(result: GeocodeResult): QuizLocation {
+  return {
+    zip: result.zip,
+    city: result.city,
+    stateCode: result.stateCode,
+    stateFips: result.stateFips,
+    countyFips: result.countyFips,
+    countyName: result.countyName,
+    latitude: result.latitude,
+    longitude: result.longitude,
+    precision: result.precision,
+  };
+}
+
 export default function RecoveryQuiz() {
   const navigate = useNavigate();
+  // NEW: logged-in users save to their account, guests to a guest record
+  const { user } = useAuth();
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<RecoveryQuizAnswers>(EMPTY_ANSWERS);
 
-  const progress = ((step + 1) / TOTAL_STEPS) * 100;
+  // NEW: state for the location lookup, the disaster list, and saving
+  // Street stays in component state only: it is sent to the geocoder, never saved
+  const [street, setStreet] = useState('');
+  const [resolvedFor, setResolvedFor] = useState<string | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const [locationNote, setLocationNote] = useState<string | null>(null);
 
-  const handleNext = () => {
+  const [disasterOptions, setDisasterOptions] = useState<DisasterChoice[]>([]);
+  const [disastersLoading, setDisastersLoading] = useState(false);
+  const [disastersFailed, setDisastersFailed] = useState(false);
+
+  const [saving, setSaving] = useState(false);
+
+  const progress = ((step + 1) / TOTAL_STEPS) * 100;
+  // NEW: everything from here down to handleNext
+  const stateFips = answers.location?.stateFips;
+  const countyFips = answers.location?.countyFips;
+  const timeline = answers.timeline;
+
+  // Step 2: load FEMA disasters for the user's county and timeline
+  useEffect(() => {
+    if (step !== 2) return;
+    if (!stateFips || !countyFips) {
+      setDisasterOptions([]);
+      setDisastersFailed(true);
+      return;
+    }
+    let cancelled = false;
+    setDisastersLoading(true);
+    setDisastersFailed(false);
+    apolloClient
+      .query<GetDisastersForLocationQuery, GetDisastersForLocationQueryVariables>({
+        query: GetDisastersForLocationDocument,
+        variables: { stateFips, countyFips, timeline },
+      })
+      .then(({ data }) => {
+        if (!cancelled) setDisasterOptions(data?.getDisastersForLocation ?? []);
+      })
+      .catch((err) => {
+        console.error('[RecoveryQuiz] disaster lookup failed:', err);
+        if (!cancelled) setDisastersFailed(true);
+      })
+      .finally(() => {
+        if (!cancelled) setDisastersLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [step, stateFips, countyFips, timeline]);
+
+  // Step 0: address (optional) + ZIP -> county via the Census Geocoder.
+  // Returns true when the quiz can move on.
+  const resolveLocation = async (): Promise<boolean> => {
+    const zip = answers.zipCode.trim();
+    const trimmedStreet = street.trim();
+    const key = `${trimmedStreet}|${zip}`;
+    if (resolvedFor === key && answers.location) return true;
+
+    setLocating(true);
+    setLocationError(null);
+    setLocationNote(null);
+    try {
+      let result: GeocodeResult | null = null;
+      if (trimmedStreet) {
+        const { data } = await apolloClient.query<
+          GeocodeAddressQuery,
+          GeocodeAddressQueryVariables
+        >({
+          query: GeocodeAddressDocument,
+          variables: { address: `${trimmedStreet}, ${zip}` },
+          fetchPolicy: 'network-only',
+        });
+        result = data?.geocodeAddress ?? null;
+        if (!result) {
+          setLocationNote("We couldn't match that street address, so we're using your ZIP code.");
+        }
+      }
+      if (!result) {
+        const { data } = await apolloClient.query<GeocodeZipQuery, GeocodeZipQueryVariables>({
+          query: GeocodeZipDocument,
+          variables: { zip },
+        });
+        result = data?.geocodeZip ?? null;
+      }
+      if (!result) {
+        setLocationError("We couldn't find that ZIP code. Please check it and try again.");
+        return false;
+      }
+
+      const location = toQuizLocation(result);
+      setAnswers((prev) => ({
+        ...prev,
+        location,
+        // previously picked disasters belong to the old county
+        disasters: prev.location?.countyFips === location.countyFips ? prev.disasters : [],
+      }));
+      setResolvedFor(key);
+      return true;
+    } catch (err) {
+      // Location service down: let people keep going instead of getting stuck
+      console.error('[RecoveryQuiz] location lookup failed:', err);
+      setAnswers((prev) => ({ ...prev, location: null }));
+      setResolvedFor(null);
+      return true;
+    } finally {
+      setLocating(false);
+    }
+  };
+
+  // CHANGED: now async. On step 1 it looks up the location before moving on
+  const handleNext = async () => {
+    if (step === 0 && !(await resolveLocation())) return;
     if (step < TOTAL_STEPS - 1) {
       setStep((s) => s + 1);
     }
@@ -101,9 +268,20 @@ export default function RecoveryQuiz() {
     else navigate('/');
   };
 
-  const handleFinish = () => {
+  // CHANGED: replaces handleFinish. Also saves to the database, and is used by both end buttons
+  // Saves locally first (works offline), then to the database
+  const finishTo = async (path: string) => {
     saveAnswers(answers);
-    navigate('/dashboard');
+    setSaving(true);
+    try {
+      await saveRecoveryQuiz(answers, user?.id);
+    } catch (err) {
+      // localStorage still has the answers; login/sign-up sync retries for accounts
+      console.error('[RecoveryQuiz] saving to the database failed:', err);
+    } finally {
+      setSaving(false);
+    }
+    navigate(path);
   };
 
   const toggleMulti = (field: 'disasters' | 'helpTypes' | 'household', value: string) => {
@@ -118,7 +296,8 @@ export default function RecoveryQuiz() {
   const canContinue = (): boolean => {
     switch (step) {
       case 0:
-        return answers.zipCode.trim().length === 5;
+        // CHANGED: also wait while the location lookup is running
+        return answers.zipCode.trim().length === 5 && !locating;
       case 1:
         return !!answers.timeline;
       case 2:
@@ -171,18 +350,20 @@ export default function RecoveryQuiz() {
           variant='contained'
           size='large'
           sx={{ mt: 2, px: 5, py: 1.75 }}
-          onClick={handleFinish}
+          // CHANGED: saves to the database before going to the dashboard
+          disabled={saving}
+          onClick={() => finishTo('/dashboard')}
         >
-          See my plan
+          {/* CHANGED: spinner while saving */}
+          {saving ? <CircularProgress size={24} color='inherit' /> : 'See my plan'}
         </Button>
         <Button
           variant='outlined'
           size='large'
           sx={{ px: 5, py: 1.75 }}
-          onClick={() => {
-            saveAnswers(answers);
-            navigate('/create-account');
-          }}
+          // CHANGED: saves to the database (as a guest) before going to sign-up
+          disabled={saving}
+          onClick={() => finishTo('/create-account')}
         >
           Create an account
         </Button>
@@ -217,19 +398,37 @@ export default function RecoveryQuiz() {
       {step === 0 && (
         <StepWrapper
           question='Where are you located?'
-          hint='We use your ZIP code to find disasters and help near you.'
+          // CHANGED: hint mentions the optional street address
+          hint='We use your location to find disasters and help near you. A street address is optional but more accurate. We never save it.'
         >
-          <TextField
-            label='ZIP Code'
-            value={answers.zipCode}
-            onChange={(e) => {
-              const val = e.target.value.replace(/\D/g, '').slice(0, 5);
-              setAnswers((prev) => ({ ...prev, zipCode: val }));
-            }}
-            inputProps={{ inputMode: 'numeric', maxLength: 5 }}
-            fullWidth
-            autoFocus
-          />
+          {/* CHANGED: optional street address field added above the ZIP field. The street is
+              only sent to the Census Geocoder and is never saved */}
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <TextField
+              label='Street address (optional)'
+              placeholder='123 Main St'
+              value={street}
+              onChange={(e) => setStreet(e.target.value.slice(0, 150))}
+              autoComplete='street-address'
+              fullWidth
+              autoFocus
+            />
+            <TextField
+              label='ZIP Code'
+              value={answers.zipCode}
+              onChange={(e) => {
+                const val = e.target.value.replace(/\D/g, '').slice(0, 5);
+                setAnswers((prev) => ({ ...prev, zipCode: val }));
+                setLocationError(null);
+              }}
+              inputProps={{ inputMode: 'numeric', maxLength: 5 }}
+              // CHANGED: clears the error when typing, and shows "ZIP not found" errors
+              autoComplete='postal-code'
+              error={!!locationError}
+              helperText={locationError ?? ' '}
+              fullWidth
+            />
+          </Box>
         </StepWrapper>
       )}
 
@@ -239,9 +438,22 @@ export default function RecoveryQuiz() {
           question='When did the disaster happen?'
           hint='A rough estimate is fine. Some deadlines depend on the date.'
         >
+          {/* NEW: shown when the street address didn't match and we used the ZIP instead */}
+          {locationNote && (
+            <Alert severity='info' sx={{ mb: 2 }}>
+              {locationNote}
+            </Alert>
+          )}
           <RadioGroup
             value={answers.timeline}
-            onChange={(e) => setAnswers((prev) => ({ ...prev, timeline: e.target.value }))}
+            // CHANGED: changing the timeline clears disasters picked for the old timeline
+            onChange={(e) =>
+              setAnswers((prev) => ({
+                ...prev,
+                timeline: e.target.value,
+                disasters: prev.timeline === e.target.value ? prev.disasters : [],
+              }))
+            }
           >
             {TIMELINE_OPTIONS.map((opt) => (
               <FormControlLabel
@@ -260,22 +472,30 @@ export default function RecoveryQuiz() {
       {step === 2 && (
         <StepWrapper
           question='Which disaster affected you?'
-          hint={`These disasters were reported in your area, ${answers.zipCode}, during that time. Select all that apply.`}
+          // CHANGED: hint names the county and handles loading / no results / errors
+          hint={disasterHint(answers, disasterOptions, disastersLoading, disastersFailed)}
         >
           <FormGroup>
-            {MOCK_DISASTERS.map((d) => (
-              <FormControlLabel
-                key={d.id}
-                control={
-                  <Checkbox
-                    checked={answers.disasters.includes(d.id)}
-                    onChange={() => toggleMulti('disasters', d.id)}
-                  />
-                }
-                label={`${d.title} — ${d.date}`}
-                sx={{ mb: 0.5 }}
-              />
-            ))}
+            {/* CHANGED: real FEMA disasters (with a loading spinner) instead of MOCK_DISASTERS */}
+            {disastersLoading && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+                <CircularProgress size={28} aria-label='Loading disasters' />
+              </Box>
+            )}
+            {!disastersLoading &&
+              disasterOptions.map((d) => (
+                <FormControlLabel
+                  key={d.id}
+                  control={
+                    <Checkbox
+                      checked={answers.disasters.includes(d.id)}
+                      onChange={() => toggleMulti('disasters', d.id)}
+                    />
+                  }
+                  label={formatDisasterLabel(d)}
+                  sx={{ mb: 0.5 }}
+                />
+              ))}
             <FormControlLabel
               control={
                 <Checkbox
@@ -411,7 +631,14 @@ export default function RecoveryQuiz() {
         onClick={handleNext}
         sx={{ mt: 3, py: 1.75 }}
       >
-        {step === TOTAL_STEPS - 2 ? 'Finish' : 'Continue'}
+        {/* CHANGED: spinner while the location lookup runs */}
+        {locating ? (
+          <CircularProgress size={24} color='inherit' aria-label='Finding your location' />
+        ) : step === TOTAL_STEPS - 2 ? (
+          'Finish'
+        ) : (
+          'Continue'
+        )}
       </Button>
     </Box>
   );
@@ -450,4 +677,45 @@ function formatList(items: (string | undefined)[]): string {
     .slice(0, -1)
     .map((i) => `"${i}"`)
     .join(', ')}, and "${filtered[filtered.length - 1]}"`;
+}
+
+// NEW: helpers for the disaster step (everything below this line is new)
+function placeName(location: QuizLocation | null): string | null {
+  if (!location?.countyName) return null;
+  return location.stateCode ? `${location.countyName}, ${location.stateCode}` : location.countyName;
+}
+
+function disasterHint(
+  answers: RecoveryQuizAnswers,
+  options: DisasterChoice[],
+  loading: boolean,
+  failed: boolean
+): string {
+  const place = placeName(answers.location);
+  if (loading) return 'Looking up disasters declared in your area…';
+  if (failed || !place) {
+    return `We couldn't look up disasters for ${answers.zipCode} right now. Choose "I don't see my event" to keep going.`;
+  }
+  if (options.length === 0) {
+    return `We didn't find federally declared disasters in ${place} during that time. Choose "I don't see my event" to keep going.`;
+  }
+  return `These federally declared disasters cover ${place} around that time. Select all that apply.`;
+}
+
+// FEMA titles are all caps ("SEVERE STORMS AND FLOODING")
+function toTitleCase(text: string): string {
+  return text.toLowerCase().replace(/\b([a-z])/g, (c) => c.toUpperCase());
+}
+
+function formatDisasterLabel(d: DisasterChoice): string {
+  const title = toTitleCase(d.title);
+  if (!d.incidentBeginDate) return title;
+  const date = new Date(d.incidentBeginDate);
+  if (Number.isNaN(date.getTime())) return title;
+  const when = date.toLocaleDateString('en-US', {
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
+  return `${title} — ${when}`;
 }
