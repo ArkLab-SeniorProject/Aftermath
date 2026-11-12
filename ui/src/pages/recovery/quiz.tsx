@@ -687,7 +687,7 @@ export default function RecoveryQuiz() {
               />
               <TextField
                 label='ZIP Code'
-                placeholder='Ex. 12345'
+                placeholder='Ex. 90001'
                 value={answers.zipCode}
                 onChange={(e) => {
                   const val = e.target.value.replace(/\D/g, '').slice(0, 5);
