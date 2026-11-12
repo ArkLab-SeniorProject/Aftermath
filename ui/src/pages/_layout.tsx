@@ -13,20 +13,12 @@ const NO_NAV_ROUTES = [
   '/recovery/quiz',
   '/preparedness/quiz',
 ];
-const GUEST_ONLY_ROUTES = ['/', '/login', '/create-account', '/forgot-password', '/recovery/quiz'];
+const GUEST_ONLY_ROUTES = ['/', '/login', '/create-account', '/forgot-password'];
 
 function isNoNavRoute(pathname: string) {
   if (NO_NAV_ROUTES.includes(pathname)) return true;
   if (pathname.startsWith('/reset-password/')) return true;
   return false;
-}
-
-function hasCompletedQuiz(): boolean {
-  try {
-    return localStorage.getItem('recovery_quiz_complete') === 'true';
-  } catch {
-    return false;
-  }
 }
 
 export default function RootLayout() {
@@ -51,7 +43,7 @@ function LayoutShell() {
     return <Navigate to='/dashboard' replace />;
   }
 
-  const showNav = !isNoNavRoute(pathname) && (!!user || hasCompletedQuiz());
+  const showNav = !isNoNavRoute(pathname);
 
   if (isNoNavRoute(pathname)) {
     return (

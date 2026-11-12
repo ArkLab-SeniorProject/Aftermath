@@ -44,6 +44,7 @@ export async function getDb(): Promise<Db> {
   db = mongoClient.db(dbName);
 
   await db.collection('users').createIndex({ username: 1 }, { unique: true });
+  await db.collection('situation').createIndex({ user_id: 1 }, { unique: true });
 
   // guest situations are looked up by the hash of their guest token
   await db

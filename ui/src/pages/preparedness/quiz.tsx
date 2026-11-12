@@ -1,14 +1,15 @@
 import { ArrowBack } from '@mui/icons-material';
 import { Box, IconButton, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { CONTENT_MAX_WIDTH } from '../../theme';
 
 export default function PreparednessQuiz() {
   const navigate = useNavigate();
 
   return (
-    <Box sx={{ maxWidth: 480, mx: 'auto', px: 2, py: 3 }}>
+    <Box sx={{ maxWidth: CONTENT_MAX_WIDTH, mx: 'auto', px: 2, py: 3 }}>
       <Box sx={{ mb: 4 }}>
-        <IconButton onClick={() => navigate('/')} size='small' aria-label='back'>
+        <IconButton onClick={() => navigate('/preparedness')} size='small' aria-label='back'>
           <ArrowBack />
         </IconButton>
       </Box>

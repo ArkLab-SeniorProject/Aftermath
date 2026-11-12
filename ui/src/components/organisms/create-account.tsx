@@ -1,46 +1,53 @@
 import {
-  BadgeOutlined,
-  EmailOutlined,
-  LockOutlined,
-  PersonOutline,
-  Visibility,
-  VisibilityOff,
-} from '@mui/icons-material';
-import {
   Alert,
   Box,
   Button,
-  Container,
   Dialog,
   DialogActions,
   DialogContent,
   DialogContentText,
   DialogTitle,
-  IconButton,
-  InputAdornment,
   Link,
-  Paper,
   TextField,
   Typography,
 } from '@mui/material';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/useAuth';
-import { syncRecoverySituationIfNeeded } from '../../lib/sync-recovery-situation';
+import {
+  type SyncResult,
+  dismissConflictAndKeepServer,
+  overwriteSituationWithLocal,
+  syncRecoverySituationIfNeeded,
+} from '../../lib/sync-recovery-situation';
+import type { RecoveryQuizAnswers } from '../../pages/recovery/quiz';
+import { AuthCard } from './auth-card';
 
 export function CreateAccountContent() {
   const auth = useAuth();
   const navigate = useNavigate();
-  const [username, setUsername] = useState('');
+  const [firstName, setFirstName] = useState(() => {
+    try {
+      const stored = localStorage.getItem('recovery_quiz_answers');
+      if (stored) {
+        const answers = JSON.parse(stored);
+        if (answers.name?.trim()) return answers.name.trim();
+      }
+    } catch {}
+    return '';
+  });
   const [email, setEmail] = useState('');
-  const [firstName, setFirstName] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [accessGranted, setAccessGranted] = useState(false);
   const [accessCode, setAccessCode] = useState('');
   const [accessError, setAccessError] = useState('');
+  const [conflict, setConflict] = useState<{
+    localAnswers: RecoveryQuizAnswers;
+    situationId: string;
+  } | null>(null);
 
   const handleAccessSubmit = () => {
     if (accessCode === import.meta.env.VITE_ACCESS_CODE) {
@@ -72,24 +79,40 @@ export function CreateAccountContent() {
       password
     );
     if (result.success) {
-      navigate('/dashboard', { replace: true });
-      void syncRecoverySituationIfNeeded();
+      const syncResult: SyncResult = await syncRecoverySituationIfNeeded();
+      if (syncResult.status === 'conflict') {
+        setConflict({
+          localAnswers: syncResult.localAnswers,
+          situationId: syncResult.situationId,
+        });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
     } else {
       setError(result.error ?? 'Failed to create account');
     }
   };
 
+  const handleKeepServer = () => {
+    dismissConflictAndKeepServer();
+    setConflict(null);
+    navigate('/dashboard', { replace: true });
+  };
+
+  const handleUseLocal = async () => {
+    if (conflict) {
+      try {
+        await overwriteSituationWithLocal(conflict.situationId, conflict.localAnswers);
+      } catch {
+        /* best-effort */
+      }
+    }
+    setConflict(null);
+    navigate('/dashboard', { replace: true });
+  };
+
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        bgcolor: 'background.default',
-        p: 2,
-      }}
-    >
+    <AuthCard onBack={() => navigate('/')}>
       <Dialog open={!accessGranted} disableEscapeKeyDown>
         <DialogTitle>Access Code Required</DialogTitle>
         <DialogContent>
@@ -122,153 +145,135 @@ export function CreateAccountContent() {
         </DialogActions>
       </Dialog>
 
-      <Container maxWidth='sm'>
-        <Paper elevation={2} sx={{ p: 4, borderRadius: 3 }}>
-          <Typography variant='h4' component='h1' gutterBottom fontWeight={600}>
-            Create an account
-          </Typography>
-          <Typography variant='body1' color='text.secondary' gutterBottom>
-            Get started with your recovery guide.
-          </Typography>
+      <Dialog open={!!conflict} onClose={handleKeepServer}>
+        <DialogTitle>Update your answers?</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            You just completed a recovery quiz, but your account already has saved answers. Would
+            you like to update to the new answers or keep your existing ones?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleKeepServer}>Keep existing</Button>
+          <Button onClick={handleUseLocal} variant='contained'>
+            Use new answers
+          </Button>
+        </DialogActions>
+      </Dialog>
 
-          {error && (
-            <Alert severity='error' sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
+      <Typography variant='h4' component='h1' sx={{ fontWeight: 700, mb: 1 }}>
+        Create your account.
+      </Typography>
+      <Typography variant='body2' color='text.secondary' sx={{ mb: 3 }}>
+        Get started with your recovery guide.
+      </Typography>
 
-          <Box
-            component='form'
-            onSubmit={handleSubmit}
-            sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
-          >
-            <TextField
-              label='First Name'
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-              required
-              fullWidth
-              slotProps={{
-                input: {
-                  startAdornment: (
-                    <InputAdornment position='start'>
-                      <BadgeOutlined color='disabled' />
-                    </InputAdornment>
-                  ),
-                },
-              }}
-              disabled={auth.loading}
-            />
-            <TextField
-              label='Email'
-              type='email'
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              fullWidth
-              slotProps={{
-                input: {
-                  startAdornment: (
-                    <InputAdornment position='start'>
-                      <EmailOutlined color='disabled' />
-                    </InputAdornment>
-                  ),
-                },
-              }}
-              disabled={auth.loading}
-            />
-            <TextField
-              label='Username'
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-              fullWidth
-              slotProps={{
-                input: {
-                  startAdornment: (
-                    <InputAdornment position='start'>
-                      <PersonOutline color='disabled' />
-                    </InputAdornment>
-                  ),
-                },
-              }}
-              disabled={auth.loading}
-            />
-            <TextField
-              label='Password'
-              type={showPassword ? 'text' : 'password'}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              fullWidth
-              slotProps={{
-                input: {
-                  startAdornment: (
-                    <InputAdornment position='start'>
-                      <LockOutlined color='disabled' />
-                    </InputAdornment>
-                  ),
-                  endAdornment: (
-                    <InputAdornment position='end'>
-                      <IconButton
-                        aria-label={showPassword ? 'Hide password' : 'Show password'}
-                        onClick={() => setShowPassword((prev) => !prev)}
-                        edge='end'
-                        disabled={auth.loading}
-                      >
-                        {showPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                },
-              }}
-              disabled={auth.loading}
-            />
-            <TextField
-              label='Confirm Password'
-              type={showPassword ? 'text' : 'password'}
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              fullWidth
-              slotProps={{
-                input: {
-                  startAdornment: (
-                    <InputAdornment position='start'>
-                      <LockOutlined color='disabled' />
-                    </InputAdornment>
-                  ),
-                },
-              }}
-              disabled={auth.loading}
-            />
-            <Button
-              type='submit'
-              variant='contained'
-              size='large'
-              fullWidth
-              disabled={auth.loading}
-            >
-              {auth.loading ? 'Creating account...' : 'Create account'}
-            </Button>
-          </Box>
+      {error && (
+        <Alert severity='error' sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
 
-          <Box sx={{ mt: 2 }}>
-            <Typography variant='body2'>
-              Already have an account?{' '}
-              <Link
-                component='button'
-                variant='body2'
-                underline='hover'
-                onClick={() => navigate('/login')}
-              >
-                Sign in
-              </Link>
-            </Typography>
-          </Box>
-        </Paper>
-      </Container>
-    </Box>
+      <Box
+        component='form'
+        onSubmit={handleSubmit}
+        sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}
+      >
+        <Typography variant='body2' sx={{ fontWeight: 500 }}>
+          First name:
+        </Typography>
+        <TextField
+          placeholder='Enter your first name'
+          value={firstName}
+          onChange={(e) => setFirstName(e.target.value)}
+          required
+          fullWidth
+          disabled={auth.loading}
+          sx={{ mb: 2 }}
+        />
+
+        <Typography variant='body2' sx={{ fontWeight: 500 }}>
+          Email address:
+        </Typography>
+        <TextField
+          placeholder='jane@gmail.com'
+          type='email'
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          fullWidth
+          disabled={auth.loading}
+          sx={{ mb: 2 }}
+        />
+
+        <Typography variant='body2' sx={{ fontWeight: 500 }}>
+          Username:
+        </Typography>
+        <TextField
+          placeholder='Choose a username'
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          required
+          fullWidth
+          disabled={auth.loading}
+          sx={{ mb: 2 }}
+        />
+
+        <Typography variant='body2' sx={{ fontWeight: 500 }}>
+          Password:
+        </Typography>
+        <TextField
+          placeholder='Enter your password'
+          type='password'
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          fullWidth
+          disabled={auth.loading}
+          sx={{ mb: 2 }}
+        />
+
+        <Typography variant='body2' sx={{ fontWeight: 500 }}>
+          Confirm password:
+        </Typography>
+        <TextField
+          placeholder='Re-enter your password'
+          type='password'
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          required
+          fullWidth
+          disabled={auth.loading}
+          sx={{ mb: 3 }}
+        />
+
+        <Button
+          type='submit'
+          variant='contained'
+          size='large'
+          fullWidth
+          disabled={auth.loading}
+          sx={{ py: 1.75 }}
+        >
+          {auth.loading ? 'Creating account...' : 'Create account'}
+        </Button>
+      </Box>
+
+      <Box sx={{ flex: 1 }} />
+
+      <Typography variant='body2' sx={{ textAlign: 'center', mt: 4 }}>
+        Already have an account?{' '}
+        <Link
+          component='button'
+          variant='body2'
+          underline='always'
+          onClick={() => navigate('/login')}
+          sx={{ color: 'text.primary', fontWeight: 600 }}
+        >
+          Sign in
+        </Link>
+      </Typography>
+    </AuthCard>
   );
 }
 

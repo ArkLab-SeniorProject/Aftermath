@@ -23,7 +23,7 @@ export function toSnakeCaseDoc(input: any, idFields: string[] = []) {
     displayName: 'display_name',
     helpTypes: 'help_types',
     homeStatus: 'home_status',
-    disaster: 'disaster',
+    situation: 'situation',
     resourceType: 'resource_type',
     guideType: 'guide_type',
     stateCode: 'state_code',
@@ -100,7 +100,7 @@ function mapGuide(doc: any) {
   return {
     id: String(doc._id),
     userId: String(doc.user_id),
-    disaster: String(doc.disaster),
+    situation: String(doc.situation),
     guideType: doc.guide_type,
     resources: (doc.resources ?? []).map((r: any) => ({
       resourceId: String(r.resource_id),
@@ -291,8 +291,18 @@ export const mutationResolvers = {
     // clean the location (round coordinates, drop any street address)
     const input = { ...sanitizeSituationInput(args.input), userId: authedUserId };
     const doc = toSnakeCaseDoc(input, ['userId']);
-    const result = await insertAndReturn(ctx.mongoDb, 'situation', doc);
-    return mapSituation(result);
+    try {
+      const result = await insertAndReturn(ctx.mongoDb, 'situation', doc);
+      return mapSituation(result);
+    } catch (err: any) {
+      if (err?.code === 11000) {
+        const fallback = await ctx.mongoDb.collection('situation').findOne({
+          user_id: new ObjectId(authedUserId),
+        });
+        if (fallback) return mapSituation(fallback);
+      }
+      throw err;
+    }
   },
 
   updateSituation: async (_: unknown, args: any, ctx: Context) => {
@@ -339,14 +349,14 @@ export const mutationResolvers = {
   // guides
   createGuide: async (_: unknown, args: any, ctx: Context) => {
     const authedUserId = requireAuth(ctx);
-    await requireOwnership(ctx.mongoDb, 'situation', args.input.disaster, authedUserId);
+    await requireOwnership(ctx.mongoDb, 'situation', args.input.situation, authedUserId);
     const input = { ...args.input, userId: authedUserId };
     const existing = await ctx.mongoDb.collection('guide').findOne({
       user_id: new ObjectId(authedUserId),
       guide_type: input.guideType,
     });
     if (existing) throw new Error(`A user can only have one ${input.guideType} guide`);
-    const doc = toSnakeCaseDoc(input, ['userId', 'disaster']);
+    const doc = toSnakeCaseDoc(input, ['userId', 'situation']);
     if (!doc.resources?.length && input.filters && typeof input.filters === 'object') {
       const helpTypes = input.filters.helpTypes ?? input.filters.help_types;
       const resourceTypes = Object.entries(helpTypes ?? {})
