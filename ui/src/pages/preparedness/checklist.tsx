@@ -1,4 +1,5 @@
-import { ArrowBack } from '@mui/icons-material';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Checkbox,
@@ -7,9 +8,8 @@ import {
   IconButton,
   Paper,
   Typography,
-} from '@mui/material';
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+} from '../../components/base-web';
+import { ArrowBack } from '../../components/icons';
 import { PageContainer } from '../../components/molecules/page-container';
 
 const CHECKLIST_ITEMS = [

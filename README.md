@@ -1,6 +1,6 @@
 # Senior Project
 
-Base web application for the senior project. Built with a Vite + React + TypeScript frontend using Material UI, and a Node.js + GraphQL + MongoDB backend.
+Base web application for the senior project. Built with a Vite + React + TypeScript frontend using Base Web, and a Node.js + GraphQL + MongoDB backend.
 
 ## Structure
 

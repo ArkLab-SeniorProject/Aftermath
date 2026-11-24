@@ -127,15 +127,14 @@ export const CREATE_SITUATION = gql`
         ...SituationLocationFields
       }
       timeline
-      disasters
-      displayName
-      helpTypes {
-        housing
-        financial
-        damage
-      }
+      disaster
+      helpTypes
+      helpDetails
+      insurance
       homeStatus
+      primaryResidence
       household
+      femaApplied
       createdAt
       updatedAt
     }
@@ -153,15 +152,14 @@ export const GET_SITUATIONS_BY_USER = gql`
         ...SituationLocationFields
       }
       timeline
-      disasters
-      displayName
-      helpTypes {
-        housing
-        financial
-        damage
-      }
+      disaster
+      helpTypes
+      helpDetails
+      insurance
       homeStatus
+      primaryResidence
       household
+      femaApplied
       createdAt
       updatedAt
     }
@@ -174,15 +172,14 @@ export const UPDATE_SITUATION = gql`
     updateSituation(id: $id, input: $input) {
       id
       timeline
-      disasters
-      displayName
-      helpTypes {
-        housing
-        financial
-        damage
-      }
+      disaster
+      helpTypes
+      helpDetails
+      insurance
       homeStatus
+      primaryResidence
       household
+      femaApplied
       updatedAt
     }
   }
@@ -238,6 +235,22 @@ export const GET_DISASTERS_FOR_LOCATION = gql`
   }
 `;
 
+export const GET_MATCHING_RESOURCES = gql`
+  query GetMatchingResources($guideType: GuideType!, $filters: JSON, $limit: Int = 100) {
+    getMatchingResources(guideType: $guideType, filters: $filters, limit: $limit) {
+      id
+      resourceType
+      title
+      content
+      tags
+      sourceUrl
+      lastChecked
+      sectionGates
+      guideType
+    }
+  }
+`;
+
 const GUEST_SITUATION_FIELDS = gql`
   fragment GuestSituationFields on Situation {
     id
@@ -246,15 +259,14 @@ const GUEST_SITUATION_FIELDS = gql`
       ...SituationLocationFields
     }
     timeline
-    disasters
-    displayName
-    helpTypes {
-      housing
-      financial
-      damage
-    }
+    disaster
+    helpTypes
+    helpDetails
+    insurance
     homeStatus
+    primaryResidence
     household
+    femaApplied
     createdAt
     updatedAt
   }

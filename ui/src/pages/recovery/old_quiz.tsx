@@ -1,4 +1,5 @@
-import { ArrowBack } from '@mui/icons-material';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Button,
@@ -11,9 +12,8 @@ import {
   RadioGroup,
   TextField,
   Typography,
-} from '@mui/material';
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+} from '../../components/base-web';
+import { ArrowBack } from '../../components/icons';
 
 const TOTAL_STEPS = 9;
 

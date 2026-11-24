@@ -1,5 +1,5 @@
-import { Paper, Typography } from '@mui/material';
 import { useAuth } from '../auth/useAuth';
+import { Paper, Typography } from '../components/base-web';
 import { PageContainer } from '../components/molecules/page-container';
 
 export default function Dashboard() {

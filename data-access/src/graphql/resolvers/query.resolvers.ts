@@ -71,11 +71,14 @@ export function mapSituation(doc: any) {
     userId: doc.user_id ? String(doc.user_id) : null,
     location: mapLocation(doc.location),
     timeline: doc.timeline ?? null,
-    disasters: doc.disasters ?? null,
-    displayName: doc.display_name ?? null,
-    helpTypes: doc.help_types ?? null,
+    disaster: doc.disaster ?? null,
+    helpTypes: Array.isArray(doc.help_types) ? doc.help_types : [],
+    helpDetails: Array.isArray(doc.help_details) ? doc.help_details : [],
+    insurance: Array.isArray(doc.insurance) ? doc.insurance : [],
     homeStatus: doc.home_status ?? null,
+    primaryResidence: doc.primary_residence ?? null,
     household: doc.household ?? [],
+    femaApplied: doc.fema_applied ?? null,
     createdAt: doc.created_at ?? null,
     updatedAt: doc.updated_at ?? null,
   };
@@ -88,6 +91,10 @@ function mapResource(doc: any) {
     resourceType: doc.resource_type ?? null,
     title: doc.title ?? null,
     content: doc.content ?? null,
+    tags: doc.tags ?? { gate: [], requires: [], any: [] },
+    sourceUrl: doc.source_url ?? null,
+    lastChecked: doc.last_checked ?? null,
+    sectionGates: doc.section_gates ?? null,
     guideType: doc.guide_type ?? null,
     createdAt: doc.created_at ?? null,
     updatedAt: doc.updated_at ?? null,
@@ -111,6 +118,7 @@ function mapGuide(doc: any) {
     guideType: doc.guide_type,
     resources: (doc.resources ?? []).map(mapGuideResource),
     filters: doc.filters ?? null,
+    femaStatus: doc.fema_status ?? null,
     createdAt: doc.created_at ?? null,
     updatedAt: doc.updated_at ?? null,
   };
@@ -190,6 +198,35 @@ export const queryResolvers = {
       .limit(clampLimit(args.limit))
       .toArray();
     return docs.map(mapResource);
+  },
+
+  getMatchingResources: async (
+    _: unknown,
+    args: { guideType: string; filters?: Record<string, unknown> | null; limit: number },
+    ctx: Context
+  ) => {
+    const filters = args.filters ?? {};
+    const userTags = new Set(Array.isArray(filters.tags) ? filters.tags : []);
+    const gate = typeof filters.gate === 'string' ? filters.gate : null;
+    const docs = await ctx.mongoDb
+      .collection('resources')
+      .find({ guide_type: args.guideType })
+      .limit(clampLimit(args.limit))
+      .toArray();
+
+    return docs
+      .filter((doc: any) => {
+        const tags = doc.tags ?? {};
+        const requires = Array.isArray(tags.requires) ? tags.requires : [];
+        const any = Array.isArray(tags.any) ? tags.any : [];
+        const gates = Array.isArray(tags.gate) ? tags.gate : [];
+        return (
+          requires.every((tag: unknown) => userTags.has(tag)) &&
+          (any.length === 0 || any.some((tag: unknown) => userTags.has(tag))) &&
+          (gates.length === 0 || (gate !== null && gates.includes(gate)))
+        );
+      })
+      .map(mapResource);
   },
 
   // guides

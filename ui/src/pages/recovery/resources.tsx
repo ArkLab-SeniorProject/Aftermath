@@ -1,4 +1,4 @@
-import { ArrowBack, OpenInNew } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   IconButton,
@@ -8,8 +8,8 @@ import {
   ListItemText,
   Paper,
   Typography,
-} from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+} from '../../components/base-web';
+import { ArrowBack, OpenInNew } from '../../components/icons';
 import { PageContainer } from '../../components/molecules/page-container';
 
 const RESOURCES = [

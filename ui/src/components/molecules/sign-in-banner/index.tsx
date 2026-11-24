@@ -1,6 +1,6 @@
-import { Login } from '@mui/icons-material';
-import { Box, Button, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { Box, Button, Typography } from '../../base-web';
+import { AccountCircle } from '../../icons';
 
 export function SignInBanner() {
   const navigate = useNavigate();
@@ -19,13 +19,13 @@ export function SignInBanner() {
       }}
     >
       <Typography variant='body2' sx={{ flex: 1 }}>
-        Sign in to save your plan and resources.
+        Create an account to save your plan and resources.
       </Typography>
       <Button
         variant='outlined'
         size='small'
-        startIcon={<Login />}
-        onClick={() => navigate('/login')}
+        startIcon={<AccountCircle />}
+        onClick={() => navigate('/create-account')}
         sx={{
           color: 'inherit',
           borderColor: 'rgba(255,255,255,0.5)',
@@ -33,7 +33,7 @@ export function SignInBanner() {
           '&:hover': { borderColor: '#fff', bgcolor: 'rgba(255,255,255,0.1)' },
         }}
       >
-        Sign in
+        Create account
       </Button>
     </Box>
   );

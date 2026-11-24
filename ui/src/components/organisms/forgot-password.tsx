@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { Alert, Box, Button, Link, TextField, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { apolloClient } from '../../lib/apollo-client';
 import {
   ForgotPasswordDocument,
   type ForgotPasswordMutation,
   type ForgotPasswordMutationVariables,
 } from '../../generated';
+import { apolloClient } from '../../lib/apollo-client';
+import { Alert, Box, Button, Link, TextField, Typography } from '../base-web';
 import { AuthCard } from './auth-card';
 
 type Step = 'email' | 'sent';

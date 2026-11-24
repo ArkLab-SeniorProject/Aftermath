@@ -1,4 +1,6 @@
-import { AssignmentOutlined, MenuBook, PlayArrow, Quiz, Replay } from '@mui/icons-material';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../auth/useAuth';
 import {
   Alert,
   Button,
@@ -9,10 +11,8 @@ import {
   ListItemText,
   Paper,
   Typography,
-} from '@mui/material';
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../auth/useAuth';
+} from '../../components/base-web';
+import { AssignmentOutlined, MenuBook, PlayArrow, Quiz, Replay } from '../../components/icons';
 import { PageContainer } from '../../components/molecules/page-container';
 import {
   GetSituationsByUserDocument,

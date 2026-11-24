@@ -1,26 +1,12 @@
-import { Home, Login, Logout, Menu } from '@mui/icons-material';
-import {
-  Box,
-  Button,
-  Divider,
-  Drawer,
-  IconButton,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Toolbar,
-} from '@mui/material';
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../auth/useAuth';
+import { Box, Button, Divider } from '../../base-web';
+import { Home, Login, Logout, Menu } from '../../icons';
 
 export interface NavigationProps {
   onLogout?: () => void;
 }
-
-const DRAWER_WIDTH = 240;
 
 const navItems = [{ key: 'dashboard', label: 'Home', icon: <Home />, path: '/' }];
 
@@ -30,46 +16,48 @@ export function Navigation({ onLogout }: NavigationProps) {
   const { user } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const handleToggle = () => setMobileOpen((open) => !open);
-  const handleClose = () => setMobileOpen(false);
-
+  const closeMenu = () => setMobileOpen(false);
   const drawerContent = (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <Toolbar />
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        backgroundColor: 'background.paper',
+      }}
+    >
+      <Box sx={{ height: 24 }} />
       <Divider />
-      <List sx={{ flex: 1 }}>
+      <Box sx={{ flex: 1, p: 1 }}>
         {navItems.map((item) => (
-          <ListItem key={item.key} disablePadding>
-            <ListItemButton
-              selected={location.pathname === item.path}
-              onClick={() => {
-                navigate(item.path);
-                handleClose();
-              }}
-            >
-              <ListItemIcon>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.label} />
-            </ListItemButton>
-          </ListItem>
+          <Button
+            key={item.key}
+            variant='text'
+            fullWidth
+            startIcon={item.icon}
+            onClick={() => {
+              navigate(item.path);
+              closeMenu();
+            }}
+            sx={{
+              justifyContent: 'flex-start',
+              backgroundColor: location.pathname === item.path ? '#f0f0f0' : 'transparent',
+            }}
+          >
+            {item.label}
+          </Button>
         ))}
-      </List>
+      </Box>
       <Divider />
       <Box sx={{ p: 2 }}>
         {user ? (
-          <Button
-            fullWidth
-            variant='outlined'
-            color='inherit'
-            startIcon={<Logout />}
-            onClick={onLogout}
-          >
+          <Button fullWidth variant='outlined' startIcon={<Logout />} onClick={onLogout}>
             Sign out
           </Button>
         ) : (
           <Button
             fullWidth
             variant='outlined'
-            color='inherit'
             startIcon={<Login />}
             onClick={() => navigate('/login')}
           >
@@ -82,45 +70,54 @@ export function Navigation({ onLogout }: NavigationProps) {
 
   return (
     <>
-      <IconButton
-        color='inherit'
+      <Button
         aria-label='open navigation'
-        edge='start'
-        onClick={handleToggle}
+        variant='text'
+        onClick={() => setMobileOpen((open) => !open)}
+        startIcon={<Menu />}
         sx={{
           position: 'fixed',
           top: 12,
           right: 16,
-          zIndex: (theme) => theme.zIndex.drawer + 2,
-          display: { md: 'none' },
+          zIndex: 1100,
+          display: { xs: 'flex', md: 'none' },
         }}
       >
-        <Menu />
-      </IconButton>
-
-      <Box component='nav' sx={{ width: { md: DRAWER_WIDTH }, flexShrink: { md: 0 } }}>
-        <Drawer
-          variant='temporary'
-          open={mobileOpen}
-          onClose={handleClose}
-          ModalProps={{ keepMounted: true }}
-          sx={{
-            display: { xs: 'block', md: 'none' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: DRAWER_WIDTH },
-          }}
-        >
-          {drawerContent}
-        </Drawer>
-        <Drawer
-          variant='permanent'
-          open
+        Menu
+      </Button>
+      <Box component='nav' sx={{ width: { md: 240 }, flexShrink: { md: 0 } }}>
+        {mobileOpen && (
+          <Box
+            sx={{ position: 'fixed', inset: 0, zIndex: 1200, backgroundColor: 'rgba(0,0,0,.35)' }}
+            onClick={closeMenu}
+          >
+            <Box
+              sx={{
+                position: 'absolute',
+                inset: '0 auto 0 0',
+                width: 240,
+                height: '100%',
+                boxShadow: '0 8px 24px rgba(0,0,0,.2)',
+              }}
+              onClick={(event: React.MouseEvent) => event.stopPropagation()}
+            >
+              {drawerContent}
+            </Box>
+          </Box>
+        )}
+        <Box
           sx={{
             display: { xs: 'none', md: 'block' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: DRAWER_WIDTH },
+            position: 'fixed',
+            top: 0,
+            bottom: 0,
+            left: 0,
+            width: 240,
+            borderRight: '1px solid #e0e0e0',
           }}
         >
           {drawerContent}
-        </Drawer>
+        </Box>
       </Box>
     </>
   );

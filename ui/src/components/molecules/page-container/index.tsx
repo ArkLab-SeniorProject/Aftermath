@@ -1,7 +1,7 @@
-import { Box } from '@mui/material';
 import { useAuth } from '../../../auth/useAuth';
-import { SignInBanner } from '../sign-in-banner';
 import { CONTENT_MAX_WIDTH } from '../../../theme';
+import { Box } from '../../base-web';
+import { SignInBanner } from '../sign-in-banner';
 
 export interface PageContainerProps {
   children: React.ReactNode;

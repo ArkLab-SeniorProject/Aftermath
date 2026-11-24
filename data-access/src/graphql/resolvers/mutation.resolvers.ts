@@ -20,12 +20,18 @@ export function toSnakeCaseDoc(input: any, idFields: string[] = []) {
     email: 'email',
     passwordHash: 'password_hash',
     userId: 'user_id',
-    displayName: 'display_name',
     helpTypes: 'help_types',
     homeStatus: 'home_status',
+    helpDetails: 'help_details',
+    primaryResidence: 'primary_residence',
+    femaApplied: 'fema_applied',
     situation: 'situation',
     resourceType: 'resource_type',
     guideType: 'guide_type',
+    sourceUrl: 'source_url',
+    lastChecked: 'last_checked',
+    sectionGates: 'section_gates',
+    femaStatus: 'fema_status',
     stateCode: 'state_code',
     countryCode: 'country_code',
     // geocoded location fields
@@ -90,6 +96,10 @@ function mapResource(doc: any) {
     resourceType: doc.resource_type ?? null,
     title: doc.title ?? null,
     content: doc.content ?? null,
+    tags: doc.tags ?? { gate: [], requires: [], any: [] },
+    sourceUrl: doc.source_url ?? null,
+    lastChecked: doc.last_checked ?? null,
+    sectionGates: doc.section_gates ?? null,
     guideType: doc.guide_type ?? null,
     createdAt: doc.created_at ?? null,
     updatedAt: doc.updated_at ?? null,
@@ -108,6 +118,7 @@ function mapGuide(doc: any) {
       saved: r.saved ?? false,
     })),
     filters: doc.filters ?? null,
+    femaStatus: doc.fema_status ?? null,
     createdAt: doc.created_at ?? null,
     updatedAt: doc.updated_at ?? null,
   };
@@ -358,16 +369,16 @@ export const mutationResolvers = {
     if (existing) throw new Error(`A user can only have one ${input.guideType} guide`);
     const doc = toSnakeCaseDoc(input, ['userId', 'situation']);
     if (!doc.resources?.length && input.filters && typeof input.filters === 'object') {
-      const helpTypes = input.filters.helpTypes ?? input.filters.help_types;
-      const resourceTypes = Object.entries(helpTypes ?? {})
-        .filter(([, enabled]) => enabled === true)
-        .map(([type]) => (type === 'damage' ? 'damage-recovery' : type));
-      if (resourceTypes.length) {
+      const tags = Array.isArray(input.filters.tags) ? input.filters.tags : [];
+      if (tags.length) {
         const resources = await ctx.mongoDb
           .collection('resources')
           .find({
             guide_type: input.guideType,
-            resource_type: { $in: resourceTypes },
+            $or: [
+              { tags: { $exists: false } },
+              { 'tags.requires': { $not: { $elemMatch: { $nin: tags } } } },
+            ],
           })
           .toArray();
         doc.resources = resources.map((resource: any) => ({

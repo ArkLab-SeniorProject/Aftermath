@@ -36,6 +36,7 @@ export type AuthPayload = {
 };
 
 export type CreateGuideInput = {
+  femaStatus?: InputMaybe<Scalars['JSON']['input']>;
   filters?: InputMaybe<Scalars['JSON']['input']>;
   guideType: GuideType;
   resources?: InputMaybe<Array<GuideResourceInput>>;
@@ -46,17 +47,24 @@ export type CreateGuideInput = {
 export type CreateResourceInput = {
   content?: InputMaybe<Scalars['JSON']['input']>;
   guideType: GuideType;
+  lastChecked?: InputMaybe<Scalars['DateTime']['input']>;
   resourceType: Scalars['String']['input'];
+  sectionGates?: InputMaybe<Scalars['JSON']['input']>;
+  sourceUrl?: InputMaybe<Scalars['String']['input']>;
+  tags?: InputMaybe<Scalars['JSON']['input']>;
   title: Scalars['String']['input'];
 };
 
 export type CreateSituationInput = {
-  disasters?: InputMaybe<Scalars['String']['input']>;
-  displayName?: InputMaybe<Scalars['String']['input']>;
-  helpTypes?: InputMaybe<HelpTypesInput>;
+  disaster?: InputMaybe<Scalars['String']['input']>;
+  femaApplied?: InputMaybe<Scalars['Boolean']['input']>;
+  helpDetails?: InputMaybe<Array<Scalars['String']['input']>>;
+  helpTypes?: InputMaybe<Array<Scalars['String']['input']>>;
   homeStatus?: InputMaybe<Scalars['String']['input']>;
   household?: InputMaybe<Array<Scalars['String']['input']>>;
+  insurance?: InputMaybe<Array<Scalars['String']['input']>>;
   location?: InputMaybe<LocationInput>;
+  primaryResidence?: InputMaybe<Scalars['Boolean']['input']>;
   timeline?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -102,6 +110,7 @@ export type GuestSituationPayload = {
 export type Guide = {
   __typename?: 'Guide';
   createdAt?: Maybe<Scalars['DateTime']['output']>;
+  femaStatus?: Maybe<Scalars['JSON']['output']>;
   filters?: Maybe<Scalars['JSON']['output']>;
   guideType: GuideType;
   id: Scalars['ID']['output'];
@@ -129,19 +138,6 @@ export type GuideResourceInput = {
 export type GuideType =
   | 'preparedness'
   | 'recovery';
-
-export type HelpTypes = {
-  __typename?: 'HelpTypes';
-  damage?: Maybe<Scalars['Boolean']['output']>;
-  financial?: Maybe<Scalars['Boolean']['output']>;
-  housing?: Maybe<Scalars['Boolean']['output']>;
-};
-
-export type HelpTypesInput = {
-  damage?: InputMaybe<Scalars['Boolean']['input']>;
-  financial?: InputMaybe<Scalars['Boolean']['input']>;
-  housing?: InputMaybe<Scalars['Boolean']['input']>;
-};
 
 export type Location = {
   __typename?: 'Location';
@@ -298,6 +294,7 @@ export type Query = {
   getGuide?: Maybe<Guide>;
   getGuideBySituation?: Maybe<Guide>;
   getGuidesByUser: Array<Guide>;
+  getMatchingResources: Array<Resource>;
   getResource?: Maybe<Resource>;
   getResources: Array<Resource>;
   getSituation?: Maybe<Situation>;
@@ -343,6 +340,13 @@ export type QueryGetGuideBySituationArgs = {
 
 export type QueryGetGuidesByUserArgs = {
   userId: Scalars['ID']['input'];
+};
+
+
+export type QueryGetMatchingResourcesArgs = {
+  filters?: InputMaybe<Scalars['JSON']['input']>;
+  guideType: GuideType;
+  limit?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -395,7 +399,11 @@ export type Resource = {
   createdAt?: Maybe<Scalars['DateTime']['output']>;
   guideType?: Maybe<GuideType>;
   id: Scalars['ID']['output'];
+  lastChecked?: Maybe<Scalars['DateTime']['output']>;
   resourceType?: Maybe<Scalars['String']['output']>;
+  sectionGates?: Maybe<Scalars['JSON']['output']>;
+  sourceUrl?: Maybe<Scalars['String']['output']>;
+  tags?: Maybe<Scalars['JSON']['output']>;
   title?: Maybe<Scalars['String']['output']>;
   updatedAt?: Maybe<Scalars['DateTime']['output']>;
 };
@@ -403,13 +411,16 @@ export type Resource = {
 export type Situation = {
   __typename?: 'Situation';
   createdAt?: Maybe<Scalars['DateTime']['output']>;
-  disasters?: Maybe<Scalars['String']['output']>;
-  displayName?: Maybe<Scalars['String']['output']>;
-  helpTypes?: Maybe<HelpTypes>;
+  disaster?: Maybe<Scalars['String']['output']>;
+  femaApplied?: Maybe<Scalars['Boolean']['output']>;
+  helpDetails: Array<Scalars['String']['output']>;
+  helpTypes: Array<Scalars['String']['output']>;
   homeStatus?: Maybe<Scalars['String']['output']>;
   household?: Maybe<Array<Scalars['String']['output']>>;
   id: Scalars['ID']['output'];
+  insurance: Array<Scalars['String']['output']>;
   location?: Maybe<Location>;
+  primaryResidence?: Maybe<Scalars['Boolean']['output']>;
   timeline?: Maybe<Scalars['String']['output']>;
   updatedAt?: Maybe<Scalars['DateTime']['output']>;
   user?: Maybe<User>;
@@ -417,6 +428,7 @@ export type Situation = {
 };
 
 export type UpdateGuideInput = {
+  femaStatus?: InputMaybe<Scalars['JSON']['input']>;
   filters?: InputMaybe<Scalars['JSON']['input']>;
   resources?: InputMaybe<Array<GuideResourceInput>>;
 };
@@ -424,17 +436,24 @@ export type UpdateGuideInput = {
 export type UpdateResourceInput = {
   content?: InputMaybe<Scalars['JSON']['input']>;
   guideType?: InputMaybe<GuideType>;
+  lastChecked?: InputMaybe<Scalars['DateTime']['input']>;
   resourceType?: InputMaybe<Scalars['String']['input']>;
+  sectionGates?: InputMaybe<Scalars['JSON']['input']>;
+  sourceUrl?: InputMaybe<Scalars['String']['input']>;
+  tags?: InputMaybe<Scalars['JSON']['input']>;
   title?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type UpdateSituationInput = {
-  disasters?: InputMaybe<Scalars['String']['input']>;
-  displayName?: InputMaybe<Scalars['String']['input']>;
-  helpTypes?: InputMaybe<HelpTypesInput>;
+  disaster?: InputMaybe<Scalars['String']['input']>;
+  femaApplied?: InputMaybe<Scalars['Boolean']['input']>;
+  helpDetails?: InputMaybe<Array<Scalars['String']['input']>>;
+  helpTypes?: InputMaybe<Array<Scalars['String']['input']>>;
   homeStatus?: InputMaybe<Scalars['String']['input']>;
   household?: InputMaybe<Array<Scalars['String']['input']>>;
+  insurance?: InputMaybe<Array<Scalars['String']['input']>>;
   location?: InputMaybe<LocationInput>;
+  primaryResidence?: InputMaybe<Scalars['Boolean']['input']>;
   timeline?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -526,14 +545,14 @@ export type CreateSituationMutationVariables = Exact<{
 }>;
 
 
-export type CreateSituationMutation = { __typename?: 'Mutation', createSituation: { __typename?: 'Situation', id: string, userId?: string | null, timeline?: string | null, disasters?: string | null, displayName?: string | null, homeStatus?: string | null, household?: Array<string> | null, createdAt?: any | null, updatedAt?: any | null, location?: { __typename?: 'Location', zip?: string | null, city?: string | null, state?: string | null, stateCode?: string | null, countryCode?: string | null, stateFips?: string | null, countyFips?: string | null, countyName?: string | null, latitude?: number | null, longitude?: number | null, precision?: LocationPrecision | null } | null, helpTypes?: { __typename?: 'HelpTypes', housing?: boolean | null, financial?: boolean | null, damage?: boolean | null } | null } };
+export type CreateSituationMutation = { __typename?: 'Mutation', createSituation: { __typename?: 'Situation', id: string, userId?: string | null, timeline?: string | null, disaster?: string | null, helpTypes: Array<string>, helpDetails: Array<string>, insurance: Array<string>, homeStatus?: string | null, primaryResidence?: boolean | null, household?: Array<string> | null, femaApplied?: boolean | null, createdAt?: any | null, updatedAt?: any | null, location?: { __typename?: 'Location', zip?: string | null, city?: string | null, state?: string | null, stateCode?: string | null, countryCode?: string | null, stateFips?: string | null, countyFips?: string | null, countyName?: string | null, latitude?: number | null, longitude?: number | null, precision?: LocationPrecision | null } | null } };
 
 export type GetSituationsByUserQueryVariables = Exact<{
   userId: Scalars['ID']['input'];
 }>;
 
 
-export type GetSituationsByUserQuery = { __typename?: 'Query', getSituationsByUser: Array<{ __typename?: 'Situation', id: string, userId?: string | null, timeline?: string | null, disasters?: string | null, displayName?: string | null, homeStatus?: string | null, household?: Array<string> | null, createdAt?: any | null, updatedAt?: any | null, location?: { __typename?: 'Location', zip?: string | null, city?: string | null, state?: string | null, stateCode?: string | null, countryCode?: string | null, stateFips?: string | null, countyFips?: string | null, countyName?: string | null, latitude?: number | null, longitude?: number | null, precision?: LocationPrecision | null } | null, helpTypes?: { __typename?: 'HelpTypes', housing?: boolean | null, financial?: boolean | null, damage?: boolean | null } | null }> };
+export type GetSituationsByUserQuery = { __typename?: 'Query', getSituationsByUser: Array<{ __typename?: 'Situation', id: string, userId?: string | null, timeline?: string | null, disaster?: string | null, helpTypes: Array<string>, helpDetails: Array<string>, insurance: Array<string>, homeStatus?: string | null, primaryResidence?: boolean | null, household?: Array<string> | null, femaApplied?: boolean | null, createdAt?: any | null, updatedAt?: any | null, location?: { __typename?: 'Location', zip?: string | null, city?: string | null, state?: string | null, stateCode?: string | null, countryCode?: string | null, stateFips?: string | null, countyFips?: string | null, countyName?: string | null, latitude?: number | null, longitude?: number | null, precision?: LocationPrecision | null } | null }> };
 
 export type UpdateSituationMutationVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -541,7 +560,7 @@ export type UpdateSituationMutationVariables = Exact<{
 }>;
 
 
-export type UpdateSituationMutation = { __typename?: 'Mutation', updateSituation: { __typename?: 'Situation', id: string, timeline?: string | null, disasters?: string | null, displayName?: string | null, homeStatus?: string | null, household?: Array<string> | null, updatedAt?: any | null, helpTypes?: { __typename?: 'HelpTypes', housing?: boolean | null, financial?: boolean | null, damage?: boolean | null } | null } };
+export type UpdateSituationMutation = { __typename?: 'Mutation', updateSituation: { __typename?: 'Situation', id: string, timeline?: string | null, disaster?: string | null, helpTypes: Array<string>, helpDetails: Array<string>, insurance: Array<string>, homeStatus?: string | null, primaryResidence?: boolean | null, household?: Array<string> | null, femaApplied?: boolean | null, updatedAt?: any | null } };
 
 export type GeocodeFieldsFragment = { __typename?: 'GeocodeResult', matchedAddress?: string | null, zip?: string | null, city?: string | null, stateCode?: string | null, stateFips?: string | null, countyFips?: string | null, countyName?: string | null, latitude: number, longitude: number, precision: LocationPrecision };
 
@@ -568,7 +587,16 @@ export type GetDisastersForLocationQueryVariables = Exact<{
 
 export type GetDisastersForLocationQuery = { __typename?: 'Query', getDisastersForLocation: Array<{ __typename?: 'DisasterOption', id: string, disasterNumber: number, title: string, incidentType?: string | null, declarationType?: string | null, incidentBeginDate?: any | null, declarationDate?: any | null, individualAssistance: boolean }> };
 
-export type GuestSituationFieldsFragment = { __typename?: 'Situation', id: string, userId?: string | null, timeline?: string | null, disasters?: string | null, displayName?: string | null, homeStatus?: string | null, household?: Array<string> | null, createdAt?: any | null, updatedAt?: any | null, location?: { __typename?: 'Location', zip?: string | null, city?: string | null, state?: string | null, stateCode?: string | null, countryCode?: string | null, stateFips?: string | null, countyFips?: string | null, countyName?: string | null, latitude?: number | null, longitude?: number | null, precision?: LocationPrecision | null } | null, helpTypes?: { __typename?: 'HelpTypes', housing?: boolean | null, financial?: boolean | null, damage?: boolean | null } | null };
+export type GetMatchingResourcesQueryVariables = Exact<{
+  guideType: GuideType;
+  filters?: InputMaybe<Scalars['JSON']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type GetMatchingResourcesQuery = { __typename?: 'Query', getMatchingResources: Array<{ __typename?: 'Resource', id: string, resourceType?: string | null, title?: string | null, content?: any | null, tags?: any | null, sourceUrl?: string | null, lastChecked?: any | null, sectionGates?: any | null, guideType?: GuideType | null }> };
+
+export type GuestSituationFieldsFragment = { __typename?: 'Situation', id: string, userId?: string | null, timeline?: string | null, disaster?: string | null, helpTypes: Array<string>, helpDetails: Array<string>, insurance: Array<string>, homeStatus?: string | null, primaryResidence?: boolean | null, household?: Array<string> | null, femaApplied?: boolean | null, createdAt?: any | null, updatedAt?: any | null, location?: { __typename?: 'Location', zip?: string | null, city?: string | null, state?: string | null, stateCode?: string | null, countryCode?: string | null, stateFips?: string | null, countyFips?: string | null, countyName?: string | null, latitude?: number | null, longitude?: number | null, precision?: LocationPrecision | null } | null };
 
 export type SaveGuestSituationMutationVariables = Exact<{
   input: CreateSituationInput;
@@ -576,14 +604,14 @@ export type SaveGuestSituationMutationVariables = Exact<{
 }>;
 
 
-export type SaveGuestSituationMutation = { __typename?: 'Mutation', saveGuestSituation: { __typename?: 'GuestSituationPayload', guestToken: string, situation: { __typename?: 'Situation', id: string, userId?: string | null, timeline?: string | null, disasters?: string | null, displayName?: string | null, homeStatus?: string | null, household?: Array<string> | null, createdAt?: any | null, updatedAt?: any | null, location?: { __typename?: 'Location', zip?: string | null, city?: string | null, state?: string | null, stateCode?: string | null, countryCode?: string | null, stateFips?: string | null, countyFips?: string | null, countyName?: string | null, latitude?: number | null, longitude?: number | null, precision?: LocationPrecision | null } | null, helpTypes?: { __typename?: 'HelpTypes', housing?: boolean | null, financial?: boolean | null, damage?: boolean | null } | null } } };
+export type SaveGuestSituationMutation = { __typename?: 'Mutation', saveGuestSituation: { __typename?: 'GuestSituationPayload', guestToken: string, situation: { __typename?: 'Situation', id: string, userId?: string | null, timeline?: string | null, disaster?: string | null, helpTypes: Array<string>, helpDetails: Array<string>, insurance: Array<string>, homeStatus?: string | null, primaryResidence?: boolean | null, household?: Array<string> | null, femaApplied?: boolean | null, createdAt?: any | null, updatedAt?: any | null, location?: { __typename?: 'Location', zip?: string | null, city?: string | null, state?: string | null, stateCode?: string | null, countryCode?: string | null, stateFips?: string | null, countyFips?: string | null, countyName?: string | null, latitude?: number | null, longitude?: number | null, precision?: LocationPrecision | null } | null } } };
 
 export type GetGuestSituationQueryVariables = Exact<{
   guestToken: Scalars['String']['input'];
 }>;
 
 
-export type GetGuestSituationQuery = { __typename?: 'Query', getGuestSituation?: { __typename?: 'Situation', id: string, userId?: string | null, timeline?: string | null, disasters?: string | null, displayName?: string | null, homeStatus?: string | null, household?: Array<string> | null, createdAt?: any | null, updatedAt?: any | null, location?: { __typename?: 'Location', zip?: string | null, city?: string | null, state?: string | null, stateCode?: string | null, countryCode?: string | null, stateFips?: string | null, countyFips?: string | null, countyName?: string | null, latitude?: number | null, longitude?: number | null, precision?: LocationPrecision | null } | null, helpTypes?: { __typename?: 'HelpTypes', housing?: boolean | null, financial?: boolean | null, damage?: boolean | null } | null } | null };
+export type GetGuestSituationQuery = { __typename?: 'Query', getGuestSituation?: { __typename?: 'Situation', id: string, userId?: string | null, timeline?: string | null, disaster?: string | null, helpTypes: Array<string>, helpDetails: Array<string>, insurance: Array<string>, homeStatus?: string | null, primaryResidence?: boolean | null, household?: Array<string> | null, femaApplied?: boolean | null, createdAt?: any | null, updatedAt?: any | null, location?: { __typename?: 'Location', zip?: string | null, city?: string | null, state?: string | null, stateCode?: string | null, countryCode?: string | null, stateFips?: string | null, countyFips?: string | null, countyName?: string | null, latitude?: number | null, longitude?: number | null, precision?: LocationPrecision | null } | null } | null };
 
 export type ClaimGuestSituationMutationVariables = Exact<{
   guestToken: Scalars['String']['input'];
@@ -629,15 +657,14 @@ export const GuestSituationFieldsFragmentDoc = gql`
     ...SituationLocationFields
   }
   timeline
-  disasters
-  displayName
-  helpTypes {
-    housing
-    financial
-    damage
-  }
+  disaster
+  helpTypes
+  helpDetails
+  insurance
   homeStatus
+  primaryResidence
   household
+  femaApplied
   createdAt
   updatedAt
 }
@@ -992,15 +1019,14 @@ export const CreateSituationDocument = gql`
       ...SituationLocationFields
     }
     timeline
-    disasters
-    displayName
-    helpTypes {
-      housing
-      financial
-      damage
-    }
+    disaster
+    helpTypes
+    helpDetails
+    insurance
     homeStatus
+    primaryResidence
     household
+    femaApplied
     createdAt
     updatedAt
   }
@@ -1041,15 +1067,14 @@ export const GetSituationsByUserDocument = gql`
       ...SituationLocationFields
     }
     timeline
-    disasters
-    displayName
-    helpTypes {
-      housing
-      financial
-      damage
-    }
+    disaster
+    helpTypes
+    helpDetails
+    insurance
     homeStatus
+    primaryResidence
     household
+    femaApplied
     createdAt
     updatedAt
   }
@@ -1096,15 +1121,14 @@ export const UpdateSituationDocument = gql`
   updateSituation(id: $id, input: $input) {
     id
     timeline
-    disasters
-    displayName
-    helpTypes {
-      housing
-      financial
-      damage
-    }
+    disaster
+    helpTypes
+    helpDetails
+    insurance
     homeStatus
+    primaryResidence
     household
+    femaApplied
     updatedAt
   }
 }
@@ -1278,6 +1302,59 @@ export type GetDisastersForLocationQueryHookResult = ReturnType<typeof useGetDis
 export type GetDisastersForLocationLazyQueryHookResult = ReturnType<typeof useGetDisastersForLocationLazyQuery>;
 export type GetDisastersForLocationSuspenseQueryHookResult = ReturnType<typeof useGetDisastersForLocationSuspenseQuery>;
 export type GetDisastersForLocationQueryResult = ApolloReactCommon.QueryResult<GetDisastersForLocationQuery, GetDisastersForLocationQueryVariables>;
+export const GetMatchingResourcesDocument = gql`
+    query GetMatchingResources($guideType: GuideType!, $filters: JSON, $limit: Int = 100) {
+  getMatchingResources(guideType: $guideType, filters: $filters, limit: $limit) {
+    id
+    resourceType
+    title
+    content
+    tags
+    sourceUrl
+    lastChecked
+    sectionGates
+    guideType
+  }
+}
+    `;
+
+/**
+ * __useGetMatchingResourcesQuery__
+ *
+ * To run a query within a React component, call `useGetMatchingResourcesQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetMatchingResourcesQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetMatchingResourcesQuery({
+ *   variables: {
+ *      guideType: // value for 'guideType'
+ *      filters: // value for 'filters'
+ *      limit: // value for 'limit'
+ *   },
+ * });
+ */
+export function useGetMatchingResourcesQuery(baseOptions: ApolloReactHooks.QueryHookOptions<GetMatchingResourcesQuery, GetMatchingResourcesQueryVariables> & ({ variables: GetMatchingResourcesQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<GetMatchingResourcesQuery, GetMatchingResourcesQueryVariables>(GetMatchingResourcesDocument, options);
+      }
+export function useGetMatchingResourcesLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<GetMatchingResourcesQuery, GetMatchingResourcesQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<GetMatchingResourcesQuery, GetMatchingResourcesQueryVariables>(GetMatchingResourcesDocument, options);
+        }
+// @ts-ignore
+export function useGetMatchingResourcesSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<GetMatchingResourcesQuery, GetMatchingResourcesQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetMatchingResourcesQuery, GetMatchingResourcesQueryVariables>;
+export function useGetMatchingResourcesSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetMatchingResourcesQuery, GetMatchingResourcesQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GetMatchingResourcesQuery | undefined, GetMatchingResourcesQueryVariables>;
+export function useGetMatchingResourcesSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GetMatchingResourcesQuery, GetMatchingResourcesQueryVariables>) {
+          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useSuspenseQuery<GetMatchingResourcesQuery, GetMatchingResourcesQueryVariables>(GetMatchingResourcesDocument, options);
+        }
+export type GetMatchingResourcesQueryHookResult = ReturnType<typeof useGetMatchingResourcesQuery>;
+export type GetMatchingResourcesLazyQueryHookResult = ReturnType<typeof useGetMatchingResourcesLazyQuery>;
+export type GetMatchingResourcesSuspenseQueryHookResult = ReturnType<typeof useGetMatchingResourcesSuspenseQuery>;
+export type GetMatchingResourcesQueryResult = ApolloReactCommon.QueryResult<GetMatchingResourcesQuery, GetMatchingResourcesQueryVariables>;
 export const SaveGuestSituationDocument = gql`
     mutation SaveGuestSituation($input: CreateSituationInput!, $guestToken: String) {
   saveGuestSituation(input: $input, guestToken: $guestToken) {

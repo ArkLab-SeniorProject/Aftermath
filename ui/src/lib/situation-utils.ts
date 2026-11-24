@@ -18,14 +18,12 @@ export function quizAnswersToInput(answers: RecoveryQuizAnswers) {
         }
       : { zip: answers.zipCode },
     timeline: answers.timeline,
-    disasters: answers.disasters.join(','),
-    displayName: answers.name || null,
-    helpTypes: {
-      housing: answers.helpTypes.includes('housing_shelter'),
-      financial: answers.helpTypes.includes('financial_assistance'),
-      damage: answers.helpTypes.includes('damage_recovery'),
-    },
+    disaster: answers.disaster || null,
+    helpTypes: answers.helpTypes.filter((value) => value !== 'unsure'),
+    helpDetails: answers.helpDetails,
+    insurance: answers.insurance,
     homeStatus: answers.homeStatus,
+    primaryResidence: answers.primaryResidence,
     household: answers.household,
   };
 }
@@ -43,27 +41,19 @@ export function situationToQuizAnswers(record: {
     precision?: string | null;
   } | null;
   timeline?: string | null;
-  disasters?: string | null;
-  displayName?: string | null;
-  helpTypes?: {
-    housing?: boolean | null;
-    financial?: boolean | null;
-    damage?: boolean | null;
-  } | null;
+  disaster?: string | null;
+  helpTypes?: string[] | null;
+  helpDetails?: string[] | null;
+  insurance?: string[] | null;
   homeStatus?: string | null;
+  primaryResidence?: boolean | null;
   household?: string[] | null;
+  femaApplied?: boolean | null;
 }): RecoveryQuizAnswers {
   const helpTypes: string[] = [];
-  if (record.helpTypes?.damage) helpTypes.push('damage_recovery');
-  if (record.helpTypes?.financial) helpTypes.push('financial_assistance');
-  if (record.helpTypes?.housing) helpTypes.push('housing_shelter');
+  helpTypes.push(...(record.helpTypes ?? []));
 
-  const disasters = record.disasters
-    ? record.disasters
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean)
-    : [];
+  const disaster = record.disaster ?? '';
 
   const loc = record.location;
   const lat = loc?.latitude;
@@ -86,18 +76,21 @@ export function situationToQuizAnswers(record: {
           }
         : null,
     timeline: record.timeline ?? '',
-    disasters,
+    disaster,
     helpTypes,
+    helpDetails: record.helpDetails ?? [],
+    insurance: record.insurance ?? [],
     homeStatus: record.homeStatus ?? '',
+    primaryResidence: record.primaryResidence ?? true,
     household: record.household ?? [],
-    name: record.displayName ?? '',
+    name: '',
   };
 }
 
 export function deriveQuizStep(answers: RecoveryQuizAnswers, isLoggedIn: boolean): number {
   if (!answers.zipCode.trim()) return 0;
   if (!answers.timeline) return 1;
-  if (answers.disasters.length === 0) return 2;
+  if (!answers.disaster) return 2;
   if (answers.helpTypes.length === 0) return 3;
   if (!answers.homeStatus) return 5; // step 4 is filter confirmation, skip it
   if (answers.household.length === 0) return 6;
@@ -109,7 +102,7 @@ export function isQuizComplete(answers: RecoveryQuizAnswers): boolean {
   return (
     answers.zipCode.trim().length === 5 &&
     !!answers.timeline &&
-    answers.disasters.length > 0 &&
+    !!answers.disaster &&
     answers.helpTypes.length > 0 &&
     !!answers.homeStatus &&
     answers.household.length > 0
