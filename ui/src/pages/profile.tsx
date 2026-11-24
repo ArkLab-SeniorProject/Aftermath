@@ -1,7 +1,7 @@
-import { LogoutOutlined, PersonOutline } from '@mui/icons-material';
-import { Avatar, Box, Button, Divider, Paper, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/useAuth';
+import { Avatar, Box, Button, Divider, Paper, Typography } from '../components/base-web';
+import { LogoutOutlined, PersonOutline } from '../components/icons';
 import { PageContainer } from '../components/molecules/page-container';
 
 export default function ProfilePage() {

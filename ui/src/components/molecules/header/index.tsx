@@ -1,6 +1,6 @@
-import { Login } from '@mui/icons-material';
-import { AppBar, Box, Button, Toolbar, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { Box, Button, Typography } from '../../base-web';
+import { Login } from '../../icons';
 
 export interface HeaderProps {
   user?: Record<string, unknown>;
@@ -15,52 +15,57 @@ export function Header({ user }: HeaderProps) {
     : null;
 
   return (
-    <AppBar position='static' elevation={1} sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
-      <Toolbar>
-        <Box
-          component='a'
-          href='/'
-          onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
-            e.preventDefault();
-            navigate('/');
-          }}
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 2,
-            cursor: 'pointer',
-            flexGrow: 1,
-            textDecoration: 'none',
-            color: 'inherit',
-          }}
-        >
-          <Typography variant='h6' component='div' fontWeight={600}>
-            Senior Project
+    <Box
+      component='header'
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        minHeight: 64,
+        px: 3,
+        backgroundColor: 'background.paper',
+        borderBottom: '1px solid #e0e0e0',
+      }}
+    >
+      <Box
+        component='a'
+        href='/'
+        onClick={(event: React.MouseEvent<HTMLElement>) => {
+          event.preventDefault();
+          navigate('/');
+        }}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 2,
+          flex: 1,
+          color: 'text.primary',
+          textDecoration: 'none',
+        }}
+      >
+        <Typography variant='h6' component='span' fontWeight={600}>
+          Senior Project
+        </Typography>
+        {orgName && (
+          <Typography variant='body2' color='text.secondary'>
+            {orgName}
           </Typography>
-          {orgName && (
-            <Typography variant='body2' color='inherit' sx={{ opacity: 0.8 }}>
-              {orgName}
-            </Typography>
-          )}
-        </Box>
-        <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 1 }}>
-          {userDisplayName ? (
-            <Typography variant='body2' color='inherit'>
-              {userDisplayName}
-            </Typography>
-          ) : (
-            <Button
-              color='inherit'
-              size='small'
-              startIcon={<Login />}
-              onClick={() => navigate('/login')}
-            >
-              Sign in
-            </Button>
-          )}
-        </Box>
-      </Toolbar>
-    </AppBar>
+        )}
+      </Box>
+      <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 1 }}>
+        {userDisplayName ? (
+          <Typography variant='body2'>{userDisplayName}</Typography>
+        ) : (
+          <Button
+            variant='text'
+            size='small'
+            startIcon={<Login />}
+            onClick={() => navigate('/login')}
+          >
+            Sign in
+          </Button>
+        )}
+      </Box>
+    </Box>
   );
 }
 

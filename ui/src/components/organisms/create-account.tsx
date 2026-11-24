@@ -1,3 +1,13 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../auth/useAuth';
+import {
+  type SyncResult,
+  dismissConflictAndKeepServer,
+  overwriteSituationWithLocal,
+  syncRecoverySituationIfNeeded,
+} from '../../lib/sync-recovery-situation';
+import type { RecoveryQuizAnswers } from '../../pages/recovery/quiz';
 import {
   Alert,
   Box,
@@ -10,17 +20,7 @@ import {
   Link,
   TextField,
   Typography,
-} from '@mui/material';
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../auth/useAuth';
-import {
-  type SyncResult,
-  dismissConflictAndKeepServer,
-  overwriteSituationWithLocal,
-  syncRecoverySituationIfNeeded,
-} from '../../lib/sync-recovery-situation';
-import type { RecoveryQuizAnswers } from '../../pages/recovery/quiz';
+} from '../base-web';
 import { AuthCard } from './auth-card';
 
 export function CreateAccountContent() {
@@ -50,7 +50,13 @@ export function CreateAccountContent() {
   } | null>(null);
 
   const handleAccessSubmit = () => {
-    if (accessCode === import.meta.env.VITE_ACCESS_CODE) {
+    const expectedAccessCode = import.meta.env.VITE_ACCESS_CODE;
+    if (!expectedAccessCode) {
+      setAccessError('Access code is not configured. Please contact the project administrator.');
+      return;
+    }
+
+    if (accessCode === expectedAccessCode) {
       setAccessGranted(true);
       setAccessError('');
     } else {
@@ -117,8 +123,8 @@ export function CreateAccountContent() {
         <DialogTitle>Access Code Required</DialogTitle>
         <DialogContent>
           <DialogContentText sx={{ mb: 2 }}>
-            Account creation is currently limited to authorized testers. Please enter your access
-            code to continue.
+            Enter your access code to unlock account creation. This is not your signup password; you
+            will set that in the form after verification.
           </DialogContentText>
           {accessError && (
             <Alert severity='error' sx={{ mb: 2 }}>

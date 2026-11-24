@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Box } from '@mui/material';
+import { Box } from '../../base-web';
 import { BottomNav } from '../../molecules/bottom-nav';
 
 export interface AppLayoutProps {

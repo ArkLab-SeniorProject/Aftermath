@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react';
-import { Alert, Box, Button, CircularProgress, TextField, Typography } from '@mui/material';
 import { useNavigate, useParams } from 'react-router-dom';
-import { apolloClient } from '../../lib/apollo-client';
 import {
   ResetPasswordWithTokenDocument,
-  ValidateResetTokenDocument,
   type ResetPasswordWithTokenMutation,
   type ResetPasswordWithTokenMutationVariables,
+  ValidateResetTokenDocument,
   type ValidateResetTokenQuery,
   type ValidateResetTokenQueryVariables,
 } from '../../generated';
+import { apolloClient } from '../../lib/apollo-client';
+import { Alert, Box, Button, CircularProgress, TextField, Typography } from '../base-web';
 import { AuthCard } from './auth-card';
 
 type Step = 'validating' | 'form' | 'invalid' | 'success';

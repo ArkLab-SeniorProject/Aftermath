@@ -1,3 +1,13 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../auth/useAuth';
+import {
+  type SyncResult,
+  dismissConflictAndKeepServer,
+  overwriteSituationWithLocal,
+  syncRecoverySituationIfNeeded,
+} from '../../lib/sync-recovery-situation';
+import type { RecoveryQuizAnswers } from '../../pages/recovery/quiz';
 import {
   Alert,
   Box,
@@ -10,17 +20,7 @@ import {
   Link,
   TextField,
   Typography,
-} from '@mui/material';
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../auth/useAuth';
-import {
-  type SyncResult,
-  dismissConflictAndKeepServer,
-  overwriteSituationWithLocal,
-  syncRecoverySituationIfNeeded,
-} from '../../lib/sync-recovery-situation';
-import type { RecoveryQuizAnswers } from '../../pages/recovery/quiz';
+} from '../base-web';
 import { AuthCard } from './auth-card';
 
 export function LoginContent() {
@@ -164,7 +164,7 @@ export function LoginContent() {
           component='button'
           variant='body2'
           underline='always'
-          onClick={() => navigate('/create-account')}
+          onClick={() => navigate('/')}
           sx={{ color: 'text.primary', fontWeight: 600 }}
         >
           Choose a plan to get started.

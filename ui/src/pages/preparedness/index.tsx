@@ -1,4 +1,4 @@
-import { CheckCircleOutline, MenuBook, Quiz } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import {
   Button,
   List,
@@ -8,8 +8,8 @@ import {
   ListItemText,
   Paper,
   Typography,
-} from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+} from '../../components/base-web';
+import { CheckCircleOutline, MenuBook, Quiz } from '../../components/icons';
 import { PageContainer } from '../../components/molecules/page-container';
 
 export default function PreparednessHub() {

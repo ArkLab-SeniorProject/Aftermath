@@ -1,7 +1,7 @@
-import { ArrowBack, Close } from '@mui/icons-material';
-import { Box, IconButton, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { colors } from '../../theme';
+import { Box, IconButton, Typography } from '../base-web';
+import { ArrowBack, Close } from '../icons';
 
 export function AuthCard({
   children,
@@ -81,6 +81,9 @@ export function AuthCard({
             flexDirection: 'column',
             px: { xs: 3, md: 5 },
             pb: { xs: 3, md: 4 },
+            width: '100%',
+            maxWidth: 640,
+            mx: 'auto',
           }}
         >
           {children}

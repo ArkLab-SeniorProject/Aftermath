@@ -1,6 +1,6 @@
-import { AccountCircle, Assignment, Healing, Home, Shield } from '@mui/icons-material';
-import { BottomNavigation, BottomNavigationAction, Paper } from '@mui/material';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { Box, Button } from '../../base-web';
+import { AccountCircle, Assignment, Healing, Home, Shield } from '../../icons';
 
 const NAV_ITEMS = [
   { label: 'My Situation', icon: <Assignment />, path: '/situation' },
@@ -13,43 +13,50 @@ const NAV_ITEMS = [
 export function BottomNav() {
   const navigate = useNavigate();
   const location = useLocation();
-
-  const currentIndex = NAV_ITEMS.findIndex((item) => location.pathname.startsWith(item.path));
+  const currentPath = NAV_ITEMS.find((item) => location.pathname.startsWith(item.path))?.path;
 
   return (
-    <Paper
-      elevation={3}
+    <Box
+      component='nav'
+      aria-label='Main navigation'
       sx={{
         position: 'fixed',
         bottom: 0,
         left: 0,
         right: 0,
-        zIndex: (theme) => theme.zIndex.appBar,
+        zIndex: 1100,
+        display: 'flex',
+        justifyContent: 'space-around',
+        backgroundColor: 'background.paper',
+        borderTop: '1px solid #e0e0e0',
         borderRadius: '16px 16px 0 0',
+        height: 64,
+        px: 1,
       }}
     >
-      <BottomNavigation
-        value={currentIndex === -1 ? 2 : currentIndex}
-        onChange={(_, newValue) => navigate(NAV_ITEMS[newValue].path)}
-        showLabels
-        sx={{
-          borderRadius: '16px 16px 0 0',
-          height: 64,
-          '& .MuiBottomNavigationAction-root': {
+      {NAV_ITEMS.map((item) => (
+        <Button
+          key={item.path}
+          variant='text'
+          onClick={() => navigate(item.path)}
+          sx={{
             minWidth: 0,
-            py: 1,
-          },
-          '& .MuiBottomNavigationAction-label': {
+            flex: 1,
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            gap: 0.25,
+            color: currentPath === item.path ? '#1a1a1a' : '#6b6b6b',
             fontSize: '0.65rem',
-            '&.Mui-selected': { fontSize: '0.65rem' },
-          },
-        }}
-      >
-        {NAV_ITEMS.map((item) => (
-          <BottomNavigationAction key={item.label} label={item.label} icon={item.icon} />
-        ))}
-      </BottomNavigation>
-    </Paper>
+            backgroundColor: 'transparent',
+          }}
+        >
+          {item.icon}
+          {item.label}
+        </Button>
+      ))}
+    </Box>
   );
 }
 

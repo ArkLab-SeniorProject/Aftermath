@@ -1,4 +1,6 @@
-import { ArrowBack, Close } from '@mui/icons-material';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../auth/useAuth';
 import {
   Alert,
   Box,
@@ -12,10 +14,8 @@ import {
   RadioGroup,
   TextField,
   Typography,
-} from '@mui/material';
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../auth/useAuth';
+} from '../../components/base-web';
+import { ArrowBack, Close } from '../../components/icons';
 import {
   CreateSituationDocument,
   type CreateSituationMutation,
@@ -761,6 +761,9 @@ export default function RecoveryQuiz() {
           px: { xs: 3, md: 5 },
           pt: { xs: 2, md: 3 },
           pb: 2,
+          width: '100%',
+          maxWidth: 640,
+          mx: 'auto',
         }}
       >
         {step === 0 && (
@@ -843,9 +846,7 @@ export default function RecoveryQuiz() {
             {!disastersLoading && (
               <RadioGroup
                 value={answers.disaster}
-                onChange={(e) =>
-                  setAnswers((prev) => ({ ...prev, disaster: e.target.value }))
-                }
+                onChange={(e) => setAnswers((prev) => ({ ...prev, disaster: e.target.value }))}
               >
                 {disasterOptions.map((d) => (
                   <FormControlLabel
@@ -898,7 +899,7 @@ export default function RecoveryQuiz() {
                       )}
                     </Box>
                   }
-                  sx={{ mb: 1.5, alignItems: 'flex-start', '& .MuiCheckbox-root': { pt: 0.5 } }}
+                  sx={{ mb: 1.5, alignItems: 'flex-start' }}
                 />
               ))}
             </FormGroup>
@@ -1002,7 +1003,7 @@ export default function RecoveryQuiz() {
                   sx={{
                     mb: 1.5,
                     ...('description' in opt && opt.description
-                      ? { alignItems: 'flex-start', '& .MuiRadio-root': { pt: 0.5 } }
+                      ? { alignItems: 'flex-start' }
                       : {}),
                   }}
                 />
@@ -1083,6 +1084,9 @@ export default function RecoveryQuiz() {
           px: { xs: 3, md: 5 },
           pb: { xs: 3, md: 4 },
           pt: 1,
+          width: '100%',
+          maxWidth: 640,
+          mx: 'auto',
         }}
       >
         <Button
